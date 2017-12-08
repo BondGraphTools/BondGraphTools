@@ -1,0 +1,90 @@
+{
+  "name": "Basic Components",
+  "id":"base",
+  "components": {
+    "0": {
+      "name": "Equipotential Node",
+      "ports": null,
+      "local_params": null,
+      "global_params": null,
+      "constitutive_relations": [
+        "sum(f_i)",
+        "e_i - e_0"
+      ]
+    },
+    "1": {
+      "name": "Equal Flow Node",
+      "ports": null,
+      "local_params": null,
+      "global_params": null,
+      "constitutive_relations": [
+        "sum(e_i)",
+        "f_i - f_0"
+      ]
+    },
+    "R": {
+      "name": "Generalised Linear Resistor",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "r": {
+          "name": "Resistance",
+          "distribution": "Normal",
+          "default": 1000,
+          "std_dev": 10,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "global_params": null,
+      "constitutive_relations": [
+        "e_0 - f_0*r"
+      ]
+    },
+    "C": {
+      "name": "Generalised Linear Capacitor",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "c": {
+          "name": "Capacitance",
+          "distribution": "Normal",
+          "default": 1000,
+          "std_dev": 10,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        },
+        "q0": {
+          "name": "Initial Charge",
+          "default": 0,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "global_params": null,
+      "constitutive_relations": [
+        "q_0 - q0 - c*e_0"
+      ]
+    },
+    "Se": {
+      "name": "Effort Source",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "e": null
+      },
+      "constitutive_relations": [
+        "e_0 - e"
+      ]
+    }
+  }
+}
