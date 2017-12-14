@@ -40,13 +40,14 @@ class Controller(object):
 
     def _add_node(self, library, component, pos, node_id=None):
 
-        new_node = cm.build_node(library, component)
-        new_node.pos = pos
-        result_id = self.bondgraph.add_node(new_node, node_id)
+        result_id = self.bondgraph.add_component(library=library,
+                                                 pos=pos,
+                                                 component=component,
+                                                 node_id=node_id)
         self.view.add_component(
             node_id=result_id,
-            node_type=new_node.node_type,
-            pos=pos
+            node_type=component,
+            pos=pos,
         )
         return result_id
 
@@ -76,8 +77,12 @@ class Controller(object):
             (action, params, pos, result)
         )
 
+    def save_model(self, filename):
 
+        pass
 
+    def load_model(self, filename):
 
+        pass
 
 

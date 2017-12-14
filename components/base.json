@@ -1,9 +1,10 @@
 {
-  "name": "Basic Components",
+  "desc": "Basic Components",
   "id":"base",
   "components": {
     "0": {
-      "name": "Equipotential Node",
+      "desc": "Equipotential Node",
+      "cls": "ManyPort",
       "ports": null,
       "local_params": null,
       "global_params": null,
@@ -13,7 +14,8 @@
       ]
     },
     "1": {
-      "name": "Equal Flow Node",
+      "desc": "Equal Flow Node",
+      "cls": "ManyPort",
       "ports": null,
       "local_params": null,
       "global_params": null,
@@ -23,13 +25,14 @@
       ]
     },
     "R": {
-      "name": "Generalised Linear Resistor",
+      "desc": "Generalised Linear Resistor",
+      "cls": "OnePort",
       "ports": {
         "0": null
       },
       "local_params": {
         "r": {
-          "name": "Resistance",
+          "desc": "Resistance",
           "distribution": "Normal",
           "default": 1000,
           "std_dev": 10,
@@ -45,13 +48,14 @@
       ]
     },
     "C": {
-      "name": "Generalised Linear Capacitor",
+      "desc": "Generalised Linear Capacitor",
+      "cls": "OnePort",
       "ports": {
         "0": null
       },
       "local_params": {
         "c": {
-          "name": "Capacitance",
+          "desc": "Capacitance",
           "distribution": "Normal",
           "default": 1000,
           "std_dev": 10,
@@ -61,7 +65,7 @@
           ]
         },
         "q0": {
-          "name": "Initial Charge",
+          "desc": "Initial Charge",
           "default": 0,
           "bounds": [
             0,
@@ -74,8 +78,29 @@
         "q_0 - q0 - c*e_0"
       ]
     },
+    "I":{
+      "desc": "Generalised Linear Inductor",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "L":{
+          "desc": "Inductance",
+          "default": 2000,
+          "bounds": [0, "inf"]
+        },
+        "p0":{
+          "desc": "Initial flux"
+        }
+      },
+      "constitutive_relations": [
+        "p_0 - p0 - L*f_0"
+      ]
+    },
     "Se": {
-      "name": "Effort Source",
+      "desc": "Effort Source",
+      "cls": "OnePort",
       "ports": {
         "0": null
       },
