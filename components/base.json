@@ -1,0 +1,115 @@
+{
+  "desc": "Basic Components",
+  "id":"base",
+  "components": {
+    "0": {
+      "desc": "Equipotential Node",
+      "cls": "ManyPort",
+      "ports": null,
+      "local_params": null,
+      "global_params": null,
+      "constitutive_relations": [
+        "sum(f_i)",
+        "e_i - e_0"
+      ]
+    },
+    "1": {
+      "desc": "Equal Flow Node",
+      "cls": "ManyPort",
+      "ports": null,
+      "local_params": null,
+      "global_params": null,
+      "constitutive_relations": [
+        "sum(e_i)",
+        "f_i - f_0"
+      ]
+    },
+    "R": {
+      "desc": "Generalised Linear Resistor",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "r": {
+          "desc": "Resistance",
+          "distribution": "Normal",
+          "default": 1000,
+          "std_dev": 10,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "global_params": null,
+      "constitutive_relations": [
+        "e_0 - f_0*r"
+      ]
+    },
+    "C": {
+      "desc": "Generalised Linear Capacitor",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "c": {
+          "desc": "Capacitance",
+          "distribution": "Normal",
+          "default": 1000,
+          "std_dev": 10,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        },
+        "q0": {
+          "desc": "Initial Charge",
+          "default": 0,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "global_params": null,
+      "constitutive_relations": [
+        "q_0 - q0 - c*e_0"
+      ]
+    },
+    "I":{
+      "desc": "Generalised Linear Inductor",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "L":{
+          "desc": "Inductance",
+          "default": 2000,
+          "bounds": [0, "inf"]
+        },
+        "p0":{
+          "desc": "Initial flux"
+        }
+      },
+      "constitutive_relations": [
+        "p_0 - p0 - L*f_0"
+      ]
+    },
+    "Se": {
+      "desc": "Effort Source",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "e": null
+      },
+      "constitutive_relations": [
+        "e_0 - e"
+      ]
+    }
+  }
+}
