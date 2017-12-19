@@ -1,38 +1,134 @@
 import sympy as sp
 from sympy.physics.mechanics import dynamicsymbols
-import numpy as np
-
 
 
 def bondgraph_to_sympy(graph):
+    """
 
+    Args:
+        graph:
+
+    Returns:
+        (dx, x, J, A, B , NL)
+
+        So that the bond graph's motion is given by
+        A*dx + B*x = 0
+        Jx = 0
+        NL(x,dx) = 0
+    """
     xdot, x, p, relations, labels = _construct_coordinates(graph)
+
+    #dy, y, J, D,  NL = _matricize(xdot, x, p)
+    return _matricize(xdot, x, relations)
+
+
+def reduce(dx, x, A, B, J, NL):
+    """
+    Projects the system onto the dynamics of the linear subspace spanned by
+    the solutions to Jx = 0
+
+    Assumptions:
+        A, B are in rref
+    Args:
+        dx:
+        x:
+        A:
+        B:
+        J:
+        NL:
+
+    Returns:
+
+    """
+
+    nonlinearity = NL
+    P = _smith_normal_form(J) # projection onto the nullspace of J
+    n, _ = P.shape
+    R = (sp.eye(n) - P)
+    system = A * R * dx + B * R * x
+
+    Rx = R*x
+    for i in range(x.rows):
+        nonlinearity.subs(x[i], Rx[i])
+
+    system.simplify()
+    nonlinearity.simplify()
+    return system, nonlinearity
+
+
+def _matricize(xdot, x, relations):
     t = sp.symbols("t")
-    Y = x + xdot
-    ydot = xdot + [sp.diff(X, t) for X in xdot]
 
+    Y = sp.Matrix(len(x) + len(xdot), 1, x + xdot)
+    ydot = sp.Matrix(len(x) + len(xdot), 1, xdot + [sp.diff(dx, t) for dx in xdot])
     N = len(Y)
-    zero = sp.zeros(N,N)
-    h_zero = sp.zeros(N/2, N/2)
-
-    #L = -sp.eye(len(x)).col_insert(0,-sp.eye(len(x)))
-    L = sp.Matrix(0, len(Y), [])
     NL = sp.Matrix(0, 1, [])
-
+    D = sp.Matrix(0, N, [])
+    J = sp.Matrix(0, N/2, [])
     for rel in relations:
         H = sp.hessian(rel, Y)
-        if H == zero:
-            row = sp.Matrix(1, N, [sp.diff(rel, y) for y in Y])
-            L = L.row_insert(-1, row)
+        if H.is_zero:
+            #linear
+            row_x = sp.Matrix(1, N/2, [sp.diff(rel, x1) for x1 in x])
+            row_dotx = sp.Matrix(1, N/2, [sp.diff(rel, x1) for x1 in xdot])
+            if row_x.is_zero:
+                J = J.col_join(row_dotx)
+            elif row_dotx.is_zero:
+                J = J.col_join(row_x)
+            else:
+                D = D.col_join(
+                    row_dotx.row_join(row_x)
+                )
         else:
-            if H[0:N/2, 0:N/2] == h_zero:
+            if H[0:N/2, 0:N/2].is_zero:
                 row = sp.Matrix(1, 1, [rel])
             else:
                 df = sp.Matrix([sp.diff(rel, y) for y in Y])
                 row = df.dot(ydot)
-            NL = NL.row_insert(-1, row)
+            NL = NL.col_join(row)
 
-    return L
+    J, _ = J.rref()
+    D, _ = D.rref()
+    A = D[:, 0:int(N/2)]
+    B = D[:, int(N/2):]
+    return ydot[int(N/2):,:], ydot[0:int(N/2),:], A, B, J, NL
+
+
+def _smith_normal_form(matrix):
+    """
+    Assume n >= m
+    Args:
+        matrix:
+
+    Returns:
+    n x n smith normal form of the matrix.
+    Particularly for projection onto the nullspace of M and the orthogonal
+    complement
+    that is, for a matrix M,
+    P = _smith_normal_form(M) is a projection operator onto the nullspace of M
+    """
+    M, _ = matrix.rref()
+    m, n = M.shape
+    Mp = sp.Matrix(0, n, [])
+    row = 0
+    ins = 0
+
+    while row < m:
+        col = row
+        while col + ins < n and M[row , col+ ins] == 0:
+            col += 1
+        if col > row + ins:
+            Mp = Mp.col_join(sp.zeros(col - row, n))
+            ins += col - row
+        Mp = Mp.col_join(M.row(row))
+        row += 1
+
+    m, n = Mp.shape
+
+    if m<n:
+        Mp = Mp.col_join(sp.zeros(n-m, n))
+    return Mp
+
 
 def _construct_coordinates(graph):
     # coordinates
@@ -55,12 +151,19 @@ def _construct_coordinates(graph):
     for node_id, node in graph.nodes.items():
 
         subs = []
+
+        one_port = len(node.ports) == 1
+
         for port_id in node.ports:
-            en = dynamicsymbols("e_{}".format(n))
-            fn = dynamicsymbols("f_{}".format(n))
-            pn = dynamicsymbols("p_{}".format(n))
-            qn = dynamicsymbols("q_{}".format(n))
-            coord_labels[(node_id, port_id)] = (node.name, [en,fn, pn,qn])
+            if one_port:
+                label = node.name
+            else:
+                label = "{};{}".format(node.name, port_id)
+            en = dynamicsymbols("e_{{{}}}".format(label))
+            fn = dynamicsymbols("f_{{{}}}".format(label))
+            pn = dynamicsymbols("p_{{{}}}".format(label))
+            qn = dynamicsymbols("q_{{{}}}".format(label))
+            coord_labels[(node_id, port_id)] = (node.name, [en, fn, pn, qn])
             E.append(en)
             F.append(fn)
             P.append(pn)
@@ -74,8 +177,9 @@ def _construct_coordinates(graph):
 
         if node.local_params:
             for param in node.local_params:
-                params_labels[an] = (node.name, param)
-                p_an = sp.symbols("a_{}".format(an))
+
+                p_an = sp.symbols("{}_{{{}}}".format(param, node.name))
+                params_labels[(node.name, param)]= p_an
                 A.append(p_an)
                 subs.append((param, p_an))
                 an += 1
@@ -85,10 +189,8 @@ def _construct_coordinates(graph):
                 try:
                     p_bn = globals_map[param]
                 except KeyError:
-                    p_bn = sp.symbols("b_{}".format(bn))
+                    p_bn = sp.symbols("{}".format(param))
                     globals_map[param] = p_bn
-                    globals_labels[bn] = param
-                    bn += 1
 
                 subs.append((param, p_bn))
 
@@ -98,10 +200,11 @@ def _construct_coordinates(graph):
     subs, (E, F, P, Q) = _construct_edge_subs(graph, coord_labels, (E, F, P, Q))
 
     relations = [r.subs(subs).simplify() for r in relations]
-    print(E)
     B = list(globals_map.values())
-    return E + F, P + Q, A + B, relations, (coord_labels, params_labels, globals_labels)
+    DX = F + E
+    X = Q + P
 
+    return DX, X, A + B, relations, (coord_labels, params_labels, globals_map)
 
 
 def _build_relations(node):
@@ -168,16 +271,16 @@ def _construct_edge_subs(graph, coord_labels, coords):
 
         while edges:
             edge = edges.pop()
-            (n1, p1), (n2, p2) = edge
+            (n1, po1), (n2, po2) = edge
             edge_list.remove(edge)
 
             if n1 == from_node:
-                _,  (e1, f1, p1, q1) = coord_labels[(n1, p1)]
-                _,  (e2, f2, p2, q2) = coord_labels[(n2, p2)]
+                _,  (e1, f1, p1, q1) = coord_labels[(n1, po1)]
+                _,  (e2, f2, p2, q2) = coord_labels[(n2, po2)]
                 dirn = -1  # power leaving
             else:
-                _, (e1, f1, p1, q1) = coord_labels[(n2, p2)]
-                _, (e2, f2, p2, q2) = coord_labels[(n1, p1)]
+                _, (e1, f1, p1, q1) = coord_labels[(n2, po2)]
+                _, (e2, f2, p2, q2) = coord_labels[(n1, po1)]
                 dirn = 1  # power coming in
 
             subs += [

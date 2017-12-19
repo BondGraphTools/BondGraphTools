@@ -249,7 +249,7 @@ class OnePort(AtomicNode):
             assert isinstance(p, int)
 
 
-def _optimise(nodes, edges, N=10000):
+def _optimise(nodes, edges, N=1000):
     """
     e is a list of edge tuples [(i,j), (i,m), ... ]
 
