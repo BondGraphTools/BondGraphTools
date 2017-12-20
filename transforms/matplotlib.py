@@ -1,37 +1,65 @@
-import os
+"""
+Matplotlib Interface
+====================
 
+make sure to set up your matplotlib interface prior to importing this module
+
+You may also change the plot style by changing 
+matplotlib.pyplot.stye  
+in the usual manner
+"""
+
+import os
+import logging
 import numpy as np
-import matplotlib.pyplot as plt
+
+import matplotlib.pyplot as pyplot
+
+logger = logging.getLogger(__name__)
 
 _mplstyle = os.path.join(os.path.dirname(__file__), "mtt2.mplstyle")
-plt.style.use(_mplstyle)
-
+pyplot.style.use(_mplstyle)
 
 def draw(graph):
-    X = [node.pos[0] for node in graph.nodes.values()]
-    Y = [node.pos[1] for node in graph.nodes.values()]
-    min_x = min(X)
-    max_x = max(X)
-    min_y = min(Y)
-    max_y = max(Y)
+    """
+    Uses Matplotlib to draw the bond graph
+
+    Args:
+        graph: The bond graph
+
+    Returns:
+        :obj:matplotlib.pyplot.figure
+    """
+
+    try:
+        X = [node.pos[0] for node in graph.nodes.values()]
+        Y = [node.pos[1] for node in graph.nodes.values()]
+        min_x = min(X)
+        max_x = max(X)
+        min_y = min(Y)
+        max_y = max(Y)
+    except ValueError:
+        logger.warning("Cannot draw empty graph")
+        return None
+
+    fig = pyplot.figure()
 
     width = abs(max_x - min_x)
     height = abs(max_y - min_y)
     tweak_x = 0.25*width
     tweak_y = 0.25*height
 
-    fig = plt.figure()
-    plt.axis([min_x - tweak_x,
+    pyplot.axis([min_x - tweak_x,
               max_x + tweak_x,
               min_y - tweak_y,
               max_y + tweak_y])
     renderer = find_renderer(fig)
-    ax = plt.gca()
+    ax = pyplot.gca()
     eps = []
 
     for node_id, node in graph.nodes.items():
         x, y = node.pos
-        text = plt.text(x, y, str(node),
+        text = pyplot.text(x, y, str(node),
                         horizontalalignment='center',
                         verticalalignment='center')
 
@@ -57,7 +85,7 @@ def draw(graph):
 
         line_x = [x1 + eps1*vx1, x2 - eps2*vx1, x2 - eps2*vx1 + arrow_l*vx2]
         line_y = [y1 + eps1*vy1, y2 - eps2*vy1, y2 - eps2*vy1 + arrow_l*vy2]
-        plt.plot(line_x, line_y, color='k')
+        pyplot.plot(line_x, line_y, color='k')
 
     fig.tight_layout(pad=0.1)
     fig.suptitle(graph.name)
@@ -65,6 +93,7 @@ def draw(graph):
     ax.get_yaxis().set_visible(False)
     ax.set_aspect('equal')
     return fig
+
 
 def find_renderer(fig):
     """
@@ -76,16 +105,17 @@ def find_renderer(fig):
 
     """
     if hasattr(fig.canvas, "get_renderer"):
-        #Some backends, such as TkAgg, have the get_renderer method, which
-        #makes this easy.
+        # Some backends, such as TkAgg, have the get_renderer method, which
+        # makes this easy.
         renderer = fig.canvas.get_renderer()
     else:
-        #Other backends do not have the get_renderer method, so we have a work
-        #around to find the renderer.  Print the figure to a temporary file
-        #object, and then grab the renderer that was used.
-        #(I stole this trick from the matplotlib backend_bases.py
-        #print_figure() method.)
+        # Other backends do not have the get_renderer method, so we have a work
+        # around to find the renderer.  Print the figure to a temporary file
+        # object, and then grab the renderer that was used.
+        # (I stole this trick from the matplotlib backend_bases.py
+        # print_figure() method.)
         import io
         fig.canvas.print_pdf(io.BytesIO())
         renderer = fig._cachedRenderer
-    return(renderer)
+
+    return renderer
