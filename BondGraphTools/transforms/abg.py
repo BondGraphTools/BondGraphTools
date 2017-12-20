@@ -1,7 +1,5 @@
 import logging
 
-from bondgraph import BondGraph
-
 logger = logging.getLogger(__name__)
 
 def load(filename):

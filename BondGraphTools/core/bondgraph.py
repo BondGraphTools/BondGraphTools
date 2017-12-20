@@ -2,7 +2,7 @@ import math
 import random
 import logging
 
-import component_manager as cm
+from . import component_manager as cm
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +108,39 @@ class BondGraph(object):
 
         return node_id
 
+    def find_bonds(self, node):
+        if isinstance(node, NodeBase):
+            node_id = self.find_component(node=node)
+        elif isinstance(node, int):
+            node_id = node
+
+        out = []
+
+        for bond in self.bonds:
+            n1, n2, _, _ = bond
+
+            if n1 == node_id or n2 == node_id:
+                out.append(bond)
+
+        return out
+
+    def remove_component(self, node):
+        if isinstance(node, NodeBase):
+            node_id = self.find_component(node=node)
+        elif isinstance(node, int):
+            node_id = node
+
+        if not self.find_bonds():
+            del self.nodes[node_id]
+        else:
+            logger.warning("Could not delete attached bond")
+            raise DeletionError
+
+    def remove_bond(self, bond):
+        del self.bonds[bond]
+
+class DeletionError(Exception):
+    pass
 
 class NodeBase(object):
     factories = {}
@@ -176,7 +209,7 @@ class NodeBase(object):
     @staticmethod
     def factory(cls, *args, **kwargs):
 
-        C = find_subclass(cls, NodeBase)
+        C = _find_subclass(cls, NodeBase)
         if not C:
             raise NotImplementedError(
                 "Node class not found", cls
@@ -185,13 +218,13 @@ class NodeBase(object):
         return C(*args, **kwargs)
 
 
-def find_subclass(name, base_class):
+def _find_subclass(name, base_class):
 
     for c in base_class.__subclasses__():
         if c.__name__ == name:
             return c
         else:
-            sc = find_subclass(name, c)
+            sc = _find_subclass(name, c)
             if sc:
                 return sc
     return None
@@ -248,8 +281,10 @@ class OnePort(AtomicNode):
         for p in self.ports:
             assert isinstance(p, int)
 
+
 class TwoPort(AtomicNode):
     pass
+
 
 class IOPort(AtomicNode):
     pass

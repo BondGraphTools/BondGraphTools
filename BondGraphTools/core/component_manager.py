@@ -37,7 +37,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-LIB_DIR = os.path.join(os.path.dirname(__file__), "components")
+__base_dir, _ = os.path.split(os.path.dirname(__file__))
+LIB_DIR = os.path.join(__base_dir, "components")
+print(LIB_DIR)
 __libraries = dict()
 base_id = "base"
 

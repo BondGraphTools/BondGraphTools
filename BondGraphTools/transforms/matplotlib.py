@@ -50,9 +50,9 @@ def draw(graph):
     tweak_y = 0.25*height
 
     pyplot.axis([min_x - tweak_x,
-              max_x + tweak_x,
-              min_y - tweak_y,
-              max_y + tweak_y])
+                 max_x + tweak_x,
+                 min_y - tweak_y,
+                 max_y + tweak_y])
     renderer = find_renderer(fig)
     ax = pyplot.gca()
     eps = []
@@ -60,8 +60,8 @@ def draw(graph):
     for node_id, node in graph.nodes.items():
         x, y = node.pos
         text = pyplot.text(x, y, str(node),
-                        horizontalalignment='center',
-                        verticalalignment='center')
+                           horizontalalignment='center',
+                           verticalalignment='center')
 
         bbox = text.get_window_extent(renderer).transformed(
             ax.transData.inverted())

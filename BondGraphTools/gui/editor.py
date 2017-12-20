@@ -5,9 +5,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtPrintSupport import *
-import component_manager as cm
-import controller as co
-import bondgraph as mo
+from App.gui import controller as co
+from App.core import bondgraph as mo, component_manager as cm
 
 _OSX = "darwin"
 

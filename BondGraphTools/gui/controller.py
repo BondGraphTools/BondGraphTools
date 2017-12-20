@@ -1,6 +1,3 @@
-import component_manager as cm
-
-
 class Controller(object):
     add_component = 0
     add_bond = 1
