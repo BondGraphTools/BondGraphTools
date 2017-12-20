@@ -5,7 +5,7 @@
     "0": {
       "desc": "Equipotential Node",
       "cls": "ManyPort",
-      "string":"0",
+      "string": "0",
       "ports": null,
       "local_params": null,
       "global_params": null,
@@ -17,7 +17,7 @@
     "1": {
       "desc": "Equal Flow Node",
       "cls": "ManyPort",
-      "string":"1",
+      "string": "1",
       "ports": null,
       "local_params": null,
       "global_params": null,
@@ -80,19 +80,22 @@
         "q_0 - q0 - c*e_0"
       ]
     },
-    "I":{
+    "I": {
       "desc": "Generalised Linear Inductor",
       "cls": "OnePort",
       "ports": {
         "0": null
       },
       "local_params": {
-        "L":{
+        "L": {
           "desc": "Inductance",
           "default": 2000,
-          "bounds": [0, "inf"]
+          "bounds": [
+            0,
+            "inf"
+          ]
         },
-        "p0":{
+        "p0": {
           "desc": "Initial flux"
         }
       },
@@ -112,38 +115,78 @@
       "constitutive_relations": [
         "e_0 - e"
       ]
+    },
+    "Sf": {
+      "desc": "Flow Source",
+      "cls": "OnePort",
+      "ports": {
+        "0": null
+      },
+      "local_params": {
+        "f": null
+      },
+      "constitutive_relations": [
+        "f_0 - f"
+      ]
+    },
+    "P": {
+      "desc": "Port",
+      "cls": "IOPort",
+      "ports": {
+        "0": null
+      }
+    },
+    "TF": {
+      "desc": "Linear Transformer",
+      "cls": "TwoPort",
+      "ports": {
+        "0": {
+          "Desc": "Primary"
+        },
+        "1": {
+          "Desc": "Secondary"
+        }
+      },
+      "local_params": {
+        "a": {
+          "desc": "Ratio",
+          "defaults": 1,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "constitutive_relations": [
+        "e_1 - a*e_0",
+        "f_0 - a*f_1"
+      ]
+    },
+    "GY": {
+      "desc": "Linear Gyrator",
+      "cls": "TwoPort",
+      "ports": {
+        "0": {
+          "Desc": "Primary"
+        },
+        "1": {
+          "Desc": "Secondary"
+        }
+      },
+      "local_params": {
+        "R": {
+          "desc": "Ratio",
+          "defaults": 1,
+          "bounds": [
+            0,
+            "inf"
+          ]
+        }
+      },
+      "constitutive_relations": [
+        "e_1 - R*f_0",
+        "e_1 + R*f_1"
+      ]
     }
-  },
-  "TF":{
-    "desc": "Linear Transformer",
-    "cls": "TwoPort",
-    "ports": {
-      "0":{"Desc":"Primary"},
-      "1":{"Desc":"Secondary"}
-    },
-    "local_params":{
-      "a": {
-        "desc": "Ratio",
-        "defaults":1,
-        "bounds": [0, "inf"]
-      }
-    },
-    "constitutive_relations": ["e_1 - a*e_0" , "f_0 - a*f_1"]
-  },
-  "GY":{
-    "desc": "Linear Gyrator",
-    "cls": "TwoPort",
-    "ports": {
-      "0": {"Desc":"Primary"},
-      "1":{"Desc":"Secondary"}
-    },
-    "local_params":{
-      "R": {
-        "desc": "Ratio",
-        "defaults":1,
-        "bounds": [0, "inf"]
-      }
-    },
-    "constitutive_relations": ["e_1 - R*f_0" , "e_1 + R*f_1"]
   }
 }
