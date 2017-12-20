@@ -1,8 +1,10 @@
 import math
 import random
+import logging
 
 import component_manager as cm
 
+logger = logging.getLogger(__name__)
 
 def from_file(filename):
     pass
@@ -35,10 +37,8 @@ class BondGraph(object):
                 name = "{}_{}".format(component, i)
 
         if not library:
-            lib, comp = cm.find(component)
-            build_args = cm.get_component_data(lib, comp)
-        else:
-            build_args = cm.get_component_data(library, component)
+            library = cm.find(component, ensure_unique=True)
+        build_args = cm.get_component_data(library, component)
 
         if not build_args:
             raise NotImplementedError
@@ -337,18 +337,23 @@ def _optimise(nodes, edges, N=1000):
 
 def arrange(bond_graph):
     nodes = list()
-    for node in bond_graph.nodes.values():
-        try:
-            x, y = node.pos
-            nodes.append((x, y))
-        except TypeError:
-            nodes.append((0, 0))
-    edges = set()
-    for i, j, _, _ in bond_graph.bonds:
-        if i < j:
-            edges.add((i, j))
-        else:
-            edges.add((j, i))
-    pos = _optimise(nodes, list(edges))
-    for n, node in enumerate(bond_graph.nodes.values()):
-        node.pos = pos[n]
+    if bond_graph.nodes:
+        for node in bond_graph.nodes.values():
+            try:
+                x, y = node.pos
+                nodes.append((x, y))
+            except TypeError:
+                nodes.append((0, 0))
+        edges = set()
+        for i, j, _, _ in bond_graph.bonds:
+            if i < j:
+                edges.add((i, j))
+            else:
+                edges.add((j, i))
+
+        pos = _optimise(nodes, list(edges))
+
+        for n, node in enumerate(bond_graph.nodes.values()):
+            node.pos = pos[n]
+    else:
+        logger.warning("Cannot arrange empty bond graph")

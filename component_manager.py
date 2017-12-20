@@ -142,7 +142,7 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
         keys = {k for k in __libraries if k in restrict_to}
     else:
         keys = __libraries
-    unique_id = set()
+    unique_id = None
     for lib_id in keys:
         for comp_id in __libraries[lib_id]["components"]:
             if comp_id == component:
@@ -150,14 +150,16 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
                     results.append(lib_id)
                 elif not ensure_unique:
                     return lib_id
-                elif ensure_unique:
-                    unique_id.add(lib_id)
+                elif ensure_unique and not unique_id:
+                    unique_id = lib_id
+                elif ensure_unique and unique_id:
+                    raise ValueError(
+                        "Could not find component: Component not unique",
+                        component)
     if find_all:
         return results
-    elif len(unique_id) == 1:
-        return unique_id.pop()
-    elif len(unique_id) > 1:
-        raise ValueError("Component Not Unique", unique_id)
+    elif unique_id:
+        return unique_id
     else:
         raise NotImplementedError("Component not found", component)
 
