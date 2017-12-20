@@ -248,6 +248,11 @@ class OnePort(AtomicNode):
         for p in self.ports:
             assert isinstance(p, int)
 
+class TwoPort(AtomicNode):
+    pass
+
+class IOPort(AtomicNode):
+    pass
 
 def _optimise(nodes, edges, N=1000):
     """

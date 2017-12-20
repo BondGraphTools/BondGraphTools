@@ -7,7 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtPrintSupport import *
 import component_manager as cm
 import controller as co
-import model as mo
+import bondgraph as mo
 
 _OSX = "darwin"
 
