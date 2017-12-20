@@ -130,7 +130,7 @@ class BondGraph(object):
         elif isinstance(node, int):
             node_id = node
 
-        if not self.find_bonds():
+        if not self.find_bonds(node_id):
             del self.nodes[node_id]
         else:
             logger.warning("Could not delete attached bond")

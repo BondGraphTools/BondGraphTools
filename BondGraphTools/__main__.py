@@ -2,7 +2,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 
-from App.gui.editor import MainWindow
+from BondGraphTools.gui.editor import MainWindow
 
 
 if __name__ == '__main__':
