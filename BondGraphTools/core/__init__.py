@@ -1,5 +1,2 @@
-from .bondgraph import BondGraph, arrange
-
-__all__ = [
-    "BondGraph", "arrange"
-]
+from .bondgraph import BondGraph
+#from.layout_manager import arrange

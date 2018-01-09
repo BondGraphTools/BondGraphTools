@@ -1,1 +1,46 @@
-{}
+{
+  "desc": "Biochemical Components",
+  "id":"BioChem",
+  "components":{
+    "Ce":{
+      "desc":"Concentration of Chemical Species",
+      "cls": "OnePort",
+      "ports":{
+        "0":null
+      },
+      "local_params":{
+        "e0":{
+          "desc":"Standard Free Energy",
+          "bounds":[0, "inf"]
+        }
+      },
+      "global_params":{
+        "R":{"desc":"Universal Gas Constant"},
+        "T":{"desc": "Temperature"},
+        "V":{"desc": "Volume of the vessel"}
+      },
+      "constitutive_relations":[
+        "e_0 - e0 - R*T*log(q_0/V)"
+      ]
+    },
+    "Re":{
+      "desc": "Biochemical Reaction",
+      "cls": "TwoPort",
+      "ports":{
+        "0": {"desc": "Reactants"},
+        "1": {"desc": "Products"}
+      },
+      "local_params":{
+        "kappa":{"desc":"Reaction Rate"}
+      },
+      "global_params":{
+        "R":{"desc":"Universal Gas Constant"},
+        "T":{"desc": "Temperature"}
+      },
+      "constitutive_relations":[
+        "f_0 + f_1",
+        "f_0 - kappa *(exp(e_0/R/T) - exp(e_1/R/T))"
+      ]
+    }
+  }
+}

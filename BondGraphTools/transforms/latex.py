@@ -80,12 +80,14 @@ def _matricize(xdot, x, relations):
                     row_dotx.row_join(row_x)
                 )
         else:
-            if H[0:N/2, 0:N/2].is_zero:
-                row = sp.Matrix(1, 1, [rel])
-            else:
-                df = sp.Matrix([sp.diff(rel, y) for y in Y])
-                row = df.dot(ydot)
-            NL = NL.col_join(row)
+            # if H[0:int(N/2), 0:int(N/2)].is_zero:
+            #     row = sp.Matrix(1, 1, [rel])
+            # else:
+            #     df = sp.Matrix([sp.diff(rel, y) for y in Y])
+            #     row = sp.Matrix(1, 1, [df.dot(ydot)])
+            # print(row)
+            # print(NL)
+            NL = NL.col_join(sp.Matrix(1,1,[rel]))
 
     J, _ = J.rref()
     D, _ = D.rref()
@@ -176,13 +178,16 @@ def _construct_coordinates(graph):
             n += 1
 
         if node.local_params:
-            for param in node.local_params:
+            for param, v in node.local_params.items():
+                if isinstance(v, int) or isinstance(v, float):
+                    subs.append((param, v))
+                else:
+                    p_an = sp.symbols("{}_{{{}}}".format(param, node.name))
+                    params_labels[(node.name, param)] = p_an
+                    A.append(p_an)
+                    subs.append((param, p_an))
+                    an += 1
 
-                p_an = sp.symbols("{}_{{{}}}".format(param, node.name))
-                params_labels[(node.name, param)]= p_an
-                A.append(p_an)
-                subs.append((param, p_an))
-                an += 1
 
         if node.global_params:
             for param in node.global_params:
@@ -253,8 +258,6 @@ def _build_relations(node):
             )
 
     return [r for r in rels if r != 0]
-
-
 
 
 def _construct_edge_subs(graph, coord_labels, coords):

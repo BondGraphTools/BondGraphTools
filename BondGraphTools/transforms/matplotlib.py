@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 _mplstyle = os.path.join(os.path.dirname(__file__), "mtt2.mplstyle")
 pyplot.style.use(_mplstyle)
 
+phi = (5**0.5 - 1)/2
+
+
 def draw(graph):
     """
     Uses Matplotlib to draw the bond graph
@@ -46,6 +49,8 @@ def draw(graph):
 
     width = abs(max_x - min_x)
     height = abs(max_y - min_y)
+    height = max(height, width/phi)
+
     tweak_x = 0.25*width
     tweak_y = 0.25*height
 
@@ -61,7 +66,9 @@ def draw(graph):
         x, y = node.pos
         text = pyplot.text(x, y, str(node),
                            horizontalalignment='center',
-                           verticalalignment='center')
+                           verticalalignment='center',
+                           bbox=dict(facecolor='none', edgecolor='black')
+        )
 
         bbox = text.get_window_extent(renderer).transformed(
             ax.transData.inverted())
@@ -79,15 +86,21 @@ def draw(graph):
         vx2 = (vy1 - vx1)/np.sqrt(2)
         vy2 = -(vy1 + vx1)/np.sqrt(2)
 
-        eps1 = eps[i]*1.25
-        eps2 = eps[j]*1.25
-        arrow_l = 0.1
+        # eps1 = eps[i]*1.25
+        # eps2 = eps[j]*1.25
+        # arrow_l = 0.1
+        # line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
+        #           x2 - eps2 * vx1 + arrow_l * vx2]
+        # line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,
+        #           y2 - eps2 * vy1 + arrow_l * vy2]
 
-        line_x = [x1 + eps1*vx1, x2 - eps2*vx1, x2 - eps2*vx1 + arrow_l*vx2]
-        line_y = [y1 + eps1*vy1, y2 - eps2*vy1, y2 - eps2*vy1 + arrow_l*vy2]
+        eps1 = eps[i]
+        eps2 = eps[j]
+        line_x = [x1, x2]
+        line_y = [y1, y2]
         pyplot.plot(line_x, line_y, color='k')
 
-    fig.tight_layout(pad=0.1)
+    fig.tight_layout(pad=0.2)
     fig.suptitle(graph.name)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
