@@ -6,4 +6,4 @@ legend.fontsize : 9.0
 font.family : serif
 font.serif : Computer Modern Roman
 lines.markersize : 3
-text.usetex : False
+text.usetex : True

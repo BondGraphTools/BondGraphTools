@@ -1,2 +1,2 @@
 from .bondgraph import BondGraph
-#from.layout_manager import arrange
+from.layout_manager import arrange

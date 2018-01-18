@@ -9,6 +9,7 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 DIRS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
+
 def _anneal(nodes, edges, N=10000):
     """
     e is a list of edge tuples [(i,j), (i,m), ... ]
@@ -101,12 +102,7 @@ def _anneal(nodes, edges, N=10000):
 def arrange(bond_graph):
     nodes, edges = _make_planar_graph(bond_graph)
 
-    adj = np.zeros((len(nodes), len(nodes)))
-    for i,j in edges:
-        adj[i,j] = 1
-        adj[j,i] = 1
-
-    nodes = _layout_reduced_graph(nodes, adj)
+    nodes = _algo(nodes, edges)
 
     for i in bond_graph.nodes:
         bond_graph.nodes[i].pos = nodes[i]
@@ -114,18 +110,22 @@ def arrange(bond_graph):
 
 def _make_planar_graph(bond_graph):
     nodes = list()
+    adj_dict = defaultdict(lambda: dict)
     for node in bond_graph.nodes.values():
         try:
             x, y = node.pos
             nodes.append((x, y))
         except TypeError:
             nodes.append((0, 0))
-    edges = list()
-    for i, j, _, _ in bond_graph.bonds:
-        if i < j:
-            edges.append((i, j))
-        else:
-            edges.append((j, i))
+    adj_matrix = np.zeros((len(nodes), len(nodes)))
+    for k, (i, j, _, _) in enumerate(bond_graph.bonds):
+        adj_matrix[i,j] = 1
+        adj_matrix[j,i] = 1
+
+        adj_dict[i][j] = k
+        adj_dict[j][i] = k
+
+
 
     return nodes, edges
 
@@ -263,8 +263,12 @@ def _interpolate(nodes, edges):
 
     return
 
+def _layout_reduced_graph(reduced_nodes, edges):
 
-def _layout_reduced_graph(reduced_nodes, W_adj):
+    W_adj = np.zeros((len(nodes), len(nodes)))
+    for i, j in edges:
+        W_adj[i, j] = 1
+        W_adj[j, i] = 1
 
     graph_dist = floyd_warshall(W_adj, directed=False)
     L = laplacian(W_adj)
@@ -374,8 +378,59 @@ def _recurse_contract(vertex_degree, edges):
         return _recurse_contract(vertex_degree, new_edges)
 
 
+def constrained_arrange(bond_graph):
+    nodes, edges, constraints = _make_planar_graph(bond_graph)
+
+    nodes = _algo(nodes, edges, constraints)
+
+    for i in bond_graph.nodes:
+        bond_graph.nodes[i].pos = nodes[i]
 
 
+def _layout_algorithm(nodes, edges, constriants=None):
+
+    N = len(nodes)
+    K = len(edges)
+    E = np.zeros((K, N))
+    A = np.np.zeros((N, N))
+    x, y = map(lambda q: np.array(q, ndmin=2).transpose(), zip(*nodes))
+    # x y are always column vectors
+
+    for k, (i, j) in enumerate(edges):
+        A[i, j] = 1
+        A[j, i] = 1
+        E[k, j] = -1
+        E[k, i] = 1
+
+    degree = A.sum(1)
+    D = floyd_warshall(A, directed=False)
+
+    # compute Xx Xy; euclidian distances.
+
+
+def _objective_function(x, y, adj, dist, deg):
+
+    eps_m = 0.01
+    n = len(x)
+    xbar = x.sum()
+    ybar = y.sum()
+    Xx = x - x.transpose()
+    Yy = y - y.transpose()
+
+    M = (Xx**2 + Yy**2 + eps_m)**(-1)
+    PHI = (M - np.eye(n)*eps_m).sum()/2
+    Vx = Xx + n*np.diag(x) - np.eye(n)*xbar
+    Vy = Yy + n*np.diag(y) - np.eye(n)*ybar
+    dx = Vx.dot((M**(-2)).sum(1, keepdims=True))/2
+    dy = Vy.dot((M**(-2)).sum(1, keepdims=True))/2
+
+    PHI += ((adj*Xx)**2 + (adj*Yy)**2 - adj).sum()/2
+    DB = adj*(1 - adj*(Xx**2 + Yy**2 + eps_m)**(-0.5))
+    dx -= 2 * (DB*Xx).sum(1, keepdims=True)
+    dy -= 2 * (DB*Yy).sum(1, keepdims=True)
+
+#_algo = _layout_reduced_graph
+_algo = _layout_algorithm
 
 
 

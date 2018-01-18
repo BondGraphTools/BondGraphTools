@@ -188,7 +188,6 @@ def _construct_coordinates(graph):
                     subs.append((param, p_an))
                     an += 1
 
-
         if node.global_params:
             for param in node.global_params:
                 try:

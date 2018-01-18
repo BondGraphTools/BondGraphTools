@@ -64,12 +64,15 @@ def draw(graph):
 
     for node_id, node in graph.nodes.items():
         x, y = node.pos
+        # text = pyplot.text(x, y, str(node),
+        #                    horizontalalignment='center',
+        #                    verticalalignment='center',
+        #                    bbox=dict(facecolor='none', edgecolor='black')
+        # )
         text = pyplot.text(x, y, str(node),
                            horizontalalignment='center',
-                           verticalalignment='center',
-                           bbox=dict(facecolor='none', edgecolor='black')
-        )
-
+                           verticalalignment='center'
+                           )
         bbox = text.get_window_extent(renderer).transformed(
             ax.transData.inverted())
         ep = np.sqrt(bbox.width**2 + bbox.height**2)
@@ -86,18 +89,18 @@ def draw(graph):
         vx2 = (vy1 - vx1)/np.sqrt(2)
         vy2 = -(vy1 + vx1)/np.sqrt(2)
 
-        # eps1 = eps[i]*1.25
-        # eps2 = eps[j]*1.25
-        # arrow_l = 0.1
-        # line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
-        #           x2 - eps2 * vx1 + arrow_l * vx2]
-        # line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,
-        #           y2 - eps2 * vy1 + arrow_l * vy2]
+        eps1 = eps[i]/2
+        eps2 = eps[j]/2
+        arrow_l = 0.25
+        line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
+                  x2 - eps2 * vx1 + arrow_l * vx2]
+        line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,
+                  y2 - eps2 * vy1 + arrow_l * vy2]
 
-        eps1 = eps[i]
-        eps2 = eps[j]
-        line_x = [x1, x2]
-        line_y = [y1, y2]
+        # eps1 = eps[i]
+        # eps2 = eps[j]
+        # line_x = [x1, x2]
+        # line_y = [y1, y2]
         pyplot.plot(line_x, line_y, color='k')
 
     fig.tight_layout(pad=0.2)
