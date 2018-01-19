@@ -89,9 +89,9 @@ def draw(graph):
         vx2 = (vy1 - vx1)/np.sqrt(2)
         vy2 = -(vy1 + vx1)/np.sqrt(2)
 
-        eps1 = eps[i]/2
-        eps2 = eps[j]/2
-        arrow_l = 0.25
+        eps1 = eps[i]
+        eps2 = eps[j]
+        arrow_l = 0.1
         line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
                   x2 - eps2 * vx1 + arrow_l * vx2]
         line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,

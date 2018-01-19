@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 DIRS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
 
-def _anneal(nodes, edges, N=10000):
+def simulated_annealing(nodes, edges, N=10000):
     """
     e is a list of edge tuples [(i,j), (i,m), ... ]
 
@@ -25,14 +25,16 @@ def _anneal(nodes, edges, N=10000):
     targets = set()
     w1 = 0.5
     w2 = 0.01
+
     x, y = zip(*nodes)
-    x = list(x)
-    y = list(y)
-    T = 1
-    xt = [p for p in x]
-    yt = [p for p in y]
     lenx = len(x)
     step = math.ceil(math.sqrt(lenx))
+    x = [int(step*math.cos(2*math.pi*k/lenx)) for k in range(lenx)]
+    y = [int(step*math.sin(2*math.pi*k/lenx)) for k in range(lenx)]
+    T = 1
+
+    xt = [p for p in x]
+    yt = [p for p in y]
 
     while n < N:
         # generate new candidate
@@ -47,14 +49,12 @@ def _anneal(nodes, edges, N=10000):
                 xt[i] = x[i] + dx*dist
                 yt[i] = y[i] + dy*dist
 
-
-
         targets = set()
         crossings = 0
         zero_bonds = 0
         dist = 0
         node_dist = sum(
-            sum(((x1-x2)**2 + (y1 - y2)**2)**0.5 for x1, y1 in zip(xt,yt))
+            sum(((x1-x2)**2 + (y1 - y2)**2 + w2)**(-2) for x1, y1 in zip(xt,yt))
                 for x2,y2 in zip(xt,yt))
 
         bd_x = [xt[j] - xt[i] for i, j in edges]
@@ -66,7 +66,7 @@ def _anneal(nodes, edges, N=10000):
             d = bx**2 + by**2
             if d == 0:
                 zero_bonds += 1
-                targets &= {i,j}
+                targets &= {i, j}
             else:
                 dist += d
                 for l in range(k, len(edges)):
@@ -99,18 +99,9 @@ def _anneal(nodes, edges, N=10000):
     return out
 
 
-def arrange(bond_graph):
-    nodes, edges = _make_planar_graph(bond_graph)
-
-    nodes = _algo(nodes, edges)
-
-    for i in bond_graph.nodes:
-        bond_graph.nodes[i].pos = nodes[i]
-
-
 def _make_planar_graph(bond_graph):
     nodes = list()
-    adj_dict = defaultdict(lambda: dict)
+    adj_dict = defaultdict(lambda: dict())
     for node in bond_graph.nodes.values():
         try:
             x, y = node.pos
@@ -118,19 +109,19 @@ def _make_planar_graph(bond_graph):
         except TypeError:
             nodes.append((0, 0))
     adj_matrix = np.zeros((len(nodes), len(nodes)))
+    edges = []
     for k, (i, j, _, _) in enumerate(bond_graph.bonds):
+        edges.append((i,j))
         adj_matrix[i,j] = 1
         adj_matrix[j,i] = 1
 
         adj_dict[i][j] = k
         adj_dict[j][i] = k
 
-
-
     return nodes, edges
 
 
-def _branch_and_bound_search(nodes, edges):
+def branch_and_bound(nodes, edges):
 
     n = len(nodes)
     A = np.zeros((n, n))
@@ -191,9 +182,9 @@ def _branch_and_bound_search(nodes, edges):
         # if index < -1:
         #     print("clearing")
         #     del tree[index:-1]
-    print(i)
-    return tree[-1]
-    # return tree
+    pos, _ = tree[-1]
+
+    return pos
 
 
 def _distance_matrix(nodes):
@@ -259,9 +250,11 @@ def contract_graph(nodes, edges):
     #
     #                     )
 
+
 def _interpolate(nodes, edges):
 
     return
+
 
 def _layout_reduced_graph(reduced_nodes, edges):
 
@@ -378,15 +371,6 @@ def _recurse_contract(vertex_degree, edges):
         return _recurse_contract(vertex_degree, new_edges)
 
 
-def constrained_arrange(bond_graph):
-    nodes, edges, constraints = _make_planar_graph(bond_graph)
-
-    nodes = _algo(nodes, edges, constraints)
-
-    for i in bond_graph.nodes:
-        bond_graph.nodes[i].pos = nodes[i]
-
-
 def _layout_algorithm(nodes, edges, constriants=None):
 
     N = len(nodes)
@@ -429,14 +413,16 @@ def _objective_function(x, y, adj, dist, deg):
     dx -= 2 * (DB*Xx).sum(1, keepdims=True)
     dy -= 2 * (DB*Yy).sum(1, keepdims=True)
 
-#_algo = _layout_reduced_graph
-_algo = _layout_algorithm
 
+def arrange(bond_graph,
+            algorithm=branch_and_bound,
+            **kwargs):
+    nodes, edges = _make_planar_graph(bond_graph)
+    args = []
+    nodes = algorithm(nodes, edges, *args, **kwargs)
 
-
-
-
-
+    for i in bond_graph.nodes:
+        bond_graph.nodes[i].pos = nodes[i]
 
 
 
