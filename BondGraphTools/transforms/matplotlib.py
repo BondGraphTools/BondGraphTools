@@ -14,6 +14,7 @@ import logging
 import numpy as np
 
 import matplotlib.pyplot as pyplot
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ def draw(graph):
 
     tweak_x = 0.25*width
     tweak_y = 0.25*height
-
+    arrow_len = math.ceil(max(width, height)/10)/5
     pyplot.axis([min_x - tweak_x,
                  max_x + tweak_x,
                  min_y - tweak_y,
@@ -89,9 +90,9 @@ def draw(graph):
         vx2 = (vy1 - vx1)/np.sqrt(2)
         vy2 = -(vy1 + vx1)/np.sqrt(2)
 
-        eps1 = eps[i]
-        eps2 = eps[j]
-        arrow_l = 0.1
+        eps1 = eps[i]/2
+        eps2 = eps[j]/2
+        arrow_l = arrow_len
         line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
                   x2 - eps2 * vx1 + arrow_l * vx2]
         line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,

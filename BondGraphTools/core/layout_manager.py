@@ -256,7 +256,7 @@ def _interpolate(nodes, edges):
     return
 
 
-def _layout_reduced_graph(reduced_nodes, edges):
+def force_directed(nodes, edges):
 
     W_adj = np.zeros((len(nodes), len(nodes)))
     for i, j in edges:
@@ -265,7 +265,7 @@ def _layout_reduced_graph(reduced_nodes, edges):
 
     graph_dist = floyd_warshall(W_adj, directed=False)
     L = laplacian(W_adj)
-    n = len(reduced_nodes)
+    n = len(nodes)
     r0 = n**2
     Xnew = [
         (r0/L[i, i]*np.cos(2*np.pi*i/(n-1)),
@@ -327,8 +327,10 @@ def _layout_reduced_graph(reduced_nodes, edges):
 
     xm, ym = reduce((lambda P, Q: (P[0]+Q[0], P[1]+Q[1])), Xnew)
     Xnew = [(x - xm/n, y - ym/n) for x,y in Xnew]
-    Xnew =[(np.ceil(x) if x > 0 else np.floor(x),
-            np.ceil(y) if y > 0 else np.floor(y))
+    euclid_dist = _distance_matrix(Xnew)
+    scale = min(euclid_dist[euclid_dist!= 0])/2
+    Xnew =[(np.ceil(x/scale) if x > 0 else np.floor(x),
+            np.ceil(y/scale) if y > 0 else np.floor(y))
             for x, y in Xnew]
 
     return Xnew
