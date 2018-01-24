@@ -287,7 +287,7 @@ def force_directed(nodes, edges):
                            )
     sigma_old = sigma_new*10
     eps = 0.00001
-    delta = 0.01
+    delta = 0.1
     its = 0
     max_its = 2500
     scale = 0
@@ -307,11 +307,11 @@ def force_directed(nodes, edges):
                     rij = max(euclid_dist[i, j], eps)
 
                     if i == k:
-                        dx += (coeff[i, j] - graph_dist[i,j]*rij**(-2)) * (xi - xj)/rij
-                        dy += (coeff[i, j] - graph_dist[i,j]*rij**(-2)) * (yi - yj)/rij
+                        dx += (coeff[i, j] - graph_dist[i, j]*rij**(-2)) * (xi - xj)/rij
+                        dy += (coeff[i, j] - graph_dist[i, j]*rij**(-2)) * (yi - yj)/rij
                     elif j == k:
-                        dx -= (coeff[i, j] - graph_dist[i,j]*rij**(-2)) * (xi - xj)/rij
-                        dy -= (coeff[i, j] - graph_dist[i,j]*rij**(-2)) * (yi - yj)/rij
+                        dx -= (coeff[i, j] - graph_dist[i, j]*rij**(-2)) * (xi - xj)/rij
+                        dy -= (coeff[i, j] - graph_dist[i, j]*rij**(-2)) * (yi - yj)/rij
             x, y = Xold[k]
             x, y = x - delta*dx, y - delta*dy
 
@@ -373,13 +373,13 @@ def _recurse_contract(vertex_degree, edges):
         return _recurse_contract(vertex_degree, new_edges)
 
 
-def _layout_algorithm(nodes, edges, constriants=None):
+def metro_map(nodes, edges):
 
     N = len(nodes)
     K = len(edges)
     E = np.zeros((K, N))
-    A = np.np.zeros((N, N))
-    x, y = map(lambda q: np.array(q, ndmin=2).transpose(), zip(*nodes))
+    A = np.zeros((N, N))
+
     # x y are always column vectors
 
     for k, (i, j) in enumerate(edges):
@@ -391,7 +391,39 @@ def _layout_algorithm(nodes, edges, constriants=None):
     degree = A.sum(1)
     D = floyd_warshall(A, directed=False)
 
-    # compute Xx Xy; euclidian distances.
+    x, y = map(lambda q: np.array(q, ndmin=2).transpose(), zip(*nodes))
+
+
+    PHI0, dx, dy = _objective_function(x, y, A, D, degree)
+    max_i = 10000
+    i = 0
+    while i < max_i:
+        x = int(x + dx)
+        y = int(y + dy)
+
+
+def _initial_conditions(nodes, edges):
+
+    A = np.zeros((len(nodes), len(nodes)))
+    # x y are always column vectors
+    x, y = map(lambda q: np.array(q, ndmin=2).transpose(), zip(*nodes))
+
+    for i, j in edges:
+        A[i, j] = 1
+        A[j, i] = 1
+
+    D = floyd_warshall(A, directed=False)
+
+    dmax = D.max(0)
+    #index = np.array(range(len(nodes)))
+    dsup = dmax.min()
+
+    Dmax = dmax.max()
+    for n in range(dsup, Dmax):
+        indicies = (dmax == n).nonzero()
+        print(indicies)
+
+
 
 
 def _objective_function(x, y, adj, dist, deg):
@@ -414,6 +446,8 @@ def _objective_function(x, y, adj, dist, deg):
     DB = adj*(1 - adj*(Xx**2 + Yy**2 + eps_m)**(-0.5))
     dx -= 2 * (DB*Xx).sum(1, keepdims=True)
     dy -= 2 * (DB*Yy).sum(1, keepdims=True)
+
+    return PHI, dx, dy
 
 
 def arrange(bond_graph,
