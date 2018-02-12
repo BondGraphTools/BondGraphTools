@@ -46,7 +46,7 @@ def draw(graph):
         logger.warning("Cannot draw empty graph")
         return None
 
-    fig = pyplot.figure()
+    fig = pyplot.figure(figsize=(10,10))
 
     width = abs(max_x - min_x)
     height = abs(max_y - min_y)
@@ -65,44 +65,37 @@ def draw(graph):
 
     for node_id, node in graph.nodes.items():
         x, y = node.pos
-        # text = pyplot.text(x, y, str(node),
-        #                    horizontalalignment='center',
-        #                    verticalalignment='center',
-        #                    bbox=dict(facecolor='none', edgecolor='black')
-        # )
         text = pyplot.text(x, y, str(node),
                            horizontalalignment='center',
-                           verticalalignment='center'
-                           )
+                           verticalalignment='center',
+                           transform=ax.transData,
+                           bbox=dict(boxstyle='circle',
+                                     facecolor='w',
+                                     edgecolor='w'))
+
         bbox = text.get_window_extent(renderer).transformed(
             ax.transData.inverted())
-        ep = np.sqrt(bbox.width**2 + bbox.height**2)
+        ep = bbox.width/2
         eps.append(ep)
 
     for i, j, p_i, p_j in graph.bonds:
         x1, y1 = graph.nodes[i].pos
         x2, y2 = graph.nodes[j].pos
 
-        vx1 = x2 - x1
-        vy1 = y2 - y1
-        vx1 = vx1 / np.sqrt(vx1**2 + vy1**2)
-        vy1 = vy1 / np.sqrt(vx1**2 + vy1**2)
-        vx2 = (vy1 - vx1)/np.sqrt(2)
-        vy2 = -(vy1 + vx1)/np.sqrt(2)
+        dx = x2 - x1
+        dy = y2 - y1
+        udx = dx/(dx**2 + dy**2)**0.5
+        udy = dy/(dx**2 + dy**2)**0.5
 
-        eps1 = eps[i]/2
-        eps2 = eps[j]/2
-        arrow_l = arrow_len
-        line_x = [x1 + eps1 * vx1, x2 - eps2 * vx1,
-                  x2 - eps2 * vx1 + arrow_l * vx2]
-        line_y = [y1 + eps1 * vy1, y2 - eps2 * vy1,
-                  y2 - eps2 * vy1 + arrow_l * vy2]
+        eps1 = eps[i]
 
-        # eps1 = eps[i]
-        # eps2 = eps[j]
-        # line_x = [x1, x2]
-        # line_y = [y1, y2]
-        pyplot.plot(line_x, line_y, color='k')
+        eps2 = eps[j]
+        lenx = dx - 2*(eps1 + eps2)*udx
+        leny = dy - 2*(eps1 + eps2)*udy
+
+        pyplot.arrow(x1 + eps1*udx, y1 + eps1*udy, lenx, leny,
+                     length_includes_head=True,
+                     shape='left', ec='k', fc='w', head_width=0.25)
 
     fig.tight_layout(pad=0.2)
     fig.suptitle(graph.name)

@@ -31,7 +31,7 @@
         "1": {"desc": "Products"}
       },
       "local_params":{
-        "kappa":{"desc":"Reaction Rate"}
+        "k":{"desc":"Reaction Rate"}
       },
       "global_params":{
         "R":{"desc":"Universal Gas Constant"},
@@ -39,7 +39,7 @@
       },
       "constitutive_relations":[
         "f_0 + f_1",
-        "f_0 - kappa *(exp(e_0/R/T) - exp(e_1/R/T))"
+        "f_0 - k *(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
     }
   }

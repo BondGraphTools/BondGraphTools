@@ -198,6 +198,7 @@ class Reaction_Network(object):
 
         self._flowstats[species] = flux
 
+
 def _split_reactants(reactants):
     reactants = reactants.replace(" ", "").split("+")
 

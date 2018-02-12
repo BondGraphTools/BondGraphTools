@@ -2,6 +2,7 @@ import math
 import random
 import logging
 from functools import reduce
+from itertools import permutations
 import numpy as np
 from scipy.sparse.csgraph import floyd_warshall, laplacian
 from collections import defaultdict
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 DIRS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
 
-def simulated_annealing(nodes, edges, N=10000):
+def simulated_annealing(nodes, edges, N=1000):
     """
     e is a list of edge tuples [(i,j), (i,m), ... ]
 
@@ -20,17 +21,16 @@ def simulated_annealing(nodes, edges, N=10000):
     """
     dirs = [(a,b) for a in range(-1,2) for b in range(-1,2)]
 
+    a, d, (x, y) = _initial_conditions(nodes, edges)
+
     n = 0
     obj = 1000
     targets = set()
     w1 = 0.5
     w2 = 0.01
 
-    x, y = zip(*nodes)
     lenx = len(x)
     step = math.ceil(math.sqrt(lenx))
-    x = [int(step*math.cos(2*math.pi*k/lenx)) for k in range(lenx)]
-    y = [int(step*math.sin(2*math.pi*k/lenx)) for k in range(lenx)]
     T = 1
 
     xt = [p for p in x]
@@ -92,9 +92,9 @@ def simulated_annealing(nodes, edges, N=10000):
     xm = int(sum(x)/lenx)
     ym = int(sum(y)/lenx)
     if abs(min(x) - max(x)) < abs(min(y) - max(y)):
-        out = [(ym - yp, xp - xm) for xp, yp in zip(x, y)]
+        out = [(ym - yp[0], xp[0] - xm) for xp, yp in zip(x, y)]
     else:
-        out = [(xp - xm, yp - ym) for xp, yp in zip(x,y)]
+        out = [(xp[0] - xm, yp[0] - ym) for xp, yp in zip(x, y)]
 
     return out
 
@@ -124,14 +124,11 @@ def _make_planar_graph(bond_graph):
 def branch_and_bound(nodes, edges):
 
     n = len(nodes)
-    A = np.zeros((n, n))
 
-    for (i, j) in edges:
-        A[i, j] = 1
+    a, d, (x,y) = _initial_conditions(nodes, edges)
 
-    d = np.triu(
-        floyd_warshall(A, directed=False, unweighted=True, overwrite=False)
-    )
+    a = np.triu(a)
+    d = np.triu(d)
 
     M = np.triu(_distance_matrix(nodes))
     W = np.zeros((n, n))
@@ -139,8 +136,12 @@ def branch_and_bound(nodes, edges):
 
     phi_0 = np.sum(W * (M - d)**2) + np.sum(d[M == 0])
 
-    X0 = tuple((x, y) for x, y in nodes)
+    X0 = tuple((int(xp) if xp < 0 else int(np.ceil(xp)),
+                int(yp) if yp < 0 else int(np.ceil(xp)))
+                for xp, yp in zip(x, y))
+
     tree = [(X0, phi_0)]
+
     new_list = []
     i = 0
     max_i = 10000
@@ -186,7 +187,6 @@ def branch_and_bound(nodes, edges):
 
     return pos
 
-
 def _distance_matrix(nodes):
 
     n = len(nodes)
@@ -198,79 +198,27 @@ def _distance_matrix(nodes):
             M[i, j] = ((x1 - x2)**2 + (y1 - y2)**2)**0.5
     return M
 
-
-def contract_graph(nodes, edges):
-
-    deg = defaultdict(int)
-    new_edges = []
-    A = np.zeros((len(nodes), len(nodes)))
-    for i, j in edges:
-        deg[i] += 1
-        deg[j] += 1
-        A[i, j] = 1
-        A[j, i] = 1
-        new_edges.append(((i, j), 0))
-
-    new_edges = _recurse_contract(deg, new_edges)
-    inverse_map = {}
-    forward_map = {}
-    reduced_edges = []
-    reduced_nodes = []
-
-    for (i, j), weight in new_edges:
-        for k in (i, j):
-            if k not in forward_map:
-                n = len(forward_map)
-                forward_map[k] = n
-                inverse_map[n] = k
-                reduced_nodes.append(nodes[k])
-
-        n_i = forward_map[i]
-        n_j = forward_map[j]
-        reduced_edges.append(((n_i, n_j), 2*weight + 1))
-
-    n = len(forward_map)
-
-    W_Adj = np.zeros((n, n))
-
-    for (i, j), w in reduced_edges:
-        if i < j:
-            W_Adj[i, j] = w
-        else:
-            W_Adj[j, i] = w
-
-    reduced_nodes = _layout_reduced_graph(reduced_nodes, W_Adj)
-    return reduced_nodes
-    # pre_interpolated_nodes = [None for _ in nodes]
-    # for n_i, X in enumerate(reduced_nodes):
-    #     i = inverse_map[n_i]
-    #     pre_interpolated_nodes[i] = X
-    #
-    # return _interpolate(pre_interpolated_nodes
-    #
-    #                     )
-
-
-def _interpolate(nodes, edges):
-
-    return
-
-
 def force_directed(nodes, edges):
 
-    W_adj = np.zeros((len(nodes), len(nodes)))
-    for i, j in edges:
-        W_adj[i, j] = 1
-        W_adj[j, i] = 1
-
-    graph_dist = floyd_warshall(W_adj, directed=False)
-    L = laplacian(W_adj)
     n = len(nodes)
-    r0 = n**2
-    Xnew = [
-        (r0/L[i, i]*np.cos(2*np.pi*i/(n-1)),
-         r0/L[i, i]*np.sin(2*np.pi*i/(n-1))) for i in range(n)
-    ]
+
+    # W_adj = np.zeros((len(nodes), len(nodes)))
+    # for i, j in edges:
+    #     W_adj[i, j] = 1
+    #     W_adj[j, i] = 1
+    #
+    # graph_dist = floyd_warshall(W_adj, directed=False)
+    # L = laplacian(W_adj)
+    #
+    # r0 = n**2
+    # Xnew = [
+    #     (r0/L[i, i]*np.cos(2*np.pi*i/(n-1)),
+    #      r0/L[i, i]*np.sin(2*np.pi*i/(n-1))) for i in range(n)
+    # ]
+    W_adj, graph_dist, (xvect, yvect) = _initial_conditions(nodes, edges)
+
+    Xnew = [(xp[0],yp[0]) for xp,yp in zip(xvect, yvect)]
+
     euclid_dist = _distance_matrix(Xnew)
     weights = np.zeros(W_adj.shape)
     weights[graph_dist!=0] = graph_dist[graph_dist!=0]**(-2)
@@ -329,77 +277,12 @@ def force_directed(nodes, edges):
     Xnew = [(x - xm/n, y - ym/n) for x,y in Xnew]
     euclid_dist = _distance_matrix(Xnew)
     scale = min(euclid_dist[euclid_dist!= 0])/2
-    Xnew =[(np.ceil(x/scale) if x > 0 else np.floor(x),
-            np.ceil(y/scale) if y > 0 else np.floor(y))
-            for x, y in Xnew]
+
+    Xnew =[(int(np.ceil(x/scale)) if x > 0 else int(np.floor(x)),
+           int(np.ceil(y/scale)) if y > 0 else int(np.floor(y)))
+           for x, y in Xnew]
 
     return Xnew
-
-
-def _recurse_contract(vertex_degree, edges):
-
-    new_edges = []
-    joins = 0
-    while edges:
-        (i, j), w = edges.pop()
-        if vertex_degree[i] == 1 or vertex_degree[j] == 1:
-            pass
-        elif vertex_degree[i] > 2 and vertex_degree[j] > 2:
-            new_edges.append(((i, j), w))
-            # store and skip
-        else:
-            if vertex_degree[i] == 2:
-                pivot = i
-                base = j
-            else:
-                pivot = j
-                base = i
-
-            idx = 0
-            while idx < len(edges):
-                if pivot not in edges[idx][0]:
-                    idx += 1
-                else:
-                    (k, l), w = edges.pop(idx)
-                    if k == pivot:
-                        new_edges.append(((base, l), w + 1))
-                    else:
-                        new_edges.append(((k, base), w + 1))
-                    break
-            joins += 1
-    if joins == 0:
-        return new_edges
-    else:
-        return _recurse_contract(vertex_degree, new_edges)
-
-
-def metro_map(nodes, edges):
-
-    N = len(nodes)
-    K = len(edges)
-    E = np.zeros((K, N))
-    A = np.zeros((N, N))
-
-    # x y are always column vectors
-
-    for k, (i, j) in enumerate(edges):
-        A[i, j] = 1
-        A[j, i] = 1
-        E[k, j] = -1
-        E[k, i] = 1
-
-    degree = A.sum(1)
-    D = floyd_warshall(A, directed=False)
-
-    x, y = map(lambda q: np.array(q, ndmin=2).transpose(), zip(*nodes))
-
-
-    PHI0, dx, dy = _objective_function(x, y, A, D, degree)
-    max_i = 10000
-    i = 0
-    while i < max_i:
-        x = int(x + dx)
-        y = int(y + dy)
 
 
 def _initial_conditions(nodes, edges):
@@ -413,41 +296,22 @@ def _initial_conditions(nodes, edges):
         A[j, i] = 1
 
     D = floyd_warshall(A, directed=False)
-
     dmax = D.max(0)
-    #index = np.array(range(len(nodes)))
-    dsup = dmax.min()
 
-    Dmax = dmax.max()
-    for n in range(dsup, Dmax):
+    dsup = int(dmax.min())
+    Dmax = int(dmax.max())
+
+    for n in range(dsup, Dmax + 1):
         indicies = (dmax == n).nonzero()
-        print(indicies)
 
+        for k, idx in enumerate(indicies[0]):
 
+            theta = 2*np.pi*k/len(indicies[0])
 
+            x[idx] = np.cos(theta)*n
+            y[idx] = np.sin(theta)*n
 
-def _objective_function(x, y, adj, dist, deg):
-
-    eps_m = 0.01
-    n = len(x)
-    xbar = x.sum()
-    ybar = y.sum()
-    Xx = x - x.transpose()
-    Yy = y - y.transpose()
-
-    M = (Xx**2 + Yy**2 + eps_m)**(-1)
-    PHI = (M - np.eye(n)*eps_m).sum()/2
-    Vx = Xx + n*np.diag(x) - np.eye(n)*xbar
-    Vy = Yy + n*np.diag(y) - np.eye(n)*ybar
-    dx = Vx.dot((M**(-2)).sum(1, keepdims=True))/2
-    dy = Vy.dot((M**(-2)).sum(1, keepdims=True))/2
-
-    PHI += ((adj*Xx)**2 + (adj*Yy)**2 - adj).sum()/2
-    DB = adj*(1 - adj*(Xx**2 + Yy**2 + eps_m)**(-0.5))
-    dx -= 2 * (DB*Xx).sum(1, keepdims=True)
-    dy -= 2 * (DB*Yy).sum(1, keepdims=True)
-
-    return PHI, dx, dy
+    return A, D, (x, y)
 
 
 def arrange(bond_graph,
@@ -462,5 +326,108 @@ def arrange(bond_graph,
 
 
 
+def adj_matrix(edge_list):
+    N = max(max(edge_list))
+
+    A = np.zeros((N + 1, N + 1))
+    for (i, j) in edge_list:
+        A[i, j] = 1
+
+    return A + A.T
 
 
+def metro_map(nodes, edge_list):
+    A = adj_matrix(edge_list)
+    n, _ = A.shape
+    D = floyd_warshall(A, directed=False)
+    ecen = D.max(1)
+    eta_0 = int(ecen.min())
+    level_struct = {int(eta): np.where(ecen == eta)[0].tolist() for eta in
+                    np.unique(ecen)}
+    z = np.zeros((n, 1), dtype=np.complex_)
+    z, R, N = initialise(z, eta_0, level_struct[eta_0], D)
+
+    for k, eta in enumerate(range(eta_0, max(level_struct.keys()))):
+        R += 1
+        z, N = optimise_layer(z, N, R, eta, level_struct, A,D)
+
+    Z = z - z.T
+    zmin = np.abs(Z[Z!=0]).min()
+
+    return [(zp.real/zmin, zp.imag/zmin) for zp in z.flatten()]
+
+def permute(z, N, r, indicies):
+    i_len = len(indicies)
+    for idx in permutations(range(N), i_len):
+        zp = z.copy()
+        zp[indicies, 0] = [r * np.exp(w*2*np.pi*np.complex(0,1)/N) for w in idx]
+        yield zp
+
+
+def initialise(z, eta_0, level_set, d):
+    if len(level_set) == 1:
+        return z, 0, 0
+    elif len(level_set) < 4:
+        R_0 = 0.5
+    else:
+        R_0 = 1
+
+    N_0 = int(2 * np.ceil(len(level_set) / 2))
+    f = lambda x: init_obj(x, level_set, d, eta_0)
+
+    for zp in permute(z, N_0, R_0, level_set):
+        phi = f(zp)
+        try:
+            if phi_min > phi:
+                phi_min = phi
+                z_min = zp
+        except NameError:
+            z_min = zp
+            phi_min = phi
+
+    return z_min, R_0, N_0
+
+
+def optimise_layer(z, N_eta, R, eta, level_struct, adj, dist):
+
+    N = int(max(N_eta, 2*np.ceil(len(level_struct[eta+1])/2)))
+
+    #f = lambda x: objective(x, eta, level_struct, adj)
+    f = lambda x: objective_f(x, eta, level_struct, dist)
+    z_min = z
+    for zp in permute(z, N, R, level_struct[eta + 1]):
+        phi = f(zp)
+        try:
+            if phi_min > phi:
+                z_min = zp
+                phi_min = phi
+        except NameError:
+            z_min = zp
+            phi_min = phi
+
+
+    return z_min, N
+
+
+def init_obj(z, level_set, d, eta_0):
+    phi = sum(
+        [(np.abs(z[i] - z[j]) / d[i, j] - 1) ** 2 for i in level_set for j in
+         level_set if i != j])
+    return phi
+
+
+def objective(z, eta, level_struct, A):
+    target_set = [i for i in level_struct[eta] + level_struct[eta + 1]]
+    phi = sum(
+        [(np.abs(z[i] - z[j]) - 1) ** 2 for i in level_struct[eta + 1] for j in
+         target_set if A[i, j] > 0])
+    return phi
+
+
+def objective_f(z, eta, level_struct, d):
+    target_set = [i for i in level_struct[eta] + level_struct[eta + 1]]
+
+    phi = sum(
+        [(np.abs(z[i] - z[j]) / d[i, j] - 1) ** 2 for i in level_struct[eta + 1]
+         for j in target_set if i != j])
+    return phi
