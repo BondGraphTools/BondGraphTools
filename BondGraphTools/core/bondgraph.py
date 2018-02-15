@@ -15,7 +15,7 @@ class BondGraph(object):
     def __init__(self, name=None):
 
         self.nodes = {}
-        self.ports = {}
+        self.ports = [] # rename me
         self.name = name if name else "Untitled Bond Graph"
         self.local_params = {}
         self.global_params = {}
@@ -107,6 +107,9 @@ class BondGraph(object):
 
         self.nodes[node_id] = node
 
+        if isinstance(node, IOPort):
+            self.ports.append(node_id)
+
         return node_id
 
     def find_bonds(self, node):
@@ -133,8 +136,10 @@ class BondGraph(object):
 
         if not self.find_bonds(node_id):
             del self.nodes[node_id]
+            self.ports.remove(node_id)
+
         else:
-            logger.warning("Could not delete attached bond")
+            logger.warning("Could not delete; attached bond")
             raise DeletionError
 
     def remove_bond(self, bond):
@@ -240,8 +245,10 @@ def _find_subclass(name, base_class):
 class AtomicNode(NodeBase):
     def __init__(self, *args, constitutive_relations=None, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.constitutive_relations = constitutive_relations
+        if constitutive_relations:
+            self.constitutive_relations = constitutive_relations
+        else:
+            self.constitutive_relations = []
 
 
 class CompositeNode(NodeBase):

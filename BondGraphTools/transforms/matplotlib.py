@@ -46,7 +46,9 @@ def draw(graph):
         logger.warning("Cannot draw empty graph")
         return None
 
-    fig = pyplot.figure(figsize=(10,10))
+
+
+    fig = pyplot.figure(figsize=(10, 10))
 
     width = abs(max_x - min_x)
     height = abs(max_y - min_y)
@@ -54,7 +56,9 @@ def draw(graph):
 
     tweak_x = 0.25*width
     tweak_y = 0.25*height
-    arrow_len = math.ceil(max(width, height)/10)/5
+    head_width = 0.25
+    arrow_len = math.ceil(max(width, height)/10)/8
+    head_width = arrow_len
     pyplot.axis([min_x - tweak_x,
                  max_x + tweak_x,
                  min_y - tweak_y,
@@ -75,7 +79,7 @@ def draw(graph):
 
         bbox = text.get_window_extent(renderer).transformed(
             ax.transData.inverted())
-        ep = bbox.width/2
+        ep = bbox.width
         eps.append(ep)
 
     for i, j, p_i, p_j in graph.bonds:
@@ -90,12 +94,12 @@ def draw(graph):
         eps1 = eps[i]
 
         eps2 = eps[j]
-        lenx = dx - 2*(eps1 + eps2)*udx
-        leny = dy - 2*(eps1 + eps2)*udy
+        lenx = dx - (eps1 + eps2)*udx
+        leny = dy - (eps1 + eps2)*udy
 
         pyplot.arrow(x1 + eps1*udx, y1 + eps1*udy, lenx, leny,
                      length_includes_head=True,
-                     shape='left', ec='k', fc='w', head_width=0.25)
+                     shape='left', ec='k', fc='w', head_width=head_width)
 
     fig.tight_layout(pad=0.2)
     fig.suptitle(graph.name)

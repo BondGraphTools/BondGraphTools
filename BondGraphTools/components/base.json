@@ -65,19 +65,11 @@
             0,
             "inf"
           ]
-        },
-        "q0": {
-          "desc": "Initial Charge",
-          "default": 0,
-          "bounds": [
-            0,
-            "inf"
-          ]
         }
       },
       "global_params": null,
       "constitutive_relations": [
-        "q_0 - q0 - c*e_0"
+        "q_0 - c*e_0"
       ]
     },
     "I": {
@@ -94,13 +86,10 @@
             0,
             "inf"
           ]
-        },
-        "p0": {
-          "desc": "Initial flux"
         }
       },
       "constitutive_relations": [
-        "p_0 - p0 - L*f_0"
+        "p_0 -  - L*f_0"
       ]
     },
     "Se": {

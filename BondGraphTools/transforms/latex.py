@@ -117,7 +117,7 @@ def _smith_normal_form(matrix):
 
     while row < m:
         col = row
-        while col + ins < n and M[row , col+ ins] == 0:
+        while col + ins < n and M[row, col + ins] == 0:
             col += 1
         if col > row + ins:
             Mp = Mp.col_join(sp.zeros(col - row, n))
@@ -127,7 +127,7 @@ def _smith_normal_form(matrix):
 
     m, n = Mp.shape
 
-    if m<n:
+    if m < n:
         Mp = Mp.col_join(sp.zeros(n-m, n))
     return Mp
 
