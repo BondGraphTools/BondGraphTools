@@ -1,0 +1,20 @@
+{
+  "desc": "Electical Components",
+  "id":"elec",
+  "components": {
+    "Di": {
+      "desc":"Diode",
+      "ports":{
+        "0":null
+      },
+      "local_params":{
+        "Is":{"desc":"Forward Current"},
+        "n": {"desc":"Material Number"},
+        "Vb":{"desc":"Breakdown Voltage"}
+      },
+     "constitutive_relations":[
+       "f_0 - Is*(exp(e_0/n/Vb) - 1)"
+     ]
+    }
+  }
+}

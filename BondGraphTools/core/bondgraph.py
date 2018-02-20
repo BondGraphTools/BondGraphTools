@@ -219,9 +219,15 @@ class NodeBase(object):
         self._free_ports.append(port)
 
     @staticmethod
-    def factory(cls, *args, **kwargs):
+    def factory(cls=None, *args, **kwargs):
 
-        C = _find_subclass(cls, NodeBase)
+        if not kwargs["ports"]:
+            C = ManyPort
+        if not cls:
+            C = AtomicNode
+        else:
+            C = _find_subclass(cls, NodeBase)
+
         if not C:
             raise NotImplementedError(
                 "Node class not found", cls
@@ -239,7 +245,7 @@ def _find_subclass(name, base_class):
             sc = _find_subclass(name, c)
             if sc:
                 return sc
-    return None
+    return AtomicNode
 
 
 class AtomicNode(NodeBase):
@@ -289,11 +295,7 @@ class ManyPort(AtomicNode):
 
 
 class OnePort(AtomicNode):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for p in self.ports:
-            assert isinstance(p, int)
+    pass
 
 
 class TwoPort(AtomicNode):
@@ -301,4 +303,8 @@ class TwoPort(AtomicNode):
 
 
 class IOPort(AtomicNode):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, sockets=None, **kwargs)
+
+
+

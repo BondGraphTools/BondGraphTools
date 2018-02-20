@@ -22,7 +22,7 @@ def bondgraph_to_sympy(graph):
     return _matricize(xdot, x, relations)
 
 
-def reduce(dx, x, A, B, J, NL):
+def reduce(dx, x, A, B, J, NL, targets=None):
     """
     Projects the system onto the dynamics of the linear subspace spanned by
     the solutions to Jx = 0
@@ -36,20 +36,43 @@ def reduce(dx, x, A, B, J, NL):
         B:
         J:
         NL:
+        targets:
 
     Returns:
 
     """
+    n = J.cols
+    permute = sp.eye(n)
+
+    if not targets:
+        targets = []
+
+    # Permute the co-ordinates so that the matrix perm mapping
+    # y = perm*x
+    # now has the target co-ordinates in the last positions
+    # and derivatives at the top.
+
+    top_swaps = 0
+    bot_swaps = n
+
+    for i, (xi, dxi) in enumerate(zip(x, dx)):
+        if not A[:, i].is_zero:
+            permute.row_swap(top_swaps, i)
+            top_swaps += 1
+        # we then find the projection onto the nullspace in these new
+        # co-ordinates and solve for the orthognal projector.
+
+    P = _smith_normal_form(J * permute.T)
+    R = (sp.eye(n) - P)
 
     nonlinearity = NL
-    P = _smith_normal_form(J) # projection onto the nullspace of J
-    n, _ = P.shape
-    R = (sp.eye(n) - P)
-    system = A * R * dx + B * R * x
+    dy = permute*dx
+    y = permute*x
+    system = A * permute * R * dy + B * permute * R * y
 
-    Rx = R*x
-    for i in range(x.rows):
-        nonlinearity.subs(x[i], Rx[i])
+    Ry = R*y
+    for i in range(y.rows):
+        nonlinearity.subs(y[i], Ry[i])
 
     system.simplify()
     nonlinearity.simplify()
@@ -89,11 +112,11 @@ def _matricize(xdot, x, relations):
             # print(NL)
             NL = NL.col_join(sp.Matrix(1,1,[rel]))
 
-    J, _ = J.rref()
-    D, _ = D.rref()
+    # J, _ = J.rref()
+    # D, _ = D.rref()
     A = D[:, 0:int(N/2)]
     B = D[:, int(N/2):]
-    return ydot[int(N/2):,:], ydot[0:int(N/2),:], A, B, J, NL
+    return ydot[int(N/2):, :], ydot[0:int(N/2), :], A, B, J, NL
 
 
 def _smith_normal_form(matrix):
@@ -119,7 +142,7 @@ def _smith_normal_form(matrix):
         col = row
         while col + ins < n and M[row, col + ins] == 0:
             col += 1
-        if col > row + ins:
+        if col >= row + ins:
             Mp = Mp.col_join(sp.zeros(col - row, n))
             ins += col - row
         Mp = Mp.col_join(M.row(row))

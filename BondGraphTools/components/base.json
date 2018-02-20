@@ -7,8 +7,6 @@
       "cls": "ManyPort",
       "string": "0",
       "ports": null,
-      "local_params": null,
-      "global_params": null,
       "constitutive_relations": [
         "sum(f_i)",
         "e_i - e_0"
@@ -19,8 +17,6 @@
       "cls": "ManyPort",
       "string": "1",
       "ports": null,
-      "local_params": null,
-      "global_params": null,
       "constitutive_relations": [
         "sum(e_i)",
         "f_i - f_0"
@@ -44,7 +40,6 @@
           ]
         }
       },
-      "global_params": null,
       "constitutive_relations": [
         "e_0 - f_0*r"
       ]
@@ -67,7 +62,6 @@
           ]
         }
       },
-      "global_params": null,
       "constitutive_relations": [
         "q_0 - c*e_0"
       ]
@@ -121,9 +115,16 @@
     "P": {
       "desc": "Port",
       "cls": "IOPort",
+      "sockets":{
+        "0": ["u_e, u_f"]
+      },
       "ports": {
         "0": null
-      }
+      },
+      "constitutive_relations": [
+        "f_0 - u_f",
+        "e_0 - u_e"
+      ]
     },
     "TF": {
       "desc": "Linear Transformer",
