@@ -24,7 +24,6 @@
     },
     "R": {
       "desc": "Generalised Linear Resistor",
-      "cls": "OnePort",
       "ports": {
         "0": null
       },
@@ -34,7 +33,7 @@
           "distribution": "Normal",
           "default": 1000,
           "std_dev": 10,
-          "bounds": [
+          "domain": [
             0,
             "inf"
           ]
@@ -46,7 +45,6 @@
     },
     "C": {
       "desc": "Generalised Linear Capacitor",
-      "cls": "OnePort",
       "ports": {
         "0": null
       },
@@ -68,7 +66,6 @@
     },
     "I": {
       "desc": "Generalised Linear Inductor",
-      "cls": "OnePort",
       "ports": {
         "0": null
       },
@@ -88,11 +85,10 @@
     },
     "Se": {
       "desc": "Effort Source",
-      "cls": "OnePort",
       "ports": {
         "0": null
       },
-      "local_params": {
+      "control_variables": {
         "e": null
       },
       "constitutive_relations": [
@@ -101,11 +97,10 @@
     },
     "Sf": {
       "desc": "Flow Source",
-      "cls": "OnePort",
       "ports": {
         "0": null
       },
-      "local_params": {
+      "control_variables": {
         "f": null
       },
       "constitutive_relations": [
@@ -128,7 +123,6 @@
     },
     "TF": {
       "desc": "Linear Transformer",
-      "cls": "TwoPort",
       "ports": {
         "0": {
           "Desc": "Primary"
@@ -154,7 +148,6 @@
     },
     "GY": {
       "desc": "Linear Gyrator",
-      "cls": "TwoPort",
       "ports": {
         "0": {
           "Desc": "Primary"

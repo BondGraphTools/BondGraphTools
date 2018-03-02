@@ -1,5 +1,6 @@
 
 import logging
+import sympy as sp
 
 from . import component_manager as cm
 
@@ -15,11 +16,21 @@ class BondGraph(object):
     def __init__(self, name=None):
 
         self.nodes = {}
-        self.ports = [] # rename me
+        self.ports = {} # rename me
         self.name = name if name else "Untitled Bond Graph"
-        self.local_params = {}
+        # self.local_params = {}
         self.global_params = {}
         self.bonds = dict()
+
+    @property
+    def local_params(self):
+        out = dict()
+        for node in self.nodes.values():
+            if node.local_params:
+                for param, vals in node.local_params.items():
+                    p_name = "{}_{{{}}}".format(param, node.name)
+                    out[p_name] = vals
+        return out
 
     def add_component(self, component,
                       pos=None, name=None, library=None, node_id=None, **kwargs):
@@ -108,7 +119,10 @@ class BondGraph(object):
         self.nodes[node_id] = node
 
         if isinstance(node, IOPort):
-            self.ports.append(node_id)
+            p = 0
+            while p < len(self.ports):
+                p += 1
+            self.ports[p] = node_id
 
         return node_id
 
@@ -160,6 +174,7 @@ class NodeBase(object):
                  pos=None,
                  local_params=None,
                  global_params=None,
+                 control_variables=None,
                  string=None,
                  **kwargs):
 
@@ -191,6 +206,7 @@ class NodeBase(object):
         self.string = string if string else "{node_type}: {name}".format(
             node_type=self.node_type, name=self.name
         )
+        self.control_variables = control_variables
 
         self._free_ports = list(self.ports) if self.ports else []
 
@@ -245,7 +261,8 @@ def _find_subclass(name, base_class):
             sc = _find_subclass(name, c)
             if sc:
                 return sc
-    return AtomicNode
+
+#    return AtomicNode
 
 
 class AtomicNode(NodeBase):
@@ -255,6 +272,11 @@ class AtomicNode(NodeBase):
             self.constitutive_relations = constitutive_relations
         else:
             self.constitutive_relations = []
+
+    def _generate_local_coordinates(self):
+        xstr = [s + str(port) for port in self.ports
+                for s in ["p_", "q_", "e_", "f_"]]
+        return sp.sympify(xstr)
 
 
 class CompositeNode(NodeBase):
@@ -293,18 +315,18 @@ class ManyPort(AtomicNode):
             n += 1
         return n
 
-
-class OnePort(AtomicNode):
-    pass
-
-
-class TwoPort(AtomicNode):
-    pass
+#
+# class OnePort(AtomicNode):
+#     pass
+#
+#
+# class TwoPort(AtomicNode):
+#     pass
 
 
 class IOPort(AtomicNode):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, sockets=None, **kwargs)
+    def __init__(self, *args, sockets=None, **kwargs):
+        super().__init__(*args,  **kwargs)
 
 
 
