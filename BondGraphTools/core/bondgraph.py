@@ -147,11 +147,18 @@ class BondGraph(object):
             node_id = self.find_component(node=node)
         elif isinstance(node, int):
             node_id = node
+        else:
+            raise NotImplementedError("Could not find node %s of type %s",
+                                      node,
+                                      node.__class__)
 
         if not self.find_bonds(node_id):
-            del self.nodes[node_id]
-            self.ports.remove(node_id)
 
+            del self.nodes[node_id]
+            search = self.ports.items()
+            for k, v in search:
+                if v == node_id:
+                    del self.ports[k]
         else:
             logger.warning("Could not delete; attached bond")
             raise DeletionError

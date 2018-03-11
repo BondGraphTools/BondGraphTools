@@ -11,9 +11,8 @@ edges_1 = ((0, 1), (1, 2), (2, 0))
 nodes_2 = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
 edges_2 = ((0, 1), (1, 2), (2, 0), (0, 3), (1, 4), (2, 5))
 
-
+@pytest.mark.skip()
 class TestGraph0():
-
     def test_objective_zero(self):
 
         adj, gr_dist, (x, y) = lm._initial_conditions(nodes_0, edges_0)

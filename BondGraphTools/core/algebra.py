@@ -2,16 +2,15 @@
 import functools
 import sympy as sp
 
+
 def bondgraph_to_equations(graph):
 
     coords, params, relations, labels = _build_coordinates(graph)
 
-    x, dx, u = coords
-    A, B, G, F = _matricize(coords, params, relations)
+    system = _matricize(coords, params, relations)
 
-    # Adx + Bx = Gu + F(x)
+    return system, coords, params, labels
 
-    return None
 
 
 def _build_coordinates(graph):
@@ -148,6 +147,7 @@ def _build_relations(node):
 
     return [r for r in rels if r != 0]
 
+
 def _matricize(coords, params, relations):
 
     x, dx, u = coords
@@ -165,9 +165,10 @@ def _matricize(coords, params, relations):
         rel_is_linear = True
         a_terms = {}
         b_terms = {}
+
         coeffs = extract_coefficients(rel, constants=params)
+
         for c in coeffs:
-            
             if c in dx:
                 a_terms[dx.index(c)] = coeffs[c]
             elif c in x:
@@ -209,6 +210,123 @@ def _matricize(coords, params, relations):
     F = sp.SparseMatrix(de_row, 1, F_dict)
 
     return A, B, J, G, F
+
+
+def _matricize_v2(coords, params, relations):
+    x, dx, u = coords
+    n = len(x)
+    m = len(u)
+    matrix = {}
+    de_row = 0
+
+    for rel in relations:
+
+        rel_is_linear = True
+        a_terms = {}
+        b_terms = {}
+        g_terms = {}
+        coeffs = extract_coefficients(rel, constants=params)
+        for c in coeffs:
+
+            if c in dx:
+                a_terms[dx.index(c)] = coeffs[c]
+            elif c in x:
+                b_terms[x.index(c)] = coeffs[c]
+            elif c in u:
+                g_terms[u.index(c)] = coeffs[c]
+            else:
+                rel_is_linear = False
+                try:
+                    matrix[(de_row, 2 * n + m)] += c * coeffs[c]
+                except KeyError:
+                    matrix[(de_row, 2 * n + m)] = c * coeffs[c]
+        if rel_is_linear and (b_terms and not a_terms):
+            for col, v in a_terms.items():
+                matrix[(de_row, col)] = v
+            de_row += 1
+        else:
+            for col, coeff in a_terms.items():
+                matrix[(de_row, col)] = coeff
+            for col, coeff in b_terms.items():
+                matrix[(de_row, col + n)] = coeff
+            for col, coeff in g_terms.items():
+                matrix[(de_row, 2*n + col)] = coeff
+
+            de_row += 1
+
+    M, _  = sp.SparseMatrix(de_row, 2*n+1 + m , matrix).rref()
+
+    return _decompose(M, (dx,x,u))
+
+
+def _decompose(matrix, coords):
+    dx,x, u =coords
+    n = len(x)
+    A = matrix[:, 0:n]
+    B = matrix[:, n: 2*n]
+    G = -matrix[:, 2*n]
+    F = -matrix[:, 2*n+1]
+
+    Q = sp.eye(n)
+
+    for row in range(A.rows):
+        col = row
+        while col < n and A[row, col] == 0:
+            col += 1
+
+        if row < col < n:
+            A.col_swap(row, col)
+            Q.col_swap(row, col)
+
+        if A[row, row] != 0:
+            Q[:, row] *= 1/A[row, row]
+
+    return A, B*Q, G, F
+
+
+def _generate_Q(matrix):
+
+    n = matrix.cols
+    Q = sp.SparseMatrix.eye(n)
+
+    for row in range(matrix.rows):
+
+        for col in range(row, n):
+            if matrix[row, col] != 0:
+                if col > row:
+                    Q.col_swap(row, col)
+
+                Q[:, row] /= matrix[row, col]
+                break
+
+
+    return Q
+
+
+def null_space_basis(matrix):
+    """
+    Generates the basis vectors of the specified matrix
+    Results are stored in a N x M matrix
+    of the form :math:`(b_0 | b_1 | \ldots | b_M)` where :math:`b_j` is the jth
+    basis vector of :math:`R^N`
+
+    Args:
+        matrix: The matrix to generate the basis from.
+
+    Returns:
+        Projector from nullspace :math:`P:R^M \rightarrow R^N`
+
+    """
+    R = smith_normal_form(matrix)
+    P = R - sp.SparseMatrix.eye(R.rows)
+    j = 0
+    while j < P.cols:
+        if P.col(j).is_zero:
+            P.col_del(j)
+        else:
+            j += 1
+    return P
+
 
 def _construct_edge_subs(graph, coord_labels, coords, keep_dirs=False):
     """
@@ -265,6 +383,7 @@ def _construct_edge_subs(graph, coord_labels, coords, keep_dirs=False):
 
     return subs, (E, F, P, Q)
 
+
 def smith_normal_form(matrix):
     """
     Assume n >= m
@@ -301,9 +420,6 @@ def smith_normal_form(matrix):
     return Mp
 
 
-
-
-
 def is_linear(equation, basis):
     """
     Check to see if an equation is linear.
@@ -333,8 +449,6 @@ def is_linear(equation, basis):
     return True
 
 
-
-
 def linearise(equation, X, X0=None):
     """
 
@@ -354,16 +468,16 @@ def linearise(equation, X, X0=None):
             zip(X, X0), partial) for partial in grad]
 
 
-def extract_coefficients(equaiton, constants=None):
+def extract_coefficients(equation, constants=None):
 
     coeff_dict = {}
 
-    for term in equaiton.expand().args:
+    for term in equation.expand().args:
 
         products = flatten(term.as_coeff_mul())
 
-        coeff = 1
-        base = 1
+        coeff = sp.S(1)
+        base = sp.S(1)
 
         for factor in products:
             if factor.is_number or factor in constants:
