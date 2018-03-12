@@ -1,0 +1,8 @@
+[run]
+branch = True
+include = BondGraphTools/*
+omit = test/*
+       *.json
+       */__init__.py
+       */__main__.py
+       */gui/*
