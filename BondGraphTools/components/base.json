@@ -92,7 +92,7 @@
         "e": null
       },
       "constitutive_relations": [
-        "e_0 - e"
+        "e_0 + e"
       ]
     },
     "Sf": {
@@ -104,7 +104,7 @@
         "f": null
       },
       "constitutive_relations": [
-        "f_0 - f"
+        "f_0 + f"
       ]
     },
     "P": {
