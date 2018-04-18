@@ -12,7 +12,6 @@ def bondgraph_to_equations(graph):
     return system, coords, params, labels
 
 
-
 def _build_coordinates(graph):
     # coordinates
     E = []
