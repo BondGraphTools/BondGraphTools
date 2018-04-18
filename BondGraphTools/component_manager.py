@@ -36,9 +36,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-__base_dir, _ = os.path.split(os.path.dirname(__file__))
-LIB_DIR = os.path.join(__base_dir, "components")
+LIB_DIR = os.path.join(__file__, "components")
 __libraries = dict()
 base_id = "base"
 
@@ -101,12 +99,12 @@ def get_components_list(library):
     return [(comp_id, components[comp_id]["desc"]) for comp_id in components]
 
 
-def get_component_data(library, component):
+def get_component(component, library=base_id):
     """
     Fetches the component data for the specified component
     Args:
-        library: The id of the library to which the component belongs
         component: The id of the specific component
+        library: The id of the library to which the component belongs
 
     Returns:
         dict - the component dictionary
@@ -126,9 +124,9 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
         find_all: `False` if the function should return only the first instance
          of the component, `True` if the function should return all such
          instances
-         ensure_unique: If true, this assumes that the component id must be
-          unique across libraries, and hence will raise an exception if this is
-          assumption is violated.
+        ensure_unique: If true, this assumes that the component id must be
+         unique across libraries, and hence will raise an exception if this is
+         assumption is violated.
 
     Returns: the library id, or a list of library_id in which this component
      can be found.
@@ -166,5 +164,5 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
 
 
 ## On Import actions
-for filename in pathlib.Path(LIB_DIR).glob("**/*.json"):
-    load_library(filename)
+for lib_file in pathlib.Path(LIB_DIR).glob("**/*.json"):
+    load_library(lib_file)

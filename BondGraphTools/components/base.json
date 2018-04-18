@@ -30,10 +30,8 @@
       "local_params": {
         "r": {
           "desc": "Resistance",
-          "distribution": "Normal",
-          "default": 1000,
-          "std_dev": 10,
-          "domain": [
+          "value": 1000,
+          "range": [
             0,
             "inf"
           ]
@@ -51,10 +49,8 @@
       "local_params": {
         "c": {
           "desc": "Capacitance",
-          "distribution": "Normal",
-          "default": 1000,
-          "std_dev": 10,
-          "bounds": [
+          "value": 1000,
+          "range": [
             0,
             "inf"
           ]
@@ -72,8 +68,8 @@
       "local_params": {
         "L": {
           "desc": "Inductance",
-          "default": 2000,
-          "bounds": [
+          "value": 2000,
+          "range": [
             0,
             "inf"
           ]
@@ -134,11 +130,7 @@
       "local_params": {
         "a": {
           "desc": "Ratio",
-          "defaults": 1,
-          "bounds": [
-            0,
-            "inf"
-          ]
+          "value": 1
         }
       },
       "constitutive_relations": [
@@ -159,11 +151,7 @@
       "local_params": {
         "R": {
           "desc": "Ratio",
-          "defaults": 1,
-          "bounds": [
-            0,
-            "inf"
-          ]
+          "value": 1
         }
       },
       "constitutive_relations": [
