@@ -11,12 +11,12 @@ from .component_manager import get_component, base_id
 logger = logging.getLogger(__name__)
 
 
-def new(component_type, name=None, library=base_id, **kwargs):
+def new(component, name=None, library=base_id, **kwargs):
     """
     Creates a new Bond Graph from a library component.
 
     Args:
-        component_type:
+        component:
         name:
         library:
         **kwargs:
@@ -25,11 +25,7 @@ def new(component_type, name=None, library=base_id, **kwargs):
 
     """
 
-    component_data = get_component(component_type, library)
-
-    return AtomicComponent(
-
-    )
+    return None
 
 
 class BondGraph:
@@ -46,9 +42,16 @@ class BondGraph:
         self.metadata = metadata
 
         self.ports = None
+        """ List of exposed Power ports"""
         self.state_vars = None
+        """ List of state variables"""
+        self.control_vars = None
+        """ List of exposed control variables """
         self.params = None
-        self.observables = None
+        """ Dictionary of internal parameter and their values. The key is 
+        the internal parameter, the value may be an exposed control value,
+        a function of time, or a constant."""
+
         self.parent = parent
         self.view = None
 
@@ -65,7 +68,6 @@ class AtomicComponent(BondGraph):
         super().__init__(name, **kwargs)
         self.view = Glyph()
         self.model = kwargs["constitutive_relation"]
-        self.mapping = list()
 
 
 class CompositeBondGraph(BondGraph):
@@ -81,8 +83,12 @@ class CompositeBondGraph(BondGraph):
         self.view = GraphLayout()
         """Graphical Layout of internal components"""
 
-        self.parameter_map = dict()
-        """Mapping between class level parameter values and component values"""
+        self.control_vars = []
+
+        self.cv_map = dict()
 
     def save(self, filename):
         raise NotImplementedError
+
+    def __contains__(self, item):
+        pass
