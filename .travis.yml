@@ -8,14 +8,14 @@ python:
 
 install:
   - pip install -r requirements.txt
-  - pip install pytest
+  - pip install pytest coverage mock
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-script: pytest --cov=BondGraphTools --cov-report=xml tests
+script: pytest --cov=BondGraphTools --cov-report=xml test
 
 
 after_script:

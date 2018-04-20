@@ -6,7 +6,6 @@ import logging
 import sympy
 import copy
 
-from anytree import Node
 from .view import GraphLayout, Glyph
 from .component_manager import get_component, base_id
 
