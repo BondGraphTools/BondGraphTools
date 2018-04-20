@@ -31,3 +31,4 @@ def test_bad_libary():
 
     assert not cm.load_library(file)
 
+

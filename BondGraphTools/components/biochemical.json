@@ -1,39 +1,33 @@
 {
-  "desc": "Biochemical Components",
+  "name": "Biochemical Components",
   "id":"BioChem",
   "components":{
     "Ce":{
-      "desc":"Concentration of Chemical Species",
+      "name":"Concentration of Chemical Species",
       "ports":{
         "0":null
       },
-      "local_params":{
-        "e0":{
-          "desc":"Standard Free Energy",
-          "bounds":[0, "inf"]
-        }
-      },
-      "global_params":{
-        "R":{"desc":"Universal Gas Constant"},
-        "T":{"desc": "Temperature"},
-        "V":{"desc": "Volume of the vessel"}
+      "params":{
+        "e0":{"name":"Standard Free Energy",
+              "bounds":[0, "inf"]},
+        "R":{"name":"Universal Gas Constant"},
+        "T":{"name": "Temperature"},
+        "V":{"name": "Volume of the vessel"}
       },
       "constitutive_relations":[
         "e_0 - e0 - R*T*log(q_0/V)"
       ]
     },
     "Re":{
-      "desc": "Biochemical Reaction",
+      "name": "Biochemical Reaction",
       "ports":{
-        "0": {"desc": "Reactants"},
-        "1": {"desc": "Products"}
+        "0": {"name": "Reactants"},
+        "1": {"name": "Products"}
       },
-      "local_params":{
-        "k":{"desc":"Reaction Rate"}
-      },
-      "global_params":{
-        "R":{"desc":"Universal Gas Constant"},
-        "T":{"desc": "Temperature"}
+      "params":{
+        "k":{"name":"Reaction Rate"},
+        "R":{"name":"Universal Gas Constant"},
+        "T":{"name": "Temperature"}
       },
       "constitutive_relations":[
         "f_0 + f_1",

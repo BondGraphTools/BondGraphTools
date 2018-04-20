@@ -1,5 +1,5 @@
 {
-  "desc": "Test Components",
+  "name": "Test Components",
   "id":"test",
   "components": {
     "test_1":null

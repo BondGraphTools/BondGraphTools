@@ -1,35 +1,35 @@
 {
-  "desc": "Basic Components",
+  "name": "Basic Components",
   "id":"base",
   "components": {
     "0": {
-      "desc": "Equipotential Node",
-      "cls": "ManyPort",
-      "string": "0",
-      "ports": null,
+      "name": "Equipotential Node",
+      "ports": {
+        "i": null
+      },
       "constitutive_relations": [
         "sum(f_i)",
         "e_i - e_0"
       ]
     },
     "1": {
-      "desc": "Equal Flow Node",
-      "cls": "ManyPort",
-      "string": "1",
-      "ports": null,
+      "name": "Equal Flow Node",
+      "ports": {
+        "i":null
+      },
       "constitutive_relations": [
         "sum(e_i)",
         "f_i - f_0"
       ]
     },
     "R": {
-      "desc": "Generalised Linear Resistor",
+      "name": "Generalised Linear Resistor",
       "ports": {
         "0": null
       },
-      "local_params": {
+      "params": {
         "r": {
-          "desc": "Resistance",
+          "name": "Resistance",
           "value": 1000,
           "range": [
             0,
@@ -42,13 +42,13 @@
       ]
     },
     "C": {
-      "desc": "Generalised Linear Capacitor",
+      "name": "Generalised Linear Capacitor",
       "ports": {
         "0": null
       },
-      "local_params": {
+      "params": {
         "c": {
-          "desc": "Capacitance",
+          "name": "Capacitance",
           "value": 1000,
           "range": [
             0,
@@ -56,18 +56,24 @@
           ]
         }
       },
+      "state_vars":{
+        "q_0":"Generalised Position"
+      },
       "constitutive_relations": [
         "q_0 - c*e_0"
       ]
     },
     "I": {
-      "desc": "Generalised Linear Inductor",
+      "name": "Generalised Linear Inductor",
       "ports": {
         "0": null
       },
-      "local_params": {
+      "state_vars":{
+        "p_0":"Generalised Momentum"
+      },
+      "params": {
         "L": {
-          "desc": "Inductance",
+          "name": "Inductance",
           "value": 2000,
           "range": [
             0,
@@ -76,15 +82,15 @@
         }
       },
       "constitutive_relations": [
-        "p_0 -  - L*f_0"
+        "p_0 - L*f_0"
       ]
     },
     "Se": {
-      "desc": "Effort Source",
+      "name": "Effort Source",
       "ports": {
         "0": null
       },
-      "control_variables": {
+      "params": {
         "e": null
       },
       "constitutive_relations": [
@@ -92,11 +98,11 @@
       ]
     },
     "Sf": {
-      "desc": "Flow Source",
+      "name": "Flow Source",
       "ports": {
         "0": null
       },
-      "control_variables": {
+      "params": {
         "f": null
       },
       "constitutive_relations": [
@@ -104,7 +110,7 @@
       ]
     },
     "P": {
-      "desc": "Port",
+      "name": "Port",
       "cls": "IOPort",
       "sockets":{
         "0": ["u_e, u_f"]
@@ -118,18 +124,18 @@
       ]
     },
     "TF": {
-      "desc": "Linear Transformer",
+      "name": "Linear Transformer",
       "ports": {
         "0": {
-          "Desc": "Primary"
+          "name": "Primary"
         },
         "1": {
-          "Desc": "Secondary"
+          "name": "Secondary"
         }
       },
-      "local_params": {
+      "params": {
         "a": {
-          "desc": "Ratio",
+          "name": "Ratio",
           "value": 1
         }
       },
@@ -139,18 +145,18 @@
       ]
     },
     "GY": {
-      "desc": "Linear Gyrator",
+      "name": "Linear Gyrator",
       "ports": {
         "0": {
-          "Desc": "Primary"
+          "name": "Primary"
         },
         "1": {
-          "Desc": "Secondary"
+          "name": "Secondary"
         }
       },
-      "local_params": {
+      "params": {
         "R": {
-          "desc": "Ratio",
+          "name": "Ratio",
           "value": 1
         }
       },

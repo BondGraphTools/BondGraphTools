@@ -1,6 +1,0 @@
-[
-  "test/test_base.py::test_test",
-  "test/test_component_manager.py::test_load",
-  "test/test_component_manager.py::test_duplicate_load",
-  "test/test_component_manager.py::test_bad_libary"
-]
