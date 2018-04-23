@@ -1,5 +1,8 @@
+import pytest
+
 import BondGraphTools as bgt
-from BondGraphTools.model import AtomicComponent, BondGraph
+from BondGraphTools.model import AtomicComponent, BondGraph, \
+    InvalidComponentException
 
 
 def test_new():
@@ -11,19 +14,19 @@ def test_new():
     assert len(c.params) == 1
 
 
+def test_new_zero():
+    j = bgt.new("0")
+
+    assert isinstance(j, AtomicComponent)
+    assert len(j.ports) == 1
+
+
 def test_new_parameterised():
 
     c = bgt.new("C", value=1.0)
     v = next(iter(c.params.values()))
     assert v["value"] == 1.0
 
-def test_clone():
-
-    c = bgt.new("C")
-    cprime = bgt.new(c)
-
-    assert id(c) != id(cprime)
-    assert c == cprime
 
 def test_add():
 
@@ -40,10 +43,6 @@ def test_add():
 
     assert c in bg
     assert se in bg
-
-    # assert c.parent is bg
-    # assert se.parent is bg
-    # assert not bg.parent
 
 
 def test_equal():
@@ -73,9 +72,23 @@ def test_find_port():
 
     bg = c + se
 
-    comp_id, port_id = bg._find_port(c)
+    comp, port_id = bg._find_port(c)
 
-    assert bg[comp_id] is c
+    assert comp is c
+    assert port_id in c.ports
+
+
+def test_find_port():
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + se
+
+    c_str = list(bg.components.keys())[0]
+
+    comp, port_id = bg._find_port(c_str)
+
+    assert comp is c
     assert port_id in c.ports
 
 
@@ -86,6 +99,11 @@ def test_connect_components():
     bg = c + se
 
     bg.connect(c, se)
+    (c1, p1), (c2, p2) = bg.bonds[0]
+    assert isinstance(c1, AtomicComponent)
+    assert isinstance(c2, AtomicComponent)
+    assert c1 in (c, se)
+    assert c2 in (c, se)
 
 
 def test_connect():
@@ -95,10 +113,14 @@ def test_connect():
     bg = c + se
 
     k1, k2 = tuple(bg.components)
-    print(k1)
-    print(k2)
 
     bg.connect(k1, k2)
+
+    (c1, p1), (c2, p2) = bg.bonds[0]
+    assert isinstance(c1, AtomicComponent)
+    assert isinstance(c2, AtomicComponent)
+    assert c1 in (c, se)
+    assert c2 in (c, se)
 
 
 def test_connect_ports():
@@ -111,32 +133,71 @@ def test_connect_ports():
 
     bg.connect(k1, k2)
 
+    (c1, p1), (c2, p2) = bg.bonds[0]
+    assert isinstance(c1, AtomicComponent)
+    assert isinstance(c2, AtomicComponent)
+    assert c1 in (c, se)
+    assert c2 in (c, se)
 
 
+def test_disconnect_ports():
 
-# def test_set_param_float():
-#
-#     c = bgt.new("C")
-#
-#     capacitance = next(c.param)
-#     assert c.params[capacitance] == capacitance
-#
-#     val = 1.0
-#     c.params[capacitance] = val
-#
-#     assert not c.contol_vars
-#     assert c.params[capacitance] == val
+    c = bgt.new("C")
+    se = bgt.new("Se")
 
-#
-# def test_cv_merge():
-#
-#     c1 = bgt.new("C")
-#     c2 = bgt.new("C")
-#
-#     se = bgt.new("Se")
-#
-#
+    bg = c + se
+
+    bg.connect(c, se)
+
+    with pytest.raises(InvalidComponentException):
+        bg.connect(c, se)
+
+    bond = bg.bonds.pop()
+    assert not bg.bonds
+
+    bg.connect(c, se)
+    (c1, p1), (c2, p2) = bg.bonds[0]
+    assert c1 in (c, se)
+    assert c2 in (c, se)
 
 
+def test_many_port():
+
+    j = bgt.new("0")
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + se + j
+
+    bg.connect(c, j)
+    bg.connect(se, j)
+
+    for (c1, p1), (c2, p2) in bg.bonds:
+        assert c1 in (c, se)
+        assert c2 is j
 
 
+def test_delete_one_from_many_port():
+
+    j = bgt.new("0")
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + se + j
+
+    bg.connect(c, j)
+    bg.connect(se, j)
+    (p,q), (r,s) = bg.bonds[1]
+    assert p in (se, j)
+    assert r in (se, j)
+
+    bg.disconnect(c, j)
+    assert len(bg.bonds) == 1
+    (pp, qq), (rr, ss) = bg.bonds[0]
+
+    assert pp in (se, j)
+
+    assert pp is p
+    assert rr is r
+    assert qq is q
+    assert ss is s

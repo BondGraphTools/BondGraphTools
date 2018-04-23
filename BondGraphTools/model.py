@@ -12,17 +12,21 @@ from .component_manager import get_component, base_id
 logger = logging.getLogger(__name__)
 
 
-def new(component=None, name=None, library=base_id, value=None):
+def new(component, name=None, library=base_id, value=None):
     """
     Creates a new Bond Graph from a library component.
 
     Args:
-        component(str or obj): The type of component to create
-        name:
-        library:
-        **kwargs:
+        component(str or obj): The type of component to create.
+         If a string is specified, the the component will be created from the
+         appropriate libaray. If an existing bond graph is given, the bond
+         graph will be cloned.
+        name (str): The name for the new component
+        library (str): The library from which to find this component (if
+        component is specified by string).
 
-    Returns:
+    Returns: instance of :obj:`BondGraph`
+
     """
     if isinstance(component, str):
         build_args = get_component(component, library)
@@ -92,6 +96,9 @@ class BondGraphBase:
     def state_vars(self):
         return NotImplementedError
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -130,6 +137,9 @@ class AtomicComponent(BondGraphBase):
             components=[self, other]
         )
 
+    def __hash__(self):
+        return id(self)
+
 
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
@@ -158,7 +168,10 @@ class BondGraph(BondGraphBase):
         return self.components[item]
 
     def __contains__(self, item):
-        return item in self.components.values()
+        if isinstance(item, str):
+            return item in self.components
+        else:
+            return item in self.components.values()
 
     def __radd__(self, other):
         if other == 0:
@@ -191,7 +204,7 @@ class BondGraph(BondGraphBase):
 
         return {(c, p): v.ports[p]
                 for c, v in self.components.items() for p in v.ports
-                if (c, p) not in bonds}
+                if (v, p) not in bonds}
 
     @property
     def state_vars(self):
@@ -207,11 +220,16 @@ class BondGraph(BondGraphBase):
 
         try:
             src, src_port = source
+            if isinstance(src, str):
+                src = self.components[src]
         except (ValueError, TypeError):
             src, src_port = self._find_port(source)
 
         try:
             dest, dest_port = destination
+            if isinstance(dest, str):
+                dest = self.components[dest]
+
         except (ValueError, TypeError):
             dest, dest_port = self._find_port(destination)
 
@@ -225,22 +243,22 @@ class BondGraph(BondGraphBase):
 
     def _find_port(self, component):
 
-        c_id = None
-        if isinstance(component, BondGraphBase):
-            for k, v in self.components.items():
-                if v is component:
-                    c_id = k
-                    break
-        else:
-            c_id = component if component in self else None
-        if not c_id:
+        if isinstance(component, str):
+            try:
+                comp = self.components[component]
+            except AttributeError:
+                raise InvalidComponentException(
+                    "Could not find {}: not contained in {}", component, self)
+        elif component not in self:
             raise InvalidComponentException(
                 "Could not find {}: not contained in {}", component, self)
+        else:
+            comp = component
 
         used_ports = {p for bond in self.bonds for (c, p) in bond
-                      if c == c_id and p.isnumeric()}
+                      if c is comp and p.isnumeric()}
 
-        free_ports = set(self.components[c_id].ports) - used_ports
+        free_ports = set(comp.ports) - used_ports
         if not free_ports:
             raise InvalidComponentException(
                 "Could not find a free port on {}",component)
@@ -249,10 +267,62 @@ class BondGraph(BondGraphBase):
                 "Could not find a unique free port on {}: "
                 "specify a port ", component)
 
-        return c_id, free_ports.pop()
+        return comp, free_ports.pop()
+
+    def disconnect(self, component_1, component_2=None,
+                   port_1=None, port_2=None):
+        """
+
+        Args:
+            component_1:
+            component_2:
+        """
+        if component_1 in self.components.keys():
+            c1 = self.components[component_1]
+        elif component_1 in self.components.values():
+            c1 = component_1
+        else:
+            raise InvalidComponentException(
+                "Could not find {}: not contained in {}", component_1, self
+            )
+        if port_1 and port_1 not in c1.ports:
+            raise InvalidPortException("Could not find port {} on {}",
+                                       port_1, component_1)
+
+        if component_2 and component_2 in self.components.keys():
+            c2 = self.components[component_2]
+        elif component_2 and component_2 in self.components.values():
+            c2 = component_2
+        elif component_2:
+            raise InvalidComponentException(
+                "Could not find {}: not contained in {}", component_2, self
+            )
+        if component_2 and port_2 and port_2 not in c2.ports:
+            raise InvalidPortException("Could not find port {} on {}",
+                                       port_2, component_2)
+
+        def cmp(target, test):
+            p, q = target
+            r, s = test
+            if p is r and (not q or (q is s)):
+                return True
+            else:
+                return False
+
+        def is_target(src, dest):
+            if not c2:
+                return cmp((c1, port_1), src) or cmp((c1, port_1), dest)
+            else:
+                return (
+                   cmp((c1, port_1), src) and cmp((c2, port_2), dest)) \
+                       or (cmp((c1, port_1), dest) and cmp((c2, port_2), src))
+
+        self.bonds = [bond for bond in self.bonds if not is_target(*bond)]
+
 
 class InvalidPortException(Exception):
     pass
+
 
 class InvalidComponentException(Exception):
     pass
