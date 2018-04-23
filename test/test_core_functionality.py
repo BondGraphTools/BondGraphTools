@@ -25,7 +25,7 @@ def test_new_parameterised():
 
     c = bgt.new("C", value=1.0)
     v = next(iter(c.params.values()))
-    assert v["value"] == 1.0
+    assert v == 1.0
 
 
 def test_add():
@@ -201,3 +201,11 @@ def test_delete_one_from_many_port():
     assert rr is r
     assert qq is q
     assert ss is s
+
+
+def test_set_param():
+    c = bgt.new("C")
+
+    c.params["c"] = 1
+
+    assert c.params["c"] == 1

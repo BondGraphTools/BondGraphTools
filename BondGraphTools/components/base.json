@@ -109,20 +109,6 @@
         "f_0 + f"
       ]
     },
-    "P": {
-      "name": "Port",
-      "cls": "IOPort",
-      "sockets":{
-        "0": ["u_e, u_f"]
-      },
-      "ports": {
-        "0": null
-      },
-      "constitutive_relations": [
-        "f_0 - u_f",
-        "e_0 - u_e"
-      ]
-    },
     "TF": {
       "name": "Linear Transformer",
       "ports": {

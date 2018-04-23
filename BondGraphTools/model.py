@@ -36,7 +36,7 @@ def new(component, name=None, library=base_id, value=None):
         if value:
             _update_build_params(build_args, value)
 
-        obj = AtomicComponent(type=component, **build_args)
+        return AtomicComponent(type=component, **build_args)
 
     elif isinstance(component, BondGraphBase):
         obj = copy.copy(component)
@@ -45,20 +45,25 @@ def new(component, name=None, library=base_id, value=None):
         if value:
             _update_build_params(obj.__dict__, value)
 
-    return obj
+        return obj
+
+    else:
+        raise NotImplementedError(
+            "New not implemented for object {}", component
+        )
 
 
 def _update_build_params(build_args, value):
     if isinstance(value, (list, tuple)):
         assignments = zip(value, build_args["params"].keys())
         for param, v in assignments:
-            build_args["params"][param]["value"] = v
+            build_args["params"][param] = v
     elif isinstance(value, dict):
         for param, v in value:
-            build_args["params"][param]["value"] = v
+            build_args["params"][param] = v
     else:
         p = next(iter(build_args["params"]))
-        build_args["params"][p]["value"] = value
+        build_args["params"][p] = value
 
 
 class BondGraphBase:
@@ -76,7 +81,6 @@ class BondGraphBase:
         self._ports = ports
         """ List of exposed Power ports"""
 
-        self.params = params
         """ Dictionary of internal parameter and their values. The key is 
         the internal parameter, the value may be an exposed control value,
         a function of time, or a constant."""
@@ -94,6 +98,10 @@ class BondGraphBase:
     def control_vars(self):
         return NotImplementedError
 
+    @property
+    def params(self):
+        raise NotImplementedError
+
     def __hash__(self):
         return id(self)
 
@@ -106,11 +114,12 @@ class AtomicComponent(BondGraphBase):
     Atomic bond graph components are those defined by constitutive relations.
     """
     def __init__(self, type, constitutive_relations,
-                 state_vars=None,**kwargs):
+                 state_vars=None, params=None, **kwargs):
         super().__init__(**kwargs)
 
         self._state_vars = state_vars
-        """ List of state variables"""
+
+        self._params = params
 
         self.view = Glyph()
         self.type = type
@@ -125,6 +134,10 @@ class AtomicComponent(BondGraphBase):
             return [param for param, value in self.params.items() if not value]
         else:
             return []
+
+    @property
+    def params(self):
+        return self._params
 
     @property
     def state_vars(self):
@@ -200,6 +213,13 @@ class BondGraph(BondGraphBase):
                             type(self),
                             type(other))
         return self
+
+    @property
+    def params(self):
+        return {
+            (c,p): v.params[p] for c,v in self.components.items() if v.params
+            for p in v.params if not isinstance(p, (float,complex, int))
+        }
 
     @property
     def ports(self):
