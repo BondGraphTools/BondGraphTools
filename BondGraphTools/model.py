@@ -75,18 +75,12 @@ class BondGraphBase:
         self.name = name
         self._ports = ports
         """ List of exposed Power ports"""
-        self.control_vars = list()
-        """ List of exposed control variables """
+
         self.params = params
         """ Dictionary of internal parameter and their values. The key is 
         the internal parameter, the value may be an exposed control value,
         a function of time, or a constant."""
         self.view = None
-
-        if params:
-            for param, value in self.params.items():
-                if not value:
-                    self.control_vars.append(param)
 
     @property
     def ports(self):
@@ -94,6 +88,10 @@ class BondGraphBase:
 
     @property
     def state_vars(self):
+        return NotImplementedError
+
+    @property
+    def control_vars(self):
         return NotImplementedError
 
     def __hash__(self):
@@ -108,7 +106,7 @@ class AtomicComponent(BondGraphBase):
     Atomic bond graph components are those defined by constitutive relations.
     """
     def __init__(self, type, constitutive_relations,
-                 state_vars=None, **kwargs):
+                 state_vars=None,**kwargs):
         super().__init__(**kwargs)
 
         self._state_vars = state_vars
@@ -120,6 +118,13 @@ class AtomicComponent(BondGraphBase):
 
     def __eq__(self, other):
         return self.__dict__ == self.__dict__
+
+    @property
+    def control_vars(self):
+        if self.params:
+            return [param for param, value in self.params.items() if not value]
+        else:
+            return []
 
     @property
     def state_vars(self):
@@ -155,8 +160,6 @@ class BondGraph(BondGraphBase):
         self.type = "Composite"
         self.view = GraphLayout()
         """Graphical Layout of internal components"""
-
-        self.control_vars = []
 
         self.cv_map = dict()
         self._port_map = dict()
@@ -208,9 +211,15 @@ class BondGraph(BondGraphBase):
 
     @property
     def state_vars(self):
-        return {(c, i): v.state_vars[i] for
+        return {(v, i): v.state_vars[i] for
                 c, v in self.components.items() if v.state_vars
                 for i in v.state_vars}
+
+    @property
+    def control_vars(self):
+        return [(v, i) for
+                v in self.components.values() if v.control_vars
+                for i in v.control_vars]
 
     def connect(self, source, destination):
         """
