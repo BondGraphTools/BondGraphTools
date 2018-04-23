@@ -57,14 +57,12 @@ def test_symbolic_params():
     assert set(rlc.params.values()) & set(sympy.symbols('r, l, c'))
 
 
-
 def test_simulate():
 
     rlc = build_rlc()
-
     t, X = sim.simulate(
         rlc,
-        tspan=[0, 10],
-        x0={k: 1 for k in rlc.state_vars}
+        timespan=[0, 10],
+        initial_state= {k: 1 for k in rlc.state_vars}
     )
 
