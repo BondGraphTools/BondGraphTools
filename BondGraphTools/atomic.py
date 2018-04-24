@@ -1,6 +1,7 @@
 from collections import OrderedDict
-from .base import BondGraphBase, InvalidPortException, \
-    ModelParsingError
+import sympy as sp
+
+from .base import BondGraphBase, ModelParsingError
 from .compound import BondGraph
 from .view import Glyph
 
@@ -65,6 +66,7 @@ class BaseComponent(BondGraphBase):
         for relation in self._constitutive_relations:
             pass
 
+
     def _generate_basis_vectors(self):
 
         vects = OrderedDict()
@@ -94,4 +96,5 @@ class BaseComponent(BondGraphBase):
 
     def __hash__(self):
         return id(self)
+
 
