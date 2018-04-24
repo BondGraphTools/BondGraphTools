@@ -1,14 +1,15 @@
 import pytest
 
 import BondGraphTools as bgt
-from BondGraphTools.model import AtomicComponent, BondGraph, \
-    InvalidComponentException
+from BondGraphTools.base import InvalidComponentException
+from BondGraphTools.atomic import BaseComponent
+
 
 
 def test_new():
     c = bgt.new("C")
 
-    assert isinstance(c, AtomicComponent)
+    assert isinstance(c, BaseComponent)
     assert len(c.ports) == 1
     assert len(c.state_vars) == 1
     assert len(c.params) == 1
@@ -17,7 +18,7 @@ def test_new():
 def test_new_zero():
     j = bgt.new("0")
 
-    assert isinstance(j, AtomicComponent)
+    assert isinstance(j, BaseComponent)
     assert len(j.ports) == 1
 
 
@@ -78,7 +79,7 @@ def test_find_port():
     assert port_id in c.ports
 
 
-def test_find_port():
+def test_find_port_by_name():
     c = bgt.new("C")
     se = bgt.new("Se")
 
@@ -92,6 +93,17 @@ def test_find_port():
     assert port_id in c.ports
 
 
+def test_port_connection():
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + se
+
+    assert len(bg.ports) ==2
+    bg.connect(c, se)
+    assert len(bg.ports) == 0
+
+
 def test_connect_components():
     c = bgt.new("C")
     se = bgt.new("Se")
@@ -100,8 +112,8 @@ def test_connect_components():
 
     bg.connect(c, se)
     (c1, p1), (c2, p2) = bg.bonds[0]
-    assert isinstance(c1, AtomicComponent)
-    assert isinstance(c2, AtomicComponent)
+    assert isinstance(c1, BaseComponent)
+    assert isinstance(c2, BaseComponent)
     assert c1 in (c, se)
     assert c2 in (c, se)
 
@@ -117,8 +129,8 @@ def test_connect():
     bg.connect(k1, k2)
 
     (c1, p1), (c2, p2) = bg.bonds[0]
-    assert isinstance(c1, AtomicComponent)
-    assert isinstance(c2, AtomicComponent)
+    assert isinstance(c1, BaseComponent)
+    assert isinstance(c2, BaseComponent)
     assert c1 in (c, se)
     assert c2 in (c, se)
 
@@ -134,8 +146,8 @@ def test_connect_ports():
     bg.connect(k1, k2)
 
     (c1, p1), (c2, p2) = bg.bonds[0]
-    assert isinstance(c1, AtomicComponent)
-    assert isinstance(c2, AtomicComponent)
+    assert isinstance(c1, BaseComponent)
+    assert isinstance(c2, BaseComponent)
     assert c1 in (c, se)
     assert c2 in (c, se)
 
@@ -152,7 +164,7 @@ def test_disconnect_ports():
     with pytest.raises(InvalidComponentException):
         bg.connect(c, se)
 
-    bond = bg.bonds.pop()
+    _ = bg.bonds.pop()
     assert not bg.bonds
 
     bg.connect(c, se)
@@ -209,3 +221,5 @@ def test_set_param():
     c.params["c"] = 1
 
     assert c.params["c"] == 1
+
+

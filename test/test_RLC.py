@@ -3,6 +3,7 @@ import sympy
 import BondGraphTools as bgt
 import BondGraphTools.sim_tools as sim
 
+
 def build_rlc():
     r = bgt.new("R", value=1)
     l = bgt.new("I", value=1)
@@ -60,9 +61,10 @@ def test_symbolic_params():
 def test_simulate():
 
     rlc = build_rlc()
+
     t, X = sim.simulate(
         rlc,
         timespan=[0, 10],
-        initial_state= {k: 1 for k in rlc.state_vars}
+        initial_state={k: 1 for k in rlc.state_vars}
     )
 
