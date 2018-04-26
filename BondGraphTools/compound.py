@@ -109,10 +109,12 @@ class BondGraph(BondGraphBase):
 
         if ((src, src_port) in bonds and src_port.isnumneric()) or (
                 (dest, dest_port) in bonds and dest_port.isnumeric()):
-            raise InvalidPortException("Could not join {} to {}: "
+            raise InvalidPortException("Could not join %s to %s: "
                                        "Port already in use",
                                        source, destination)
         bond = (src, src_port), (dest, dest_port)
+        src.connect_port(src_port)
+        dest.connect_port(dest_port)
         self.bonds.append(bond)
 
     def _find_port(self, component):
@@ -122,26 +124,32 @@ class BondGraph(BondGraphBase):
                 comp = self.components[component]
             except AttributeError:
                 raise InvalidComponentException(
-                    "Could not find {}: not contained in {}", component, self)
+                    "Could not find %s: not contained in %s", component, self)
         elif component not in self:
             raise InvalidComponentException(
-                "Could not find {}: not contained in {}", component, self)
+                "Could not find %s: not contained in %s", component, self)
         else:
             comp = component
 
         used_ports = {p for bond in self.bonds for (c, p) in bond
-                      if c is comp and p.isnumeric()}
+                      if c is comp}
 
         free_ports = set(comp.ports) - used_ports
+
         if not free_ports:
-            raise InvalidComponentException(
-                "Could not find a free port on {}",component)
+            try:
+                port = comp.make_port()
+            except AttributeError:
+                raise InvalidComponentException(
+                    "Could not find a free port on %s",component)
         elif len(free_ports) > 1:
             raise InvalidComponentException(
-                "Could not find a unique free port on {}: "
+                "Could not find a unique free port on %s: "
                 "specify a port ", component)
+        else:
+            port = free_ports.pop()
 
-        return comp, free_ports.pop()
+        return comp, port
 
     def disconnect(self, component_1, component_2=None,
                    port_1=None, port_2=None):
@@ -157,10 +165,10 @@ class BondGraph(BondGraphBase):
             c1 = component_1
         else:
             raise InvalidComponentException(
-                "Could not find {}: not contained in {}", component_1, self
+                "Could not find %s: not contained in %s", component_1, self
             )
         if port_1 and port_1 not in c1.ports:
-            raise InvalidPortException("Could not find port {} on {}",
+            raise InvalidPortException("Could not find port %s on %s",
                                        port_1, component_1)
 
         if component_2 and component_2 in self.components.keys():
@@ -169,10 +177,10 @@ class BondGraph(BondGraphBase):
             c2 = component_2
         elif component_2:
             raise InvalidComponentException(
-                "Could not find {}: not contained in {}", component_2, self
+                "Could not find %s: not contained in %s", component_2, self
             )
         if component_2 and port_2 and port_2 not in c2.ports:
-            raise InvalidPortException("Could not find port {} on {}",
+            raise InvalidPortException("Could not find port %s on %s",
                                        port_2, component_2)
 
         def cmp(target, test):
@@ -191,6 +199,10 @@ class BondGraph(BondGraphBase):
                    cmp((c1, port_1), src) and cmp((c2, port_2), dest)) \
                        or (cmp((c1, port_1), dest) and cmp((c2, port_2), src))
 
-        self.bonds = [bond for bond in self.bonds if not is_target(*bond)]
+        target_bonds = [bond for bond in self.bonds if is_target(*bond)]
 
+        for bond in target_bonds:
+            self.bonds.remove(bond)
+            for c, p in bond:
+                c.release_port(p)
 

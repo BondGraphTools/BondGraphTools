@@ -4,7 +4,7 @@
   "components": {
     "0": {
       "name": "Equipotential Node",
-      "class": "BaseComponent",
+      "class": "NPort",
       "ports": {
         "i": null
       },
@@ -15,7 +15,7 @@
     },
     "1": {
       "name": "Equal Flow Node",
-      "class": "BaseComponent",
+      "class": "NPort",
       "ports": {
         "i":null
       },

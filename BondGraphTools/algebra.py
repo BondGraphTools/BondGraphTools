@@ -1,7 +1,7 @@
 import sympy as sp
 
-def extract_coefficients(equation, constants=None):
 
+def extract_coefficients(equation, constants=None):
     coeff_dict = {}
 
     for term in equation.expand().args:
@@ -16,7 +16,6 @@ def extract_coefficients(equation, constants=None):
                 coeff = sp.Mul(coeff, factor)
             else:
                 base = sp.Mul(base, factor)
-
         coeff_dict[base] = coeff
     return coeff_dict
 
@@ -28,3 +27,4 @@ def flatten(sequence):
                 yield subitem
         else:
             yield item
+

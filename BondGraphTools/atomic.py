@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import sympy as sp
 
-from .base import BondGraphBase, ModelParsingError
+from .base import BondGraphBase, ModelParsingError, InvalidPortException
 from .compound import BondGraph
 from .view import Glyph
 
@@ -43,13 +43,15 @@ class BaseComponent(BondGraphBase):
 
     @property
     def model(self):
+        """
 
-        vects = self._generate_basis_vectors()
+        Returns:
 
-        models = []
+        """
+        models = self._build_relations()
 
         for var in self.state_vars:
-            var_type, _ = var.split("_")
+            var_type, port = var.split("_")
 
             if var_type == "q":
                 ef_var = f'f_{port}'
@@ -57,36 +59,90 @@ class BaseComponent(BondGraphBase):
                 ef_var = f'e_{port}'
             else:
                 raise ModelParsingError(
-                    "Error parsing model {}: "
-                    "state variable {} must be either p or q",
+                    "Error parsing model %s: "
+                    "state variable %s must be either p or q",
                     self.type, var
                 )
-            models.append({vects[ef_var]: -1, vects[f"d{var}"]: 1})
 
-        for relation in self._constitutive_relations:
-            pass
+            models.append(sp.sympify(f"{ef_var} - d{var}"))
+
+        return models
+
+        # for each relation, pull out the linear part
 
 
-    def _generate_basis_vectors(self):
-
+    @property
+    def basis(self):
         vects = OrderedDict()
 
-        for var in self.state_vars:
-            vects[var] = (self, var)
+        if self.state_vars:
+            for var in self.state_vars:
+                vects[var] = (self, var)
 
         for port in self.ports:
             if not port.isnumeric():
                 continue
-            vects[f"e_{port}"] = ((self, port), 'e')
-            vects[f"f_{port}"] = ((self, port), 'f')
 
-        for var in self.state_vars:
-            vects[f"d{var}"] = (self, f"d{var}")
+            vects[f"e_{port}"] = ((self, port), f"e_{port}")
+            vects[f"f_{port}"] = ((self, port), f"f_{port}")
 
-        for control in self.control_vars:
-            vects[control] = (self, control)
+        if self.state_vars:
+            for var in self.state_vars:
+                vects[f"d{var}"] = (self, f"d{var}")
+
+        if self.control_vars:
+            for control in self.control_vars:
+                vects[control] = (self, control)
 
         return vects
+
+    def _build_relations(self):
+        rels = []
+        for string in self._constitutive_relations:
+            iloc = 0
+            iloc = string.find("_i", iloc)
+
+            if iloc < 0:
+                # just a plain old string; sympy can take care of it
+                rels.append(sp.sympify(string))
+                continue
+
+            sloc = string.rfind("sum(", 0, iloc)
+
+            if sloc < 0:
+                # we have a vector equation here.
+                for port_id in self.ports:
+                    if port_id.isnumeric():
+                        rels.append(
+                        sp.sympify(
+                            string.replace("_i", "_{}".format(port_id))))
+
+            else:
+                tiers = 0
+
+                next_open = string.find("(", sloc + 4)
+                eloc = string.find(")", sloc + 4)
+                while next_open > 0 or tiers > 0:
+                    if next_open < eloc:
+                        tiers += 1
+                        next_open = string.find("(", next_open)
+                    else:
+                        tiers -= 1
+                        eloc = string.find(")", eloc)
+
+                if eloc < 0:
+                    raise ValueError("Unbalanced brackets", string)
+
+                substring = string[sloc + 4: eloc]
+                terms = [substring.replace("_i", "_{}".format(p))
+                         for p in self.ports if p.isnumeric()]
+                symstr = string[0:sloc] + "(" + " + ".join(terms) + string[
+                                                                    eloc:]
+                rels.append(
+                    sp.sympify(symstr)
+                )
+
+        return [r for r in rels if r != 0]
 
     def __add__(self, other):
         return BondGraph(
@@ -98,3 +154,24 @@ class BaseComponent(BondGraphBase):
         return id(self)
 
 
+class NPort(BaseComponent):
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+        self.__fixed_ports = (p for p in self.ports if p.isnumeric())
+
+    @property
+    def ports(self):
+        return {p:v for p,v in self._ports.items() if p.isnumeric()}
+
+    def make_port(self):
+        n = 0
+        while str(n) in self._ports:
+            n += 1
+        self._ports[str(n)] = None
+
+        return str(n)
+
+    def release_port(self, port):
+        if port not in self.__fixed_ports:
+            del self._ports[port]

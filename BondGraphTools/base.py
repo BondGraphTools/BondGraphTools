@@ -116,6 +116,16 @@ class BondGraphBase:
     def params(self):
         raise NotImplementedError
 
+    @property
+    def basis(self):
+        raise NotImplementedError
+
+    def connect_port(self, port):
+        pass
+
+    def release_port(self, port):
+        pass
+
     def __hash__(self):
         return id(self)
 

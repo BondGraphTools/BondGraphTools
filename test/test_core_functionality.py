@@ -19,7 +19,7 @@ def test_new_zero():
     j = bgt.new("0")
 
     assert isinstance(j, BaseComponent)
-    assert len(j.ports) == 1
+    assert len(j.ports) == 0
 
 
 def test_new_parameterised():
@@ -188,6 +188,8 @@ def test_many_port():
         assert c1 in (c, se)
         assert c2 is j
 
+    assert len(j.ports) == 2
+
 
 def test_delete_one_from_many_port():
 
@@ -221,5 +223,3 @@ def test_set_param():
     c.params["c"] = 1
 
     assert c.params["c"] == 1
-
-
