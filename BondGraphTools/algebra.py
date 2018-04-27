@@ -6,7 +6,7 @@ def extract_coefficients(equation, local_map, global_coords):
     coeff_dict = {}
     nonlinear_terms = sp.S(0)
     subs = [(k, global_coords[v]) for k,v in local_map.items()]
-    print(local_map)
+
     for term in equation.expand().args:
         prod_iter = flatten(term.as_coeff_mul())
         coeff = next(prod_iter)
@@ -56,3 +56,20 @@ def smith_normal_form(matrix):
         m_dict[(current_row, col)] = entry
 
     return sp.SparseMatrix(n, n, m_dict)
+
+def generate_relations(coords, matrix, nonlinear_op):
+    """
+    System in the form
+
+    Ax = 0
+    F(x) = 0
+
+    Args:
+        coords:
+        matrix:
+        nonlinear_op:
+
+    Returns:
+
+    """
+

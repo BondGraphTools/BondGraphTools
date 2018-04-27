@@ -51,11 +51,18 @@ def test_simulate(rlc):
         initial_state={k: 1 for k in rlc.state_vars}
     )
 
-#
-# @pytest.mark.use_fixture("rlc")
-# def test_rlc_con_rel(rlc):
-#
-#     rlc.constitutive_relations
-#     print(rel)
-#     print(cords)
-#     assert False
+
+@pytest.mark.use_fixture("rlc")
+def test_rlc_con_rel(rlc):
+
+    rel = rlc.constitutive_relations
+
+    eq1 = sympy.sympify("dx_0 - x_1")
+    eq2 = sympy.sympify("dx_1 + x_0 + x_1")
+
+    for r in rel:
+        assert r in (eq1, eq2)
+
+    assert "x_0" in rlc.state_vars
+    assert "x_1" in rlc.state_vars
+

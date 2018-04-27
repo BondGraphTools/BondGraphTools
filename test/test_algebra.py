@@ -49,6 +49,7 @@ def test_basis_vectors(rlc):
 
             model_basis_vects |= basis_vects
 
+
 def test_build_junction_dict():
     c = bgt.new("C")
     kvl = bgt.new("0")
@@ -138,5 +139,5 @@ def test_relations_iter():
 
     for lin, nlin in relations:
         assert not nlin
-        assert lin in (d1, d2, d1m,d2m)
+        assert lin in (d1, d2, d1m, d2m)
 

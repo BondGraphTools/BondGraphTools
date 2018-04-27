@@ -4,7 +4,7 @@ import sympy as sp
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-from .algebra import extract_coefficients, smith_normal_form
+from .algebra import generate_relations, smith_normal_form
 
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
@@ -116,9 +116,10 @@ class BondGraph(BondGraphBase):
 
         mappings, coordinates = self._build_inverse_coord_maps()
         inv_tm, inv_js, _ = mappings
+        js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
-
-        lin_dict = self._build_junction_dict(inv_js, offset=(ss_size-1))
+        n = len(coordinates)
+        lin_dict = self._build_junction_dict(inv_js, offset=ss_size)
         lin_row = max(row + 1 for row, _ in lin_dict.keys())
         nlin_dict = {}
         nlin_funcs = []
@@ -131,15 +132,21 @@ class BondGraph(BondGraphBase):
                     lin_dict.update({(lin_row, k): v
                                      for k, v in linear.items()})
                     lin_row += 1
+
+                elif not linear:
+                    raise NotImplementedError()
                 else:
+                    # quasilinear
                     # row = len(nlin_funcs)
                     # nlin_dict.update({(row, k):  v for k,v in linear.items()})
                     # nlin_funcs.append(nonlinear)
-                    raise NotImplementedError
+                    raise NotImplementedError()
 
-        junction_matrix = sp.SparseMatrix(lin_row, len(coordinates), lin_dict)
+        lin_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
 
-        return junction_matrix.rref(), coordinates
+        ode = lin_op[0:ss_size, 0:].dot(coordinates)
+
+        return ode
 
     def _build_inverse_coord_maps(self):
 
@@ -163,7 +170,7 @@ class BondGraph(BondGraphBase):
             coordinates.append(x)
         for u in cm:
             coordinates.append(u)
-        coordinates.append(sp.S(1))
+        coordinates.append(sp.S("c"))
 
         return (inverse_tm, inverse_js, inverse_cm), coordinates
 
