@@ -1,8 +1,10 @@
 
+import sympy as sp
+
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-
+from .algebra import extract_coefficients
 
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
@@ -98,16 +100,92 @@ class BondGraph(BondGraphBase):
 
             for var_id in c_ts.values():
                 i = len(tangent_space)
-                tangent_space[(f"x_{i}", f"dx_{i}")] = var_id
+                tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
 
             for port in c_ps.values():
                 i = len(port_space)
-                port_space[(f"e_{i}", f"f_{i}")] = port
+                port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
 
             for cv in c_cs.values():
                 i = len(control_space)
-                control_space[f"u_{i}"] = cv
+                control_space[sp.symbols(f"u_{i}")] = cv
         return tangent_space, port_space, control_space
+
+    @property
+    def constitutive_relations(self):
+
+        tm, js, cm = self.basis_vectors
+
+        inverse_tm = {
+            coord_id: index for index, coord_id in enumerate(tm.values())
+        }
+        inverse_js = {
+            coord_id: index for index, coord_id in enumerate(js.values())
+        }
+        inverse_cm = {
+            coord_id: index for index, coord_id in enumerate(cm.values())
+        }
+
+        coordinates = [dx for _, dx in tm]
+
+        for e, f in js:
+            coordinates += [e, f]
+        for x, _ in tm:
+            coordinates.append(x)
+        for u in cm:
+            coordinates.append(u)
+        coordinates.append(sp.S(1))
+
+        lin_dict = self._build_junction_dict(inverse_js, offset=len(inverse_tm))
+        nlin_dict = {}
+        row = 2*len(self.bonds)
+
+        for component in self.components.values():
+            local_tm, local_js, local_cv = component.basis_vectors
+
+            local_map = {
+                cv: inverse_cm[value] for cv, value in local_cv.items()
+            }
+            for (x, dx), coord in local_tm.items():
+                local_map[dx] = inverse_tm[coord]
+                local_map[x] = inverse_tm[coord] + 2*len(inverse_js)
+
+            for (e, f), port in local_js.items():
+                local_map[e] = inverse_js[port] + len(inverse_tm)
+                local_map[f] = inverse_js[port] + len(inverse_tm) + 1
+
+
+            for relation in component.constitutive_relations:
+                linear, nonlinear = extract_coefficients(relation,
+                                                         local_map,
+                                                         coordinates)
+
+
+    def _build_junction_dict(self, index_map, offset=0):
+        """
+        matrix has 2*#bonds rows
+        and 2*#ports columes
+        so that MX = 0 and X^T = (e_1,f_1,e_2,f_2) 
+        
+        Args:
+            index_map: the mapping between (component, port) pair and index 
+
+        Returns: Matrix M
+
+        """
+        M = dict()
+
+        for i, (bond_1, bond_2) in enumerate(self.bonds):
+            j_1 = offset + 2*index_map[bond_1]
+            j_2 = offset + 2*index_map[bond_2]
+            # effort variables
+            M[(2*i, j_1)] = - 1
+            M[(2*i, j_2)] = 1
+            # flow variables
+            M[(2*i+1, j_1 + 1)] = 1
+            M[(2*i+1, j_2 + 1)] = 1
+
+        return M
 
     def connect(self, source, destination):
         """

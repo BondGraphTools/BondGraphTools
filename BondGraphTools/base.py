@@ -117,7 +117,7 @@ class BondGraphBase:
         raise NotImplementedError
 
     @property
-    def basis(self):
+    def basis_vectors(self):
         raise NotImplementedError
 
     def connect_port(self, port):

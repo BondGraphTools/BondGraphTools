@@ -2,7 +2,7 @@ import pytest
 import sympy
 
 import BondGraphTools as bgt
-
+from BondGraphTools.algebra import extract_coefficients
 
 def test_build_relations():
     c = bgt.new("C")
@@ -67,3 +67,22 @@ def test_rlc_basis_vectors(rlc):
 
     tangent, ports, cv = rlc.basis_vectors
 
+    assert len(tangent) == 2
+    assert len(cv) == 0
+    assert len(ports) == 6
+
+
+def test_extract_coeffs():
+
+    eqn = sympy.sympify("y -2*x -3 + exp(x)")
+    local_map = {
+        sympy.symbols("y"): 0,
+        sympy.symbols("x"): 1
+    }
+    coords = [sympy.symbols("r_1"), sympy.symbols("r_0"), sympy.S(1)]
+
+    lin, nlin = extract_coefficients(eqn, local_map, coords)
+
+    print(lin)
+
+    assert nlin == sympy.sympify("exp(r_0)")

@@ -91,16 +91,16 @@ class BaseComponent(BondGraphBase):
         control_space = dict()
 
         for var in self.state_vars:
-            tangent_space[(var, f"d{var}")] = (self, var)
+            tangent_space[sp.symbols((var, f"d{var}"))] = (self, var)
 
         for port in self.ports:
             if not port.isnumeric():
                 continue
 
-            port_space[(f"e_{port}", f"f_{port}")] = (self, port)
+            port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = (self, port)
 
         for control in self.control_vars:
-            control_space[control] = (self, control)
+            control_space[sp.symbols(control)] = (self, control)
 
         return tangent_space, port_space, control_space
 
