@@ -4,7 +4,7 @@ import sympy as sp
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-from .algebra import extract_coefficients
+from .algebra import extract_coefficients, smith_normal_form
 
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
@@ -114,6 +114,35 @@ class BondGraph(BondGraphBase):
     @property
     def constitutive_relations(self):
 
+        mappings, coordinates = self._build_inverse_coord_maps()
+        inv_tm, inv_js, _ = mappings
+        ss_size = len(inv_tm) # number of state space coords
+
+        lin_dict = self._build_junction_dict(inv_js, offset=(ss_size-1))
+        lin_row = max(row + 1 for row, _ in lin_dict.keys())
+        nlin_dict = {}
+        nlin_funcs = []
+
+        for component in self.components.values():
+            relations = component.get_relations_iterator(mappings, coordinates)
+
+            for linear, nonlinear in relations:
+                if not nonlinear:
+                    lin_dict.update({(lin_row, k): v
+                                     for k, v in linear.items()})
+                    lin_row += 1
+                else:
+                    # row = len(nlin_funcs)
+                    # nlin_dict.update({(row, k):  v for k,v in linear.items()})
+                    # nlin_funcs.append(nonlinear)
+                    raise NotImplementedError
+
+        junction_matrix = sp.SparseMatrix(lin_row, len(coordinates), lin_dict)
+
+        return junction_matrix.rref(), coordinates
+
+    def _build_inverse_coord_maps(self):
+
         tm, js, cm = self.basis_vectors
 
         inverse_tm = {
@@ -136,29 +165,7 @@ class BondGraph(BondGraphBase):
             coordinates.append(u)
         coordinates.append(sp.S(1))
 
-        lin_dict = self._build_junction_dict(inverse_js, offset=len(inverse_tm))
-        nlin_dict = {}
-        row = 2*len(self.bonds)
-
-        for component in self.components.values():
-            local_tm, local_js, local_cv = component.basis_vectors
-
-            local_map = {
-                cv: inverse_cm[value] for cv, value in local_cv.items()
-            }
-            for (x, dx), coord in local_tm.items():
-                local_map[dx] = inverse_tm[coord]
-                local_map[x] = inverse_tm[coord] + 2*len(inverse_js)
-
-            for (e, f), port in local_js.items():
-                local_map[e] = inverse_js[port] + len(inverse_tm)
-                local_map[f] = inverse_js[port] + len(inverse_tm) + 1
-
-
-            for relation in component.constitutive_relations:
-                linear, nonlinear = extract_coefficients(relation,
-                                                         local_map,
-                                                         coordinates)
+        return (inverse_tm, inverse_js, inverse_cm), coordinates
 
 
     def _build_junction_dict(self, index_map, offset=0):

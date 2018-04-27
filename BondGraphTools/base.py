@@ -6,7 +6,7 @@ import logging
 import copy
 
 from .component_manager import get_component, base_id
-
+from .algebra import extract_coefficients
 logger = logging.getLogger(__name__)
 
 
@@ -132,6 +132,27 @@ class BondGraphBase:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def get_relations_iterator(self, mappings, coordinates):
+        local_tm, local_js, local_cv = self.basis_vectors
+        inv_tm, inv_js, inv_cv = mappings
+
+        num_ports = len(inv_js)
+        num_state_vars = len(inv_tm)
+
+        local_map = {
+            cv: 2*(num_ports+num_state_vars) + inv_cv[value]
+            for cv, value in local_cv.items()
+        }
+        for (x, dx), coord in local_tm.items():
+            local_map[dx] = inv_tm[coord]
+            local_map[x] = inv_tm[coord] + num_state_vars + 2 * num_ports
+
+        for (e, f), port in local_js.items():
+            local_map[e] = 2*inv_js[port] + num_state_vars
+            local_map[f] = 2*inv_js[port] + num_state_vars + 1
+
+        for relation in self.constitutive_relations:
+            yield extract_coefficients(relation, local_map, coordinates)
 
 
 class InvalidPortException(Exception):

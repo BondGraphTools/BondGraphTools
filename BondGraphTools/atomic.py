@@ -4,6 +4,7 @@ import sympy as sp
 from .base import BondGraphBase, ModelParsingError, InvalidPortException
 from .compound import BondGraph
 from .view import Glyph
+from .algebra import extract_coefficients
 
 
 class BaseComponent(BondGraphBase):

@@ -224,6 +224,7 @@ def test_set_param():
 
     assert c.params["c"] == 1
 
+
 def test_set_compuond_param():
 
     j = bgt.new("0")
