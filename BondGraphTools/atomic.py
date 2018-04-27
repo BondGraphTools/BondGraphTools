@@ -35,14 +35,14 @@ class BaseComponent(BondGraphBase):
 
     @property
     def params(self):
-        return self._params
+        return self._params if self._params else {}
 
     @property
     def state_vars(self):
-        return self._state_vars
+        return self._state_vars if self._state_vars else []
 
     @property
-    def model(self):
+    def constitutive_relations(self):
         """
 
         Returns:
@@ -64,37 +64,45 @@ class BaseComponent(BondGraphBase):
                     self.type, var
                 )
 
-            models.append(sp.sympify(f"{ef_var} - d{var}"))
+            models.append(sp.sympify(f"d{var} - {ef_var}"))
 
-        return models
+        subs = []
+        for param, value in self.params.items():
+            if isinstance(value, (int, float, complex)):
+                subs.append((sp.symbols(param), value))
+            elif isinstance(value, str) and value.isnumeric():
+                subs.append((sp.symbols(param), float(value)))
+            elif isinstance(value, dict) and "value" in value:
+                if isinstance(value["value"], (int, float, complex)):
+                    subs.append((sp.symbols(param), value["value"]))
+                elif isinstance(value["value"], str) \
+                        and value["value"].isnumeric():
+                    subs.append((sp.symbols(param), float(value["value"])))
+
+        return [model.subs(subs) for model in models]
 
         # for each relation, pull out the linear part
 
-
     @property
-    def basis(self):
-        vects = OrderedDict()
+    def basis_vectors(self):
 
-        if self.state_vars:
-            for var in self.state_vars:
-                vects[var] = (self, var)
+        tangent_space = dict()
+        port_space = dict()
+        control_space = dict()
+
+        for var in self.state_vars:
+            tangent_space[(var, f"d{var}")] = (self, var)
 
         for port in self.ports:
             if not port.isnumeric():
                 continue
 
-            vects[f"e_{port}"] = ((self, port), f"e_{port}")
-            vects[f"f_{port}"] = ((self, port), f"f_{port}")
+            port_space[(f"e_{port}", f"f_{port}")] = (self, port)
 
-        if self.state_vars:
-            for var in self.state_vars:
-                vects[f"d{var}"] = (self, f"d{var}")
+        for control in self.control_vars:
+            control_space[control] = (self, control)
 
-        if self.control_vars:
-            for control in self.control_vars:
-                vects[control] = (self, control)
-
-        return vects
+        return tangent_space, port_space, control_space
 
     def _build_relations(self):
         rels = []

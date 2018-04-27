@@ -223,3 +223,13 @@ def test_set_param():
     c.params["c"] = 1
 
     assert c.params["c"] == 1
+
+def test_set_compuond_param():
+
+    j = bgt.new("0")
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + se + j
+
+    assert len(bg.params) == 2

@@ -42,11 +42,28 @@ def test_basis_vectors(rlc):
     model_basis_vects = set()
 
     for component in rlc.components.values():
-        vects = component.basis
+        for vects in component.basis_vectors:
+            basis_vects = set(vects.values())
 
-        basis_vects = set(vects.values())
+            assert not basis_vects & model_basis_vects
 
-        assert not basis_vects & model_basis_vects
+            model_basis_vects |= basis_vects
 
-        model_basis_vects |= basis_vects
+
+def test_build_model_fixed_cap():
+    c = bgt.new("C", value=0.001)
+
+    eqns = c.constitutive_relations
+    assert len(eqns) == 2
+
+    test_eqn1 = sympy.sympify("q_0 - 0.001*e_0")
+    test_eqn2 = sympy.sympify("dq_0-f_0")
+
+    assert test_eqn1 in eqns
+    assert test_eqn2 in eqns
+
+@pytest.mark.usefixture("rlc")
+def test_rlc_basis_vectors(rlc):
+
+    tangent, ports, cv = rlc.basis_vectors
 

@@ -86,6 +86,29 @@ class BondGraph(BondGraphBase):
                 v in self.components.values() if v.control_vars
                 for i in v.control_vars]
 
+    @property
+    def basis_vectors(self):
+
+        tangent_space = dict()
+        port_space = dict()
+        control_space = dict()
+
+        for component in self.components.values():
+            c_ts, c_ps, c_cs = component.basis_vectors
+
+            for var_id in c_ts.values():
+                i = len(tangent_space)
+                tangent_space[(f"x_{i}", f"dx_{i}")] = var_id
+
+            for port in c_ps.values():
+                i = len(port_space)
+                port_space[(f"e_{i}", f"f_{i}")] = port
+
+            for cv in c_cs.values():
+                i = len(control_space)
+                control_space[f"u_{i}"] = cv
+        return tangent_space, port_space, control_space
+
     def connect(self, source, destination):
         """
 
