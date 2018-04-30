@@ -4,6 +4,7 @@
   "components": {
     "Di": {
       "name":"Diode",
+      "class": "BaseComponent",
       "ports":{
         "0":null
       },

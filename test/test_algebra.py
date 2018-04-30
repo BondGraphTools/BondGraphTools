@@ -56,7 +56,7 @@ def test_build_junction_dict():
 
     bg = kvl+c
     bg.connect(kvl, c)
-    index_map = {(c,"0"):0, (kvl,"0"):1}
+    index_map = {(c,0):0, (kvl,0):1}
     M = bg._build_junction_dict(index_map, offset=1)
     assert M[(0, 1)] == 1
     assert M[(0, 3)] == -1
@@ -84,7 +84,7 @@ def test_rlc_basis_vectors(rlc):
 
     assert len(tangent) == 2
     assert len(cv) == 0
-    assert len(ports) == 6
+    assert len(ports) == 0
 
 
 def test_extract_coeffs_lin():
@@ -128,7 +128,7 @@ def test_smith_normal_form():
 def test_relations_iter():
     c = bgt.new("C", value=1)
 
-    mappings = ({(c, 'q_0'): 0}, {(c,'0'): 0}, {})
+    mappings = ({(c, 'q_0'): 0}, {(c,0): 0}, {})
     coords = list(sympy.sympify("dx_0,e_0,f_0,x_0, 1"))
     relations = c.get_relations_iterator(mappings, coords)
 
@@ -141,3 +141,10 @@ def test_relations_iter():
         assert not nlin
         assert lin in (d1, d2, d1m, d2m)
 
+@pytest.mark.usefixture("rlc")
+def test_interal_basis_vectors(rlc):
+    tangent, ports, cv = rlc._build_internal_basis_vectors()
+
+    assert len(tangent) == 2
+    assert len(cv) == 0
+    assert len(ports) == 6

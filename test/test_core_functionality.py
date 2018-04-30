@@ -141,8 +141,8 @@ def test_connect_ports():
 
     bg = c + se
 
-    k1 = bg.ports["0"]
-    k2 = bg.ports["1"]
+    k1 = bg.ports[0]
+    k2 = bg.ports[1]
 
     bg.connect(k1, k2)
 
@@ -226,7 +226,7 @@ def test_set_param():
     assert c.params["c"] == 1
 
 
-def test_set_compuond_param():
+def test_set_compound_param():
 
     j = bgt.new("0")
     c = bgt.new("C")
@@ -235,3 +235,20 @@ def test_set_compuond_param():
     bg = c + se + j
 
     assert len(bg.params) == 2
+
+    bg.params[0] = 1
+
+
+@pytest.mark.usefixture("rlc")
+def test_add_port(rlc):
+
+    port = rlc.make_port()
+
+    rlc.connect((rlc, port), "0_0")
+
+    assert rlc.ports == {
+        0: (rlc, port)
+    }
+
+
+

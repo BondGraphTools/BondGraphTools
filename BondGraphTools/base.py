@@ -92,7 +92,12 @@ class BondGraphBase:
         """
         #super().__init__(name, parent)
         self.name = name
-        self._ports = ports
+        if ports:
+            self._ports = {
+                (int(p) if p.isnumeric() else p):v for p,v in ports.items()
+            }
+        else:
+            self._ports = {}
         """ List of exposed Power ports"""
 
         """ Dictionary of internal parameter and their values. The key is 

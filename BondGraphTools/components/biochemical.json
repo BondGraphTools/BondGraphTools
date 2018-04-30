@@ -4,6 +4,7 @@
   "components":{
     "Ce":{
       "name":"Concentration of Chemical Species",
+      "class": "BaseComponent",
       "ports":{
         "0":null
       },
@@ -20,6 +21,7 @@
     },
     "Re":{
       "name": "Biochemical Reaction",
+      "class": "BaseComponent",
       "ports":{
         "0": {"name": "Reactants"},
         "1": {"name": "Products"}

@@ -17,6 +17,7 @@ class BondGraph(BondGraphBase):
                 self.__add__(component)
 
         self.bonds = list()
+        self._internal_ports = []
         self.type = "Composite"
         self.view = GraphLayout()
         """Graphical Layout of internal components"""
@@ -72,11 +73,14 @@ class BondGraph(BondGraphBase):
     def ports(self):
         bonds = {v for bond in self.bonds for v in bond}
         j = 0
-        out = dict()
+        out = {p:v for p, v in self._ports.items()}
+
         for v in self.components.values():
             for p in v.ports:
+                while j in out:
+                    j +=1
                 if (v, p) not in bonds:
-                    out.update({f"{j}": (v, p)})
+                    out.update({j: (v, p)})
                     j += 1
         return out
 
@@ -98,25 +102,19 @@ class BondGraph(BondGraphBase):
 
     @property
     def basis_vectors(self):
-
         tangent_space = dict()
         port_space = dict()
         control_space = dict()
 
-        for component in self.components.values():
-            c_ts, c_ps, c_cs = component.basis_vectors
+        for var, var_id in self.state_vars.items():
+            tangent_space[sp.symbols((f"{var}", f"d{var}"))] = var_id
 
-            for var_id in c_ts.values():
-                i = len(tangent_space)
-                tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
+        for port, port_id in self.ports.items():
+            port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = port_id
 
-            for port in c_ps.values():
-                i = len(port_space)
-                port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
+        for var, var_id in self.control_vars.items():
+            control_space[sp.symbols(f"u_{var}")] = var_id
 
-            for cv in c_cs.values():
-                i = len(control_space)
-                control_space[sp.symbols(f"u_{i}")] = cv
         return tangent_space, port_space, control_space
 
     @property
@@ -156,9 +154,30 @@ class BondGraph(BondGraphBase):
 
         return ode
 
+    def _build_internal_basis_vectors(self):
+        tangent_space = dict()
+        port_space = dict()
+        control_space = dict()
+
+        for component in self.components.values():
+            c_ts, c_ps, c_cs = component.basis_vectors
+
+            for var_id in c_ts.values():
+                i = len(tangent_space)
+                tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
+
+            for port in c_ps.values():
+                i = len(port_space)
+                port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
+
+            for cv in c_cs.values():
+                i = len(control_space)
+                control_space[sp.symbols(f"u_{i}")] = cv
+        return tangent_space, port_space, control_space
+
     def _build_inverse_coord_maps(self):
 
-        tm, js, cm = self.basis_vectors
+        tm, js, cm = self._build_internal_basis_vectors()
 
         inverse_tm = {
             coord_id: index for index, coord_id in enumerate(tm.values())
@@ -181,7 +200,6 @@ class BondGraph(BondGraphBase):
         coordinates.append(sp.S("c"))
 
         return (inverse_tm, inverse_js, inverse_cm), coordinates
-
 
     def _build_junction_dict(self, index_map, offset=0):
         """
@@ -328,4 +346,22 @@ class BondGraph(BondGraphBase):
             self.bonds.remove(bond)
             for c, p in bond:
                 c.release_port(p)
+
+    def make_port(self):
+        n = 0
+
+        while n in self.ports:
+            n += 1
+
+        self._ports[n] = (self, n)
+        self._internal_ports.append(n)
+        return n
+
+    def delete_port(self, port):
+        if port in self._ports:
+            del self._ports[port]
+            del self._internal_ports[port]
+
+
+
 

@@ -95,7 +95,7 @@ class BaseComponent(BondGraphBase):
             tangent_space[sp.symbols((var, f"d{var}"))] = (self, var)
 
         for port in self.ports:
-            if not port.isnumeric():
+            if not isinstance(port, int):
                 continue
 
             port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = (self, port)
@@ -121,7 +121,7 @@ class BaseComponent(BondGraphBase):
             if sloc < 0:
                 # we have a vector equation here.
                 for port_id in self.ports:
-                    if port_id.isnumeric():
+                    if isinstance(port_id, int):
                         rels.append(
                         sp.sympify(
                             string.replace("_i", "_{}".format(port_id))))
@@ -144,7 +144,7 @@ class BaseComponent(BondGraphBase):
 
                 substring = string[sloc + 4: eloc]
                 terms = [substring.replace("_i", "_{}".format(p))
-                         for p in self.ports if p.isnumeric()]
+                         for p in self.ports if isinstance(p, int)]
                 symstr = string[0:sloc] + "(" + " + ".join(terms) + string[
                                                                     eloc:]
                 rels.append(
@@ -162,25 +162,32 @@ class BaseComponent(BondGraphBase):
     def __hash__(self):
         return id(self)
 
+    def make_port(self):
+        raise AttributeError(
+            "Cannot add a port to %s", self)
+
 
 class NPort(BaseComponent):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-        self.__fixed_ports = (p for p in self.ports if p.isnumeric())
+        self.__fixed_ports = (int(p) for p in self.ports if isinstance(p, int))
 
     @property
     def ports(self):
-        return {p:v for p,v in self._ports.items() if p.isnumeric()}
+        return {p:v for p,v in self._ports.items() if isinstance(p, int)}
 
     def make_port(self):
         n = 0
-        while str(n) in self._ports:
+        while n in self._ports:
             n += 1
-        self._ports[str(n)] = None
+        self._ports[n] = None
 
-        return str(n)
+        return n
+
+    def delete_port(self, port):
+        del self._ports[port]
 
     def release_port(self, port):
         if port not in self.__fixed_ports:
-            del self._ports[port]
+            self.delete_port(port)
