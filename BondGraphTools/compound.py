@@ -4,7 +4,8 @@ import sympy as sp
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-from .algebra import generate_relations, smith_normal_form
+from .algebra import smith_normal_form, adjacency_to_dict
+
 
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
@@ -125,7 +126,7 @@ class BondGraph(BondGraphBase):
         js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
         n = len(coordinates)
-        lin_dict = self._build_junction_dict(inv_js, offset=ss_size)
+        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
         lin_row = max(row + 1 for row, _ in lin_dict.keys())
         nlin_dict = {}
         nlin_funcs = []
@@ -201,31 +202,6 @@ class BondGraph(BondGraphBase):
 
         return (inverse_tm, inverse_js, inverse_cm), coordinates
 
-    def _build_junction_dict(self, index_map, offset=0):
-        """
-        matrix has 2*#bonds rows
-        and 2*#ports columes
-        so that MX = 0 and X^T = (e_1,f_1,e_2,f_2) 
-        
-        Args:
-            index_map: the mapping between (component, port) pair and index 
-
-        Returns: Matrix M
-
-        """
-        M = dict()
-
-        for i, (bond_1, bond_2) in enumerate(self.bonds):
-            j_1 = offset + 2*index_map[bond_1]
-            j_2 = offset + 2*index_map[bond_2]
-            # effort variables
-            M[(2*i, j_1)] = - 1
-            M[(2*i, j_2)] = 1
-            # flow variables
-            M[(2*i+1, j_1 + 1)] = 1
-            M[(2*i+1, j_2 + 1)] = 1
-
-        return M
 
     def connect(self, source, destination):
         """

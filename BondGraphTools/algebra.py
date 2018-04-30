@@ -57,6 +57,34 @@ def smith_normal_form(matrix):
 
     return sp.SparseMatrix(n, n, m_dict)
 
+
+def adjacency_to_dict(nodes, edges, offset=0):
+    """
+    matrix has 2*#bonds rows
+    and 2*#ports columes
+    so that MX = 0 and X^T = (e_1,f_1,e_2,f_2)
+
+    Args:
+        index_map: the mapping between (component, port) pair and index
+
+    Returns: Matrix M
+
+    """
+    M = dict()
+
+    for i, (node_1, node_2) in enumerate(edges):
+        j_1 = offset + 2 * nodes[node_1]
+        j_2 = offset + 2 * nodes[node_2]
+        # effort variables
+        M[(2 * i, j_1)] = - 1
+        M[(2 * i, j_2)] = 1
+        # flow variables
+        M[(2 * i + 1, j_1 + 1)] = 1
+        M[(2 * i + 1, j_2 + 1)] = 1
+
+    return M
+
+
 def generate_relations(coords, matrix, nonlinear_op):
     """
     System in the form

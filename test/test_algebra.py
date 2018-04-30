@@ -2,7 +2,7 @@ import pytest
 import sympy
 
 import BondGraphTools as bgt
-from BondGraphTools.algebra import extract_coefficients, smith_normal_form
+from BondGraphTools.algebra import extract_coefficients, smith_normal_form, adjacency_to_dict
 
 def test_build_relations():
     c = bgt.new("C")
@@ -57,7 +57,7 @@ def test_build_junction_dict():
     bg = kvl+c
     bg.connect(kvl, c)
     index_map = {(c,0):0, (kvl,0):1}
-    M = bg._build_junction_dict(index_map, offset=1)
+    M = adjacency_to_dict(index_map, bg.bonds, offset=1)
     assert M[(0, 1)] == 1
     assert M[(0, 3)] == -1
     assert M[(1, 2)] == 1
@@ -140,6 +140,7 @@ def test_relations_iter():
     for lin, nlin in relations:
         assert not nlin
         assert lin in (d1, d2, d1m, d2m)
+
 
 @pytest.mark.usefixture("rlc")
 def test_interal_basis_vectors(rlc):
