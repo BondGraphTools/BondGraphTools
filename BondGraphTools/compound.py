@@ -71,22 +71,30 @@ class BondGraph(BondGraphBase):
     @property
     def ports(self):
         bonds = {v for bond in self.bonds for v in bond}
-
-        return {(c, p): v.ports[p]
-                for c, v in self.components.items() for p in v.ports
-                if (v, p) not in bonds}
+        j = 0
+        out = dict()
+        for v in self.components.values():
+            for p in v.ports:
+                if (v, p) not in bonds:
+                    out.update({f"{j}": (v, p)})
+                    j += 1
+        return out
 
     @property
     def state_vars(self):
-        return {(v, i): v.state_vars[i] for
-                c, v in self.components.items() if v.state_vars
-                for i in v.state_vars}
+        j = 0
+        out = dict()
+        for v in self.components.values():
+            for i in v.state_vars:
+                out.update({f"x_{j}": (v, i)})
+                j += 1
+        return out
 
     @property
     def control_vars(self):
-        return [(v, i) for
-                v in self.components.values() if v.control_vars
-                for i in v.control_vars]
+        return {f"u_{j}":(v, i) for
+                j, v in enumerate(self.components.values())
+                for i in v.control_vars}
 
     @property
     def basis_vectors(self):

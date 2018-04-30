@@ -141,7 +141,8 @@ def test_connect_ports():
 
     bg = c + se
 
-    k1, k2 = tuple(bg.ports)
+    k1 = bg.ports["0"]
+    k2 = bg.ports["1"]
 
     bg.connect(k1, k2)
 
