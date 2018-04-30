@@ -183,7 +183,7 @@ class NPort(BaseComponent):
             n += 1
         self._ports[n] = None
 
-        return n
+        return self, n
 
     def delete_port(self, port):
         del self._ports[port]

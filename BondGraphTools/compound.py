@@ -61,7 +61,11 @@ class BondGraph(BondGraphBase):
             raise TypeError("unsupported operand type(s) for +: '%s' and '%s'",
                             type(self),
                             type(other))
+
         return self
+
+    # def __iadd__(self, other):
+    #     return self.__add__(other)
 
     @property
     def params(self):
@@ -79,7 +83,7 @@ class BondGraph(BondGraphBase):
         for v in self.components.values():
             for p in v.ports:
                 while j in out:
-                    j +=1
+                    j += 1
                 if (v, p) not in bonds:
                     out.update({j: (v, p)})
                     j += 1
@@ -127,6 +131,7 @@ class BondGraph(BondGraphBase):
         ss_size = len(inv_tm) # number of state space coords
         n = len(coordinates)
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+
         lin_row = max(row + 1 for row, _ in lin_dict.keys())
         nlin_dict = {}
         nlin_funcs = []
@@ -151,15 +156,30 @@ class BondGraph(BondGraphBase):
 
         lin_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
 
-        ode = lin_op[0:ss_size, 0:].dot(coordinates)
+        relations = []
 
-        return ode
+        for row in range(ss_size):
+            rel = lin_op[row, :].dot(coordinates)
+            if rel:
+                relations.append(rel)
+        for row in range(ss_size, ss_size + 2*js_size, 2):
+            if lin_op[row,row] == 0 or lin_op[row+1, row+1] == 0:
+                rels = lin_op[row:row+2, :].dot(coordinates)
+                relations += [rel for rel in rels if rel]
+
+        rels = lin_op[(ss_size + 2 * js_size):, :].dot(coordinates)
+        relations += [rel for rel in rels if rel]
+
+        return relations
 
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
-        port_space = dict()
         control_space = dict()
-
+        port_space = dict()
+        input_port_space = {
+            sp.symbols((f"e_{i}", f"f_{i}")): (self, i)
+            for i in self._internal_ports
+        }
         for component in self.components.values():
             c_ts, c_ps, c_cs = component.basis_vectors
 
@@ -168,12 +188,14 @@ class BondGraph(BondGraphBase):
                 tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
 
             for port in c_ps.values():
-                i = len(port_space)
+                i = len(port_space) + len(input_port_space)
                 port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
 
             for cv in c_cs.values():
                 i = len(control_space)
                 control_space[sp.symbols(f"u_{i}")] = cv
+
+        port_space.update(input_port_space)
         return tangent_space, port_space, control_space
 
     def _build_inverse_coord_maps(self):
@@ -202,7 +224,6 @@ class BondGraph(BondGraphBase):
 
         return (inverse_tm, inverse_js, inverse_cm), coordinates
 
-
     def connect(self, source, destination):
         """
 
@@ -214,7 +235,10 @@ class BondGraph(BondGraphBase):
             if isinstance(src, str):
                 src = self.components[src]
         except (ValueError, TypeError):
-            src, src_port = self._find_port(source)
+            if isinstance(source, int) and source in self._internal_ports:
+                src, src_port = (self, source)
+            else:
+                src, src_port = self._find_port(source)
 
         try:
             dest, dest_port = destination
@@ -222,7 +246,11 @@ class BondGraph(BondGraphBase):
                 dest = self.components[dest]
 
         except (ValueError, TypeError):
-            dest, dest_port = self._find_port(destination)
+            if isinstance(destination, int) and \
+                    destination in self._internal_ports:
+                dest, dest_port = self, destination
+            else:
+                dest, dest_port = self._find_port(destination)
 
         if ((src, src_port) in bonds and src_port.isnumneric()) or (
                 (dest, dest_port) in bonds and dest_port.isnumeric()):
@@ -255,7 +283,7 @@ class BondGraph(BondGraphBase):
 
         if not free_ports:
             try:
-                port = comp.make_port()
+                comp, port = comp.make_port()
             except AttributeError:
                 raise InvalidComponentException(
                     "Could not find a free port on %s",component)
@@ -331,7 +359,7 @@ class BondGraph(BondGraphBase):
 
         self._ports[n] = (self, n)
         self._internal_ports.append(n)
-        return n
+        return self, n
 
     def delete_port(self, port):
         if port in self._ports:

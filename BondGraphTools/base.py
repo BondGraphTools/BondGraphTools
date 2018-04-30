@@ -10,7 +10,7 @@ from .algebra import extract_coefficients
 logger = logging.getLogger(__name__)
 
 
-def new(component, name=None, library=base_id, value=None):
+def new(component=None, name=None, library=base_id, value=None):
     """
     Creates a new Bond Graph from a library component.
 
@@ -27,7 +27,10 @@ def new(component, name=None, library=base_id, value=None):
     Returns: instance of :obj:`BondGraph`
 
     """
-    if isinstance(component, str):
+    if not component:
+        cls = _find_subclass("BondGraph", BondGraphBase)
+        return cls(name=name)
+    elif isinstance(component, str):
         build_args = get_component(component, library)
 
         if name:

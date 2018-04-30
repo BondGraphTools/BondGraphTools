@@ -46,6 +46,19 @@ def test_add():
     assert se in bg
 
 
+def test_iadd():
+    c_1 = bgt.new("C", value=1)
+    c_2 = bgt.new("C", value=1)
+    c_3 = bgt.new("C", value=1)
+
+    bg = bgt.new(name="bg")
+    bg += c_1 + c_2 + c_3
+
+    assert c_1 in bg
+    assert c_2 in bg
+    assert c_3 in bg
+
+
 def test_equal():
 
     c_1 = bgt.new("C", value=1)
@@ -238,17 +251,6 @@ def test_set_compound_param():
 
     bg.params[0] = 1
 
-
-@pytest.mark.usefixture("rlc")
-def test_add_port(rlc):
-
-    port = rlc.make_port()
-
-    rlc.connect((rlc, port), "0_0")
-
-    assert rlc.ports == {
-        0: (rlc, port)
-    }
 
 
 

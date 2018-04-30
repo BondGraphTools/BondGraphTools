@@ -66,3 +66,23 @@ def test_rlc_con_rel(rlc):
     assert "x_0" in rlc.state_vars
     assert "x_1" in rlc.state_vars
 
+
+@pytest.mark.usefixture("rlc")
+def test_add_forcing(rlc):
+    port = rlc.make_port()
+
+    assert port == (rlc, 0)
+
+    rlc.connect(port, "0_0")
+
+    assert rlc.ports == {
+        0: port
+    }
+
+    ts, ps, cv = rlc.basis_vectors
+
+    assert len(ps) == 1
+
+    assert rlc.constitutive_relations == list(
+        sympy.sympify("dx_0 - x_1, dx_1 + f_0 + x_0 + x_1, e_0 - x_1")
+    )
