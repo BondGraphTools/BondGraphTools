@@ -171,3 +171,6 @@ class InvalidComponentException(Exception):
 
 class ModelParsingError(Exception):
     pass
+
+class ModelException(Exception):
+    pass

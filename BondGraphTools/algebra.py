@@ -85,7 +85,35 @@ def adjacency_to_dict(nodes, edges, offset=0):
     return M
 
 
+def inverse_coord_maps(tangent_space, port_space, control_space):
+    inverse_tm = {
+        coord_id: index for index, coord_id
+        in enumerate(tangent_space.values())
+    }
+    inverse_js = {
+        coord_id: index for index, coord_id
+        in enumerate(port_space.values())
+    }
+    inverse_cm = {
+        coord_id: index for index, coord_id
+        in enumerate(control_space.values())
+    }
+
+    coordinates = [dx for _, dx in tangent_space]
+
+    for e, f in port_space:
+        coordinates += [e, f]
+    for x, _ in tangent_space:
+        coordinates.append(x)
+    for u in control_space:
+        coordinates.append(u)
+    coordinates.append(sp.S("c"))
+
+    return (inverse_tm, inverse_js, inverse_cm), coordinates
+
+
 def generate_relations(coords, matrix, nonlinear_op):
+
     """
     System in the form
 

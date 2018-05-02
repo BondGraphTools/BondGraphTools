@@ -4,6 +4,7 @@ import sympy
 import BondGraphTools as bgt
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, adjacency_to_dict
 
+
 def test_build_relations():
     c = bgt.new("C")
 
@@ -149,3 +150,17 @@ def test_interal_basis_vectors(rlc):
     assert len(tangent) == 2
     assert len(cv) == 0
     assert len(ports) == 6
+
+
+def test_cv_relations():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    kcl = bgt.new("1")
+    bg = c + se + kcl + r
+
+    bg.connect(c,kcl)
+    bg.connect(se, kcl)
+    bg.connect(r, kcl)
+
+    assert bg.constitutive_relations == [sympy.sympify("dx_0 - u_0 + x_0")]

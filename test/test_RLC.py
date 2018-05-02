@@ -43,16 +43,6 @@ def test_symbolic_params():
 
 
 @pytest.mark.use_fixture("rlc")
-def test_simulate(rlc):
-
-    t, X = sim.simulate(
-        rlc,
-        timespan=[0, 10],
-        initial_state={k: 1 for k in rlc.state_vars}
-    )
-
-
-@pytest.mark.use_fixture("rlc")
 def test_rlc_con_rel(rlc):
 
     rel = rlc.constitutive_relations

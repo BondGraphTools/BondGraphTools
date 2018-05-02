@@ -28,10 +28,10 @@
       "params": {
         "Is":{
           "name":"Reverse Saturation Current",
-          "value": "10**-12",
+          "value": "10**-12"
         },
         "beta_f":{
-          "name":"Forward common current emitter gain"
+          "name":"Forward common current emitter gain",
           "value": 100,
           "range":[20,500]
         },
@@ -41,7 +41,7 @@
           "range":[0,20]
         },
         "Vt":{
-          "name":"Thermal Voltage kT/q"
+          "name":"Thermal Voltage kT/q",
           "value": 0.026
         }
       },

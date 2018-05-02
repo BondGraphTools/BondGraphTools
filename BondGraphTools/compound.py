@@ -4,7 +4,7 @@ import sympy as sp
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-from .algebra import smith_normal_form, adjacency_to_dict
+from .algebra import smith_normal_form, adjacency_to_dict, inverse_coord_maps
 
 
 class BondGraph(BondGraphBase):
@@ -101,9 +101,12 @@ class BondGraph(BondGraphBase):
 
     @property
     def control_vars(self):
-        return {f"u_{j}":(v, i) for
-                j, v in enumerate(self.components.values())
-                for i in v.control_vars}
+        j = 0
+        out = dict()
+        for v in self.components.values():
+            for i in v.control_vars:
+                out.update({f"u_{j}":(v,i)})
+        return out
 
     @property
     def basis_vectors(self):
@@ -118,23 +121,48 @@ class BondGraph(BondGraphBase):
             port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = port_id
 
         for var, var_id in self.control_vars.items():
-            control_space[sp.symbols(f"u_{var}")] = var_id
+            control_space[sp.symbols(f"{var}")] = var_id
 
         return tangent_space, port_space, control_space
 
     @property
     def constitutive_relations(self):
 
-        mappings, coordinates = self._build_inverse_coord_maps()
+        coordinates, mappings, lin_op, nlin_op = self._system_rep()
+
+        inv_tm, inv_js, _ = mappings
+        js_size = len(inv_js) # number of ports
+        ss_size = len(inv_tm) # number of state space coords
+
+        relations = []
+        for row in range(ss_size):
+            rel = lin_op[row, :].dot(coordinates)
+            if rel:
+                relations.append(rel)
+        for row in range(ss_size, ss_size + 2*js_size, 2):
+            if lin_op[row,row] == 0 or lin_op[row+1, row+1] == 0:
+                rels = lin_op[row:row+2, :].dot(coordinates)
+                relations += [rel for rel in rels if rel]
+
+        rels = lin_op[(ss_size + 2 * js_size):, :].dot(coordinates)
+        relations += [rel for rel in rels if rel]
+
+        return relations
+
+    def _system_rep(self):
+        mappings, coordinates = inverse_coord_maps(
+            *self._build_internal_basis_vectors()
+        )
         inv_tm, inv_js, _ = mappings
         js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
         n = len(coordinates)
+
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
 
         lin_row = max(row + 1 for row, _ in lin_dict.keys())
         nlin_dict = {}
-        nlin_funcs = []
+        nonlinear_op = []
 
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
@@ -154,23 +182,9 @@ class BondGraph(BondGraphBase):
                     # nlin_funcs.append(nonlinear)
                     raise NotImplementedError()
 
-        lin_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
+        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
 
-        relations = []
-
-        for row in range(ss_size):
-            rel = lin_op[row, :].dot(coordinates)
-            if rel:
-                relations.append(rel)
-        for row in range(ss_size, ss_size + 2*js_size, 2):
-            if lin_op[row,row] == 0 or lin_op[row+1, row+1] == 0:
-                rels = lin_op[row:row+2, :].dot(coordinates)
-                relations += [rel for rel in rels if rel]
-
-        rels = lin_op[(ss_size + 2 * js_size):, :].dot(coordinates)
-        relations += [rel for rel in rels if rel]
-
-        return relations
+        return coordinates, mappings, linear_op, nonlinear_op
 
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
@@ -197,32 +211,6 @@ class BondGraph(BondGraphBase):
 
         port_space.update(input_port_space)
         return tangent_space, port_space, control_space
-
-    def _build_inverse_coord_maps(self):
-
-        tm, js, cm = self._build_internal_basis_vectors()
-
-        inverse_tm = {
-            coord_id: index for index, coord_id in enumerate(tm.values())
-        }
-        inverse_js = {
-            coord_id: index for index, coord_id in enumerate(js.values())
-        }
-        inverse_cm = {
-            coord_id: index for index, coord_id in enumerate(cm.values())
-        }
-
-        coordinates = [dx for _, dx in tm]
-
-        for e, f in js:
-            coordinates += [e, f]
-        for x, _ in tm:
-            coordinates.append(x)
-        for u in cm:
-            coordinates.append(u)
-        coordinates.append(sp.S("c"))
-
-        return (inverse_tm, inverse_js, inverse_cm), coordinates
 
     def connect(self, source, destination):
         """
