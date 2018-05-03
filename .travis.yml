@@ -11,7 +11,7 @@ before_install:
   - sudo apt-get install -qq julia
 
 install:
-  - julia -e "Pkg.add("DifferentialEquations")
+  - julia -e 'Pkg.add("DifferentialEquations")'
   - pip install -r requirements.txt
   - pip install pytest coverage mock pytest-cov
 
