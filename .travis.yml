@@ -6,8 +6,11 @@ language: python
 python:
   - "3.6"
 
+before_install:
+  - apt-get update -qq
+  - apt-get install -qq julia
+
 install:
-  - apt-get install julia -U
   - julia -e "Pkg.add("DifferentialEquations")
   - pip install -r requirements.txt
   - pip install pytest coverage mock pytest-cov
