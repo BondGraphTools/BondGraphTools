@@ -12,9 +12,7 @@ def test_c_sim_fail():
     c = bgt.new("C")
     with pytest.raises(ModelException):
 
-        t, x = simulate(
-            c, timespan=[0, 1], initial_state=[1]
-       )
+        t, x = simulate(c, timespan=[0, 1], initial_state=[1])
 
 @pytest.mark.xfail
 def test_c_se_build_ode():

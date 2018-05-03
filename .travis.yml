@@ -16,9 +16,9 @@ before_install:
 
 install:
   - julia BondGraphTools/build.jl
-  - python3.6 -m pip install -r requirements.txt
-  - python3.6 -m pip install pytest coverage mock pytest-cov
-
+  - python -m pip install -r requirements.txt
+  - python -m pip install pytest coverage mock pytest-cov
+  - python -c "import diffeqpy; diffeqpy.install()"
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
