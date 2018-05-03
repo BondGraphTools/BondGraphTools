@@ -2,15 +2,19 @@ env:
   global:
     - CC_TEST_REPORTER_ID=a82fd111d71177b83059d5eaaf14e68438af425706069a325cc6d5fa8677ae3d
 
-language: python
+language: julia
+julia:
+  - 0.5
+
 python:
   - "3.6"
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq julia
+  - sudo apt-get install -qq python3 pip3
 
 install:
+  - julia -e 'Pkg.update()'
   - julia -e 'Pkg.add("DifferentialEquations")'
   - pip install -r requirements.txt
   - pip install pytest coverage mock pytest-cov
