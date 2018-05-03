@@ -7,8 +7,8 @@ python:
   - "3.6"
 
 before_install:
-  - apt-get update -qq
-  - apt-get install -qq julia
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq julia
 
 install:
   - julia -e "Pkg.add("DifferentialEquations")
