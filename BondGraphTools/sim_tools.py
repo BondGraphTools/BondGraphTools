@@ -1,8 +1,11 @@
 import numpy as np
-from scipy.integrate import ode
-import sympy as sp
+import functools
+
+from  diffeqpy import de
+
 from .base import ModelException
 from .algebra import inverse_coord_maps,smith_normal_form
+
 
 def simulate(bond_graph,
              timespan, initial_state,input=None, delta_t=0.001,
@@ -36,21 +39,32 @@ def _build_ode(bond_graph, input=None):
     if len(js_map) > 0:
         raise NotImplementedError
 
-    lin_dict = {}
-    row = 0
-    for lin, nlin in bond_graph.get_relations_iterator(mappings, coords):
+    subs = []
+    for c in coords:
+        try:
+            name, idx = str(c).split('_')
+            subs += [(str(c), f'{name}[{idx}]')]
+        except ValueError:
+            pass
 
-        if nlin:
-            raise NotImplementedError
+    differential = []
+    julia_string  = "def f(dx,x,p,t):\n"
+    return_string = "    return ["
+    for i, rel in enumerate(bond_graph.constitutive_relation):
+        if 'dx' in rel or 'dq' in rel or 'dp' in rel:
+            differential.append(True)
+        else:
+            differential.append(False)
 
-        for col, value in lin.items():
-            lin_dict.update({(row, col): value})
+        eqn = functools.reduce(lambda x, y: x.replace(*y), subs, rel)
+        julia_string += f'    res{i} = {eqn}\n'
+        return_string += 'res{i},'
 
-        row += 1
-    if row != m:
-        raise NotImplementedError
+    julia_string += return_string + ']'
+    func = de.eval(julia_string)
 
 
 
-    return None, None
+    return func, None
+
 

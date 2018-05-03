@@ -6,6 +6,7 @@ language: python
 
 python:
   - "3.6"
+  - "3.7"
 
 before_install:
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
@@ -25,7 +26,6 @@ before_script:
   - ./cc-test-reporter before-build
 
 script: pytest --cov=BondGraphTools --cov-report=xml test
-
 
 after_script:
   ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

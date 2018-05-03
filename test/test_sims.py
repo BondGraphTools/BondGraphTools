@@ -28,13 +28,13 @@ def test_c_se_build_ode():
     bg.connect(c,kcl)
     bg.connect(r, kcl)
     bg.connect(se, kcl)
-    #"dx_0 - u_0 + x_0"
+
+    # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
 
-    func, jac = _build_ode(bg, input=lambda XT: [np.exp(-XT(-1))])
+    func, jac = _build_ode(bg, input=['exp(-t)'])
 
-    assert func(0, 0) == 1
-    assert jac == -1
+    assert func(0, 0, 0, 0) == 1
 
 @pytest.mark.skip
 def test_c_se_sim():
