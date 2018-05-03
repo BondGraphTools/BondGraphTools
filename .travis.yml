@@ -15,8 +15,7 @@ before_install:
   - sudo apt-get install -qq python3.6 python3-pip
 
 install:
-  - julia -e 'Pkg.update()'
-  - julia -e 'Pkg.add("DifferentialEquations")'
+  - julia BondGraphTools/build.jl
   - python3.6 -m pip install -r requirements.txt
   - python3.6 -m pip install pytest coverage mock pytest-cov
 
