@@ -4,7 +4,7 @@ import numpy as np
 import BondGraphTools as bgt
 
 from BondGraphTools.base import ModelException
-from BondGraphTools.sim_tools import simulate, _build_ode
+from BondGraphTools.sim_tools import simulate, _build_dae
 
 
 def test_c_sim_fail():
@@ -14,7 +14,6 @@ def test_c_sim_fail():
 
         t, x = simulate(c, timespan=[0, 1], initial_state=[1])
 
-@pytest.mark.xfail
 def test_c_se_build_ode():
 
     c = bgt.new("C", value=1)
@@ -30,9 +29,11 @@ def test_c_se_build_ode():
     # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
 
-    func, jac = _build_ode(bg, input=['exp(-t)'])
+    func, diff_vars = _build_dae(bg, control_vars=['exp(-t)'])
 
-    assert func(0, 0, 0, 0) == 1
+    assert func(0, 0, 0, 0) == -1
+    assert func(2, 0, 0, 0) == 1
+    assert func(0, 2, 0, 0) == 1
 
 @pytest.mark.skip
 def test_c_se_sim():
@@ -53,8 +54,7 @@ def test_c_se_sim():
         )
         assert "Control variable not specified" in ex.args
     t, x = simulate(
-        bg, timespan=[0,10], initial_state=[1],
-        input=lambda XT: [np.exp(-XT(-1))]
+        bg, timespan=[0,10], initial_state=[1], input=['exp(-t)']
     )
 
     assert t[0] == 0
@@ -62,7 +62,7 @@ def test_c_se_sim():
     t_cols, = t.shape
     assert t_cols > 1
     assert (1, t_cols) == x.shape
-    assert x[0,0] == 1
+    assert x[0, 0] == 1
 
     solution = (1+t)*np.exp(-t)
     solution = solution.reshape(1, t_cols)
