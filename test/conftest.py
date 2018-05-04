@@ -1,5 +1,7 @@
 import pytest
 import BondGraphTools as bgt
+import julia
+julia.Julia()
 
 @pytest.fixture(scope='class')
 def rlc():

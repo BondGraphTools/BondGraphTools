@@ -12,7 +12,7 @@ def test_c_sim_fail():
     c = bgt.new("C")
     with pytest.raises(ModelException):
 
-        t, x = simulate(c, timespan=[0, 1], initial_state=[1])
+        t, x = simulate(c, timespan=[0, 1], initial=([1],[1]))
 
 def test_c_se_build_ode():
 
@@ -35,7 +35,6 @@ def test_c_se_build_ode():
     assert func(2, 0, 0, 0) == 1
     assert func(0, 2, 0, 0) == 1
 
-@pytest.mark.skip
 def test_c_se_sim():
 
     c = bgt.new("C", value=1)
@@ -50,11 +49,11 @@ def test_c_se_sim():
 
     with pytest.raises(ModelException) as ex:
         t, x = simulate(
-            c, timespan=[0, 10], initial_state=[1]
+            c, timespan=[0, 10], initial=([0], [1])
         )
         assert "Control variable not specified" in ex.args
     t, x = simulate(
-        bg, timespan=[0,10], initial_state=[1], input=['exp(-t)']
+        bg, timespan=[0,10], initial=([0], [1]), control_vars=['exp(-t)']
     )
 
     assert t[0] == 0

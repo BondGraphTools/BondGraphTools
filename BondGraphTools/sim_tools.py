@@ -4,12 +4,13 @@ import numpy as np
 from diffeqpy import de
 import julia
 from .base import ModelException
-from .algebra import inverse_coord_maps,smith_normal_form
+from .algebra import inverse_coord_maps, smith_normal_form
 
 j = julia.Julia()
 
+
 def simulate(bond_graph,
-             timespan, initial_state,input=None, delta_t=0.001,
+             timespan, initial, control_vars=None, delta_t=0.001,
              dtype=np.float32):
 
     if bond_graph.ports:
@@ -20,15 +21,15 @@ def simulate(bond_graph,
     if bond_graph.control_vars and not input:
         raise ModelException("Control variable not specified")
 
-    t = np.linspace(*timespan, 1/delta_t)
+    func, diffs = _build_dae(bond_graph, control_vars)
+    dx0, x0 = initial
+    DX0 = np.array(dx0, dtype=np.float64)
+    X0 = np.array(x0, dtype=np.float64)
+    tspan = tuple(float(t) for t in timespan)
+    problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
+    sol = de.solve(problem)
 
-    x = np.empty(shape=(len(initial_state), len(t)), dtype=dtype)
-    for i, xi_0 in enumerate(initial_state):
-        x[i,0] = xi_0
-
-    func = _build_dae(bond_graph)
-
-    return t, x
+    return np.transpose(sol.t), np.transpose(sol.u)
 
 
 def _build_dae(bond_graph, control_vars=None):
@@ -39,7 +40,7 @@ def _build_dae(bond_graph, control_vars=None):
     m = len(ss_map)
     k = len(cv_map)
     if len(js_map) > 0:
-        raise NotImplementedError
+        raise NotImplementedError("Bond Graph has unconnected Ports")
 
     # construct julia coords
 
@@ -60,7 +61,8 @@ def _build_dae(bond_graph, control_vars=None):
             elif len(cv_map) == 1 and isinstance(control_vars, str):
                 temp_string = temp_string.replace(f"u_{v}", control_vars)
             else:
-                raise NotImplementedError
+                raise NotImplementedError("No control var for %s",
+                                          control_vars)
 
         for k, idx in ss_map.items():
             temp_string = temp_string.replace(f"x_{idx}", f"X[{idx+1}]")
