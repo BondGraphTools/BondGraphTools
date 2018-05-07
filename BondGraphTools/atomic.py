@@ -154,13 +154,13 @@ class BaseComponent(BondGraphBase):
         return [r for r in rels if r != 0]
 
     def __add__(self, other):
+
         return BondGraph(
             name="{}+{}".format(self.name, other.name),
-            components=[self, other]
-        )
+            components=[self, other])
 
     def __hash__(self):
-        return id(self)
+        return super().__hash__()
 
     def make_port(self):
         raise AttributeError(
@@ -173,9 +173,21 @@ class NPort(BaseComponent):
         super().__init__(*args, **kwargs)
         self.__fixed_ports = (int(p) for p in self.ports if isinstance(p, int))
 
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        return self.__dict__ == self.__dict__
+
+    def __add__(self, other):
+        return BondGraph(
+            name="{}+{}".format(self.name, other.name),
+            components=[self, other]
+        )
+
     @property
     def ports(self):
-        return {p:v for p,v in self._ports.items() if isinstance(p, int)}
+        return {p: v for p, v in self._ports.items() if isinstance(p, int)}
 
     def make_port(self):
         n = 0

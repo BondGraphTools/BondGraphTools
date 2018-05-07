@@ -1,40 +1,64 @@
 import numpy as np
 
-
-from diffeqpy import de
-import julia
 from .base import ModelException
-from .algebra import inverse_coord_maps, smith_normal_form
+from .algebra import inverse_coord_maps
+import logging
+logger = logging.getLogger(__name__)
+j = None
+de = None
 
-j = julia.Julia()
+
+def start_julia():
+    global j
+    global de
+
+    logger.info("Starting Julia Interpreter.")
+    from diffeqpy import de as de
+
+    import julia
+
+    j = julia.Julia()
+    logger.info("Julia Interpreter Loaded.")
 
 
-def simulate(bond_graph,
-             timespan, initial, control_vars=None, delta_t=0.001,
-             dtype=np.float32):
+def simulate(system,
+             timespan, initial, control_vars=None):
+    """
+    Simulate the system dynamics.
 
-    if bond_graph.ports:
+    Args:
+        system obj:`BondGraph`:
+        timespan tuple(float):
+        initial list(float):
+        control_vars (str,list(str), dict(str)):
+
+    Returns:
+
+    """
+    if system.ports:
         raise ModelException(
             "Cannot Simulate %s: unconnected ports %s",
-            bond_graph, bond_graph.ports)
+            system, system.ports)
 
-    if bond_graph.control_vars and not input:
+    if system.control_vars and not input:
         raise ModelException("Control variable not specified")
 
-    func, diffs = _build_dae(bond_graph, control_vars)
+    func, diffs = _build_dae(system, control_vars)
     dx0, x0 = initial
     DX0 = np.array(dx0, dtype=np.float64)
     X0 = np.array(x0, dtype=np.float64)
     tspan = tuple(float(t) for t in timespan)
+    if not de:
+        start_julia()
     problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
     sol = de.solve(problem)
 
     return np.transpose(sol.t), np.transpose(sol.u)
 
 
-def _build_dae(bond_graph, control_vars=None):
+def _build_dae(system, control_vars=None):
 
-    mappings, coords = inverse_coord_maps(*bond_graph.basis_vectors)
+    mappings, coords = inverse_coord_maps(*system.basis_vectors)
     ss_map, js_map, cv_map = mappings
 
     m = len(ss_map)
@@ -48,7 +72,7 @@ def _build_dae(bond_graph, control_vars=None):
     derivatives = set(coords[0:m])
     differential_vars = []
     end_string = "    return ["
-    for i, relation in enumerate(bond_graph.constitutive_relations):
+    for i, relation in enumerate(system.constitutive_relations):
         differential_vars.append(
             derivatives ^ relation.atoms() != set()
         )
@@ -75,6 +99,9 @@ def _build_dae(bond_graph, control_vars=None):
 
     end_string += "]\nend"
     julia_string += end_string
+
+    if not j: start_julia()
+
     func = j.eval(julia_string)
 
     return func, differential_vars

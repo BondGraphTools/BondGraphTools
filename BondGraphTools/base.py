@@ -62,11 +62,11 @@ def new(component=None, name=None, library=base_id, value=None):
 
 def _update_build_params(build_args, value):
     if isinstance(value, (list, tuple)):
-        assignments = zip(value, build_args["params"].keys())
+        assignments = zip(build_args["params"].keys(), value)
         for param, v in assignments:
-            build_args["params"][param] = v
+            build_args["params"][param]["value"] = v
     elif isinstance(value, dict):
-        for param, v in value:
+        for param, v in value.items():
             build_args["params"][param] = v
     else:
         p = next(iter(build_args["params"]))
@@ -140,6 +140,8 @@ class BondGraphBase:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def __repr__(self):
+        return self.name
     def get_relations_iterator(self, mappings, coordinates):
         local_tm, local_js, local_cv = self.basis_vectors
         inv_tm, inv_js, inv_cv = mappings

@@ -46,6 +46,16 @@ def test_add():
     assert se in bg
 
 
+def test_equal():
+
+    c_1 = bgt.new("C", value=1)
+    c_2 = bgt.new("C", value=1)
+
+    assert c_1 == c_2
+    assert c_1 is c_1
+    assert c_1 is not c_2
+
+@pytest.mark.skip
 def test_iadd():
     c_1 = bgt.new("C", value=1)
     c_2 = bgt.new("C", value=1)
@@ -57,15 +67,6 @@ def test_iadd():
     assert c_1 in bg
     assert c_2 in bg
     assert c_3 in bg
-
-
-def test_equal():
-
-    c_1 = bgt.new("C", value=1)
-    c_2 = bgt.new("C", value=1)
-
-    assert c_1 == c_2
-    assert c_1 is not c_2
 
 
 def test_long_sum():
@@ -250,6 +251,24 @@ def test_set_compound_param():
     assert len(bg.params) == 2
 
     bg.params[0] = 1
+
+
+def test_connect_unadded():
+
+    j = bgt.new("0")
+    c = bgt.new("C")
+    se = bgt.new("Se")
+
+    bg = c + j
+
+    bg.connect(c, j)
+
+    assert j in bg
+    assert c in bg
+
+    assert j is not se
+    with pytest.raises(InvalidComponentException):
+        bg.connect(se, j)
 
 
 

@@ -9,12 +9,20 @@
         "0":null
       },
       "params":{
-        "Is":{"name":"Forward Current"},
-        "n": {"name":"Material Number"},
-        "Vb":{"name":"Breakdown Voltage"}
+        "Is":{
+          "name":"Forward Current"
+        },
+        "n": {
+          "name":"Material Number",
+          "value": 1
+        },
+        "Vt":{
+          "name":"Thermal Voltage",
+          "value": 0.0258563
+        }
       },
      "constitutive_relations":[
-       "f_0 - Is*(exp(e_0/n/Vb) - 1)"
+       "f_0 - Is*(exp(e_0/n/Vt) - 1)"
      ]
     },
     "BJT":{

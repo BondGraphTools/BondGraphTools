@@ -163,4 +163,30 @@ def test_cv_relations():
     bg.connect(se, kcl)
     bg.connect(r, kcl)
 
-    assert bg.constitutive_relations == [sympy.sympify("dx_0 - u_0 + x_0")]
+    assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
+
+def test_smith_normal_form_2():
+    matrix = sympy.eye(3)
+    matrix.row_del(1)
+
+    m = smith_normal_form(matrix)
+
+    diff = sympy.Matrix([[0,0,0],[0,1,0], [0,0,0]])
+
+    assert (sympy.eye(3) - m) == diff
+
+
+def test_parallel_crv_relations():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    kcl = bgt.new("0")
+    bg = c + se + kcl + r
+
+    bg.connect(c, kcl)
+    bg.connect(se, kcl)
+    bg.connect(r, kcl)
+
+    assert bg.constitutive_relations == [sympy.sympify("dx_0 - du_0"),
+                                         sympy.sympify("x_0 - u_0")]
+

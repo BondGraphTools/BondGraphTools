@@ -29,14 +29,32 @@ class BondGraph(BondGraphBase):
     def save(self, filename):
         raise NotImplementedError
 
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        if self.__dict__ != other.__dict__:
+            return False
+
+        for c1, c2 in zip(self.components.values(),
+                          other.componets.values()):
+            if c1 != c2:
+                return False
+
+        return True
+
     def __getitem__(self, item):
         return self.components[item]
 
     def __contains__(self, item):
         if isinstance(item, str):
             return item in self.components
-        else:
-            return item in self.components.values()
+        elif isinstance(item, BondGraphBase):
+            for comp in self.components.values():
+                if item is comp:
+                    return True
+
+        return False
 
     def __radd__(self, other):
         if other == 0:
@@ -63,7 +81,6 @@ class BondGraph(BondGraphBase):
                             type(other))
 
         return self
-
     # def __iadd__(self, other):
     #     return self.__add__(other)
 
@@ -153,9 +170,11 @@ class BondGraph(BondGraphBase):
         mappings, coordinates = inverse_coord_maps(
             *self._build_internal_basis_vectors()
         )
-        inv_tm, inv_js, _ = mappings
+        inv_tm, inv_js, inv_cv = mappings
         js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
+        cv_size = len(inv_cv)
+
         n = len(coordinates)
 
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
@@ -183,6 +202,29 @@ class BondGraph(BondGraphBase):
                     raise NotImplementedError()
 
         linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
+        # if we have a constraint like x_0 + x_1 - u_0 = 0
+        # turn it into dx_0 + dx_1 - du_0 = 0
+
+        cols_added = False
+
+        for row in range(2*js_size + ss_size, 2*(js_size + ss_size)):
+            if not linear_op[row, 2*(js_size + ss_size):-1].is_zero:
+                if not cols_added:
+                    linear_op = linear_op.row_join(sp.SparseMatrix(
+                        linear_op.rows, cv_size, {}))
+                    cols_added = True
+                    coordinates += [
+                        sp.symbols(f"d{coordinates[i]}")
+                        for i in range(2*(js_size + ss_size), n - 1)
+                    ]
+
+                new_row = linear_op[row, 2*js_size + ss_size: 2*(js_size + ss_size)]
+                new_row = new_row.row_join(sp.SparseMatrix(1, n - ss_size, {}))
+                new_row = new_row.row_join(linear_op[row, 2*(js_size + ss_size):-2])
+                linear_op = linear_op.col_join(new_row)
+
+        if cols_added:
+            linear_op = smith_normal_form(linear_op)
 
         return coordinates, mappings, linear_op, nonlinear_op
 
@@ -227,6 +269,8 @@ class BondGraph(BondGraphBase):
                 src, src_port = (self, source)
             else:
                 src, src_port = self._find_port(source)
+                if src and src not in self:
+                    self.__add__(src)
 
         try:
             dest, dest_port = destination
@@ -239,6 +283,8 @@ class BondGraph(BondGraphBase):
                 dest, dest_port = self, destination
             else:
                 dest, dest_port = self._find_port(destination)
+                if dest and dest not in self:
+                    self.__add__(dest)
 
         if ((src, src_port) in bonds and src_port.isnumneric()) or (
                 (dest, dest_port) in bonds and dest_port.isnumeric()):
@@ -246,6 +292,7 @@ class BondGraph(BondGraphBase):
                                        "Port already in use",
                                        source, destination)
         bond = (src, src_port), (dest, dest_port)
+
         src.connect_port(src_port)
         dest.connect_port(dest_port)
         self.bonds.append(bond)

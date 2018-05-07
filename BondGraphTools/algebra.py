@@ -43,19 +43,41 @@ def smith_normal_form(matrix):
     that is, for a matrix M,
     P = _smith_normal_form(M) is a projection operator onto the nullspace of M
     """
+    # M, _ = matrix.rref()
+    # n = max(M.shape)
+    #
+    # m_dict = {}
+    # current_row = 0
+    #
+    # for row, col, entry in M.RL:
+    #     if row > current_row:
+    #         current_row = col
+    #
+    #     m_dict[(current_row, col)] = entry
+    #
+    # return sp.SparseMatrix(n, n, m_dict)
+
     M, _ = matrix.rref()
-    n = max(M.shape)
+    m, n = M.shape
+    Mp = sp.MutableSparseMatrix(0, n, [])
+    row = 0
+    ins = 0
 
-    m_dict = {}
-    current_row = 0
+    while row < m:
+        col = row
+        while col + ins < n and M[row, col + ins] == 0:
+            col += 1
+        if col >= row + ins:
+            Mp = Mp.col_join(sp.zeros(col - row, n))
+            ins += col - row
+        Mp = Mp.col_join(M.row(row))
+        row += 1
 
-    for row, col, entry in M.RL:
-        if row > current_row:
-            current_row = col
+    m, n = Mp.shape
 
-        m_dict[(current_row, col)] = entry
-
-    return sp.SparseMatrix(n, n, m_dict)
+    if m < n:
+        Mp = Mp.col_join(sp.zeros(n - m, n))
+    return Mp
 
 
 def adjacency_to_dict(nodes, edges, offset=0):
