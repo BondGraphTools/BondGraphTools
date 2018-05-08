@@ -43,12 +43,15 @@
     "name": "Stoichiometry",
     "class": "NPortWeighted",
     "ports":{
-      "0": "Complex",
+      "0": {
+        "name":"Complex",
+        "value": -1
+      },
       "i": null
     },
     "constitutive_relations":[
-      "e_0 - sum(c_i*e_i)",
-      "f_0 + f_i/c_i"
+      "sum(c_i*e_i)",
+      "c_0*f_0 + f_i/c_i"
     ]
   }
   }

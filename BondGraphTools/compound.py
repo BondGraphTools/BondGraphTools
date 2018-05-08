@@ -179,7 +179,10 @@ class BondGraph(BondGraphBase):
 
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
 
-        lin_row = max(row + 1 for row, _ in lin_dict.keys())
+        try:
+            lin_row = max(row + 1 for row, _ in lin_dict.keys())
+        except ValueError:
+            lin_row = 0
 
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
@@ -219,9 +222,6 @@ class BondGraph(BondGraphBase):
 
         Rx = sp.Matrix([R.dot(coordinates)]).T + nonlinear_op
 
-        if nonlinear_op:
-            print(Rx)
-
         for row in reversed(range(ss_size, ss_size + 2*js_size)):
 
             nonlinear_op = nonlinear_op.subs(
@@ -230,7 +230,7 @@ class BondGraph(BondGraphBase):
 
         return linear_op, nonlinear_op
 
-    def _handle_constraints(self,linear_op, nonlinear_op, coordinates,
+    def _handle_constraints(self, linear_op, nonlinear_op, coordinates,
                             size_tuple):
         cols_added = False
 
@@ -291,7 +291,6 @@ class BondGraph(BondGraphBase):
 
     def _validate_port(self, target, port=None, **kwargs):
 
-
         if isinstance(target, tuple):
             return self._validate_port(*target)
 
@@ -313,6 +312,8 @@ class BondGraph(BondGraphBase):
 
         if port in comp.ports:
             return comp, port
+        elif port and port not in comp.ports:
+            return comp, comp.make_port(port=port)
         else:
             return self._find_port(comp)
 
@@ -330,6 +331,7 @@ class BondGraph(BondGraphBase):
             raise InvalidPortException("Could not join %s to %s: "
                                        "Port already in use",
                                        source, destination)
+
         bond = (src, src_port), (dest, dest_port)
 
         src.connect_port(src_port)
@@ -357,7 +359,7 @@ class BondGraph(BondGraphBase):
 
         if not free_ports:
             try:
-                comp, port = comp.make_port()
+                port = comp.make_port()
             except AttributeError:
                 raise InvalidPortException(
                     "Could not find a free port on %s",component)
@@ -425,15 +427,20 @@ class BondGraph(BondGraphBase):
             for c, p in bond:
                 c.release_port(p)
 
-    def make_port(self):
-        n = 0
+    def make_port(self, port=None):
+        if port and not isinstance(port, int):
+            raise InvalidPortException("Could not make port %s", port)
 
-        while n in self.ports:
-            n += 1
+        if port and port not in self.ports:
+            n = port
+        else:
+            n = 0
+            while n in self.ports:
+                n += 1
 
         self._ports[n] = (self, n)
         self._internal_ports.append(n)
-        return self, n
+        return n
 
     def delete_port(self, port):
         if port in self._ports:

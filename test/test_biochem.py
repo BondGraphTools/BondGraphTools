@@ -79,7 +79,7 @@ def test_stiochiometry():
     bg = A + B + Re + Yin
 
     assert 0 in Yin._fixed_ports
-    assert Yin.ports[0] == "Complex"
+    assert Yin.ports[0]["name"] == "Complex"
     assert len(Yin.ports) == 1
 
     bg.connect((Re, 0), (Yin, 0))
@@ -91,7 +91,7 @@ def test_stiochiometry():
     bg.connect(B, (Yin, 2))
     assert Yin.ports[2] == 1
 
-    assert Yin.ports == {0:"Complex", 1:1, 2:1}
+    assert Yin.ports == {0:{"name":"Complex","value":-1}, 1:1, 2:1}
 
 
 def test_a_to_b_model():
@@ -125,9 +125,29 @@ def test_ab_to_c_model():
     Y_AB = bgt.new('Y', library="BioChem")
     Y_C = bgt.new('Y', library="BioChem")
 
+    assert Y_AB.ports[0]
+    assert Y_AB._fixed_ports == {0}
     bg = A + B + Re + Y_AB + C + Y_C
+    bg.connect(A, (Y_AB, 1))
+
+    assert Y_AB.ports[1] == 1
+    bg.connect(B, (Y_AB, 2))
+    bg.connect((Re, 0), (Y_AB, 0))
+    bg.connect((Re, 1), (Y_C, 0))
+    bg.connect((Y_C, 1), C)
+
+    assert 0 in Y_AB._fixed_ports
+    assert 0 in Y_AB.ports
+
+    eqns = {
+        sympy.sympify("dx_0 + x_0*x_1 - x_2"),
+        sympy.sympify("dx_1 + x_0*x_1 - x_2"),
+        sympy.sympify("dx_2 - x_0*x_1 + x_2")
+    }
 
 
+    for relation in bg.constitutive_relations:
+        print(relation)
+#        assert relation in eqns
 
-
-
+#    assert False

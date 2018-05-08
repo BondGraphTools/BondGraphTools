@@ -190,3 +190,4 @@ def test_parallel_crv_relations():
     assert bg.constitutive_relations == [sympy.sympify("dx_0 - du_0"),
                                          sympy.sympify("x_0 - u_0")]
 
+

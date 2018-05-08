@@ -61,12 +61,12 @@ def test_rlc_con_rel(rlc):
 def test_add_forcing(rlc):
     port = rlc.make_port()
 
-    assert port == (rlc, 0)
+    assert port == 0
 
-    rlc.connect(port, "0_0")
+    rlc.connect((rlc, port), "0_0")
 
     assert rlc.ports == {
-        0: port
+        0: (rlc, port)
     }
 
     ts, ps, cv = rlc.basis_vectors

@@ -69,12 +69,22 @@ def smith_normal_form(matrix):
     #
     # return sp.SparseMatrix(n, n, m_dict)
 
-    M, _ = matrix.rref()
+    if isinstance(matrix, dict):
+        n = 0
+        m = 0
+        for (r,c) in matrix.keys():
+            m = max(r + 1, m)
+            n = max(c + 1, n)
+        M,_ = sp.SparseMatrix(m,n,matrix).rref()
+
+    else:
+        M, _ = matrix.rref(simplify=False)
+
     m, n = M.shape
     Mp = sp.MutableSparseMatrix(0, n, [])
     row = 0
     ins = 0
-
+    print(M)
     while row < m:
         col = row
         while col + ins < n and M[row, col + ins] == 0:
@@ -86,7 +96,7 @@ def smith_normal_form(matrix):
         row += 1
 
     m, n = Mp.shape
-
+    print(Mp[:, -1])
     if m < n:
         Mp = Mp.col_join(sp.zeros(n - m, n))
     elif m > n and Mp[:, n:m].is_zero:

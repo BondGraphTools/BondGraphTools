@@ -165,7 +165,7 @@ class BaseComponent(BondGraphBase):
     def __hash__(self):
         return super().__hash__()
 
-    def make_port(self):
+    def make_port(self, **kwargs):
         raise AttributeError(
             "Cannot add a port to %s", self)
 
@@ -174,7 +174,7 @@ class NPort(BaseComponent):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-        self._fixed_ports = (int(p) for p in self.ports if isinstance(p, int))
+        self._fixed_ports = set(int(p) for p in self.ports if isinstance(p, int))
 
     def __hash__(self):
         return super().__hash__()
@@ -192,13 +192,21 @@ class NPort(BaseComponent):
     def ports(self):
         return {p: v for p, v in self._ports.items() if isinstance(p, int)}
 
-    def make_port(self, value=None):
-        n = 0
-        while n in self._ports:
-            n += 1
+    def make_port(self, port=None, value=None):
+
+        if port and not isinstance(port, int):
+            raise InvalidPortException("Could not make port %s", port)
+
+        if port and port not in self.ports:
+            n = port
+        else:
+            n = 0
+            while n in self.ports:
+                n += 1
+
         self._ports[n] = value
 
-        return self, n
+        return n
 
     def delete_port(self, port):
         del self._ports[port]
@@ -210,8 +218,8 @@ class NPort(BaseComponent):
 
 class NPortWeighted(NPort):
 
-    def make_port(self, value=1):
-        return super().make_port(value=value)
+    def make_port(self, port=None, value=1):
+        return super().make_port(port=port, value=value)
 
     def release_port(self, port):
         if port not in self._fixed_ports:
@@ -220,8 +228,13 @@ class NPortWeighted(NPort):
 
     def _build_relations(self):
         rels = super()._build_relations()
+        subs = []
 
-        subs = [(f"c_{port}", value) for port, value in
-                self.ports if port not in self._fixed_ports]
+        for port in self.ports:
+            if port in self._fixed_ports:
+                pair = (f"c_{port}", self.ports[port]["value"])
+            else:
+                pair = (f"c_{port}", self.ports[port])
 
+            subs.append(pair)
         return [rel.subs(subs) for rel in rels]

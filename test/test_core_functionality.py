@@ -271,5 +271,3 @@ def test_connect_unadded():
         bg.connect(se, j)
 
 
-
-
