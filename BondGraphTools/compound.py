@@ -153,7 +153,7 @@ class BondGraph(BondGraphBase):
 
         relations = []
         for row in range(ss_size):
-            rel = lin_op[row, :].dot(coordinates)
+            rel = lin_op[row, :].dot(coordinates) + nlin_op[row]
             if rel:
                 relations.append(rel)
         for row in range(ss_size, ss_size + 2*js_size, 2):
@@ -180,33 +180,61 @@ class BondGraph(BondGraphBase):
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
 
         lin_row = max(row + 1 for row, _ in lin_dict.keys())
-        nlin_dict = {}
-        nonlinear_op = []
 
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
-
             for linear, nonlinear in relations:
-                if not nonlinear:
-                    lin_dict.update({(lin_row, k): v
-                                     for k, v in linear.items()})
-                    lin_row += 1
+                lin_dict.update({(lin_row, k): v
+                                 for k, v in linear.items()})
 
-                elif not linear:
-                    raise NotImplementedError()
-                else:
-                    # quasilinear
-                    # row = len(nlin_funcs)
-                    # nlin_dict.update({(row, k):  v for k,v in linear.items()})
-                    # nlin_funcs.append(nonlinear)
-                    raise NotImplementedError()
+                if nonlinear:
+                    lin_dict.update({(lin_row, n): nonlinear})
+                lin_row += 1
 
-        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
+        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n+1, lin_dict))
+
         # if we have a constraint like x_0 + x_1 - u_0 = 0
         # turn it into dx_0 + dx_1 - du_0 = 0
 
+        linear_op.row_del(n)
+        nonlinear_op = linear_op[:, n]
+        linear_op.col_del(n)
+
+        size_tuple = (js_size, ss_size, cv_size, n)
+
+        coordinates, linear_op, nonlinear_op = self._handle_constraints(
+            linear_op, nonlinear_op, coordinates, size_tuple)
+        if nonlinear_op:
+            linear_op, nonlinear_op = self._simplify_nonlinear_terms(
+                coordinates, linear_op, nonlinear_op, size_tuple
+            )
+
+        return coordinates, mappings, linear_op, nonlinear_op
+
+    def _simplify_nonlinear_terms(self, coordinates, linear_op,
+                                  nonlinear_op, size_tuple):
+        js_size, ss_size, cv_size, n = size_tuple
+
+        R = sp.eye(linear_op.rows) - linear_op
+
+        Rx = sp.Matrix([R.dot(coordinates)]).T + nonlinear_op
+
+        if nonlinear_op:
+            print(Rx)
+
+        for row in reversed(range(ss_size, ss_size + 2*js_size)):
+
+            nonlinear_op = nonlinear_op.subs(
+                coordinates[row], Rx[row]
+            )
+
+        return linear_op, nonlinear_op
+
+    def _handle_constraints(self,linear_op, nonlinear_op, coordinates,
+                            size_tuple):
         cols_added = False
 
+        js_size, ss_size, cv_size, n = size_tuple
         for row in range(2*js_size + ss_size, 2*(js_size + ss_size)):
             if not linear_op[row, 2*(js_size + ss_size):-1].is_zero:
                 if not cols_added:
@@ -224,9 +252,16 @@ class BondGraph(BondGraphBase):
                 linear_op = linear_op.col_join(new_row)
 
         if cols_added:
+            nonlinear_op = nonlinear_op.col_join(
+                sp.SparseMatrix(linear_op.rows - nonlinear_op.rows, 1, {})
+            )
+            linear_op = linear_op.row_join(nonlinear_op)
             linear_op = smith_normal_form(linear_op)
+            linear_op.row_del(linear_op.cols - 1)
+            nonlinear_op = linear_op[:, linear_op.cols -1]
+            linear_op.col_del(linear_op.cols - 1)
 
-        return coordinates, mappings, linear_op, nonlinear_op
+        return coordinates, linear_op, nonlinear_op
 
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
@@ -320,10 +355,10 @@ class BondGraph(BondGraphBase):
             try:
                 comp, port = comp.make_port()
             except AttributeError:
-                raise InvalidComponentException(
+                raise InvalidPortException(
                     "Could not find a free port on %s",component)
         elif len(free_ports) > 1:
-            raise InvalidComponentException(
+            raise InvalidPortException(
                 "Could not find a unique free port on %s: "
                 "specify a port ", component)
         else:

@@ -142,6 +142,7 @@ class BondGraphBase:
 
     def __repr__(self):
         return self.name
+
     def get_relations_iterator(self, mappings, coordinates):
         local_tm, local_js, local_cv = self.basis_vectors
         inv_tm, inv_js, inv_cv = mappings

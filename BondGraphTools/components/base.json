@@ -116,7 +116,7 @@
         "f_0 + f"
       ]
     },
-    "TF": {
+    "Tf": {
       "name": "Linear Transformer",
       "class": "BaseComponent",
       "ports": {
@@ -138,7 +138,7 @@
         "f_0 - a*f_1"
       ]
     },
-    "GY": {
+    "Gy": {
       "name": "Linear Gyrator",
       "class": "BaseComponent",
       "ports": {

@@ -15,6 +15,9 @@
         "T":{"name": "Temperature"},
         "V":{"name": "Volume of the vessel"}
       },
+      "state_vars":{
+        "q_0":"Molar Quantity"
+      },
       "constitutive_relations":[
         "e_0 - e0 - R*T*log(q_0/V)"
       ]
@@ -23,8 +26,8 @@
       "name": "Biochemical Reaction",
       "class": "BaseComponent",
       "ports":{
-        "0": {"name": "Reactants"},
-        "1": {"name": "Products"}
+        "0": {"name": "Primary"},
+        "1": {"name": "Secondary"}
       },
       "params":{
         "k":{"name":"Reaction Rate"},
@@ -36,5 +39,6 @@
         "f_0 - k *(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
     }
+
   }
 }

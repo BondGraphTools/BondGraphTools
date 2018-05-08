@@ -5,7 +5,9 @@ def extract_coefficients(equation, local_map, global_coords):
 
     coeff_dict = {}
     nonlinear_terms = sp.S(0)
-    subs = [(k, global_coords[v]) for k,v in local_map.items()]
+    subs = [(k, global_coords[v]) for k, v in local_map.items()]
+
+    subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
 
     for term in equation.expand().args:
         prod_iter = flatten(term.as_coeff_mul())
@@ -16,7 +18,9 @@ def extract_coefficients(equation, local_map, global_coords):
         elif len(base) == 1 and base[0] in local_map:
             coeff_dict[local_map[base[0]]] = coeff
         else:
-            nonlinear_terms += term.subs(subs)
+            new_term = term
+            new_term = new_term.subs(subs)
+            nonlinear_terms = sp.Add(new_term, nonlinear_terms)
 
     return coeff_dict, nonlinear_terms
 
@@ -44,16 +48,24 @@ def smith_normal_form(matrix):
     P = _smith_normal_form(M) is a projection operator onto the nullspace of M
     """
     # M, _ = matrix.rref()
-    # n = max(M.shape)
-    #
+    # m, n = M.shape
+    # M = sp.SparseMatrix(m, n, M)
     # m_dict = {}
     # current_row = 0
     #
-    # for row, col, entry in M.RL:
-    #     if row > current_row:
-    #         current_row = col
+    # row_map = {}
     #
-    #     m_dict[(current_row, col)] = entry
+    # current_row = 0
+    #
+    # for row, c_idx, entry in M.RL:
+    #     if row not in row_map:
+    #         row_map[row] = c_idx
+    #         r_idx = c_idx
+    #
+    #     else:
+    #         r_idx = row_map[row]
+    #
+    #     m_dict[(r_idx, c_idx)] = entry
     #
     # return sp.SparseMatrix(n, n, m_dict)
 
@@ -77,6 +89,9 @@ def smith_normal_form(matrix):
 
     if m < n:
         Mp = Mp.col_join(sp.zeros(n - m, n))
+    elif m > n and Mp[:, n:m].is_zero:
+        Mp = Mp[:n, :n]
+
     return Mp
 
 

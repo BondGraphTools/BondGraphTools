@@ -30,7 +30,10 @@ class BaseComponent(BondGraphBase):
     @property
     def control_vars(self):
         if self.params:
-            return [param for param, value in self.params.items() if not value]
+
+            return [param for param, value in self.params.items()
+                    if not value or isinstance(value, dict) and "value"
+                    not in value]
         else:
             return []
 

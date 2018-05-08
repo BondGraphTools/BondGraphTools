@@ -1,7 +1,7 @@
 import pytest
 
 import BondGraphTools as bgt
-from BondGraphTools.base import InvalidComponentException
+from BondGraphTools.base import InvalidComponentException, InvalidPortException
 from BondGraphTools.atomic import BaseComponent
 
 
@@ -176,7 +176,7 @@ def test_disconnect_ports():
 
     bg.connect(c, se)
 
-    with pytest.raises(InvalidComponentException):
+    with pytest.raises(InvalidPortException):
         bg.connect(c, se)
 
     _ = bg.bonds.pop()
