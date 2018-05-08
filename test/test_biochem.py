@@ -16,6 +16,8 @@ def test_make_a_to_b():
     a_to_b = A + Re + B
     with pytest.raises(InvalidPortException):
         a_to_b.connect(A, Re)
+
+    assert 0 in Re.ports
     a_to_b.connect(A, (Re, 0))
     a_to_b.connect(B, (Re, 1))
 
@@ -68,6 +70,30 @@ def test_re_con_rel():
 #     assert False
 
 
+def test_stiochiometry():
+    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+
+    Re = bgt.new("Re", library="BioChem", value={'k': 1, "R": 1, "T": 1})
+    Yin = bgt.new('Y', library="BioChem")
+    bg = A + B + Re + Yin
+
+    assert 0 in Yin._fixed_ports
+    assert Yin.ports[0] == "Complex"
+    assert len(Yin.ports) == 1
+
+    bg.connect((Re, 0), (Yin, 0))
+    assert len(Yin.ports) == 1
+
+    bg.connect(A, (Yin, 1))
+    assert Yin.ports[1] == 1
+
+    bg.connect(B, (Yin, 2))
+    assert Yin.ports[2] == 1
+
+    assert Yin.ports == {0:"Complex", 1:1, 2:1}
+
+
 def test_a_to_b_model():
     A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
     B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
@@ -88,3 +114,20 @@ def test_a_to_b_model():
 
     for relation in a_to_b.constitutive_relations:
         assert relation in eqns
+
+
+def test_ab_to_c_model():
+
+    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    C = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    Re = bgt.new("Re", library="BioChem", value={'k': 1, "R": 1, "T": 1})
+    Y_AB = bgt.new('Y', library="BioChem")
+    Y_C = bgt.new('Y', library="BioChem")
+
+    bg = A + B + Re + Y_AB + C + Y_C
+
+
+
+
+

@@ -38,7 +38,18 @@
         "f_0 + f_1",
         "f_0 - k *(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
-    }
-
+    },
+  "Y":{
+    "name": "Stoichiometry",
+    "class": "NPortWeighted",
+    "ports":{
+      "0": "Complex",
+      "i": null
+    },
+    "constitutive_relations":[
+      "e_0 - sum(c_i*e_i)",
+      "f_0 + f_i/c_i"
+    ]
+  }
   }
 }

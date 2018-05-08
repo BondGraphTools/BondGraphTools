@@ -174,7 +174,7 @@ class NPort(BaseComponent):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-        self.__fixed_ports = (int(p) for p in self.ports if isinstance(p, int))
+        self._fixed_ports = (int(p) for p in self.ports if isinstance(p, int))
 
     def __hash__(self):
         return super().__hash__()
@@ -192,11 +192,11 @@ class NPort(BaseComponent):
     def ports(self):
         return {p: v for p, v in self._ports.items() if isinstance(p, int)}
 
-    def make_port(self):
+    def make_port(self, value=None):
         n = 0
         while n in self._ports:
             n += 1
-        self._ports[n] = None
+        self._ports[n] = value
 
         return self, n
 
@@ -204,5 +204,24 @@ class NPort(BaseComponent):
         del self._ports[port]
 
     def release_port(self, port):
-        if port not in self.__fixed_ports:
+        if port not in self._fixed_ports:
             self.delete_port(port)
+
+
+class NPortWeighted(NPort):
+
+    def make_port(self, value=1):
+        return super().make_port(value=value)
+
+    def release_port(self, port):
+        if port not in self._fixed_ports:
+            self.delete_port(port)
+            del self._params[f"c_{port}"]
+
+    def _build_relations(self):
+        rels = super()._build_relations()
+
+        subs = [(f"c_{port}", value) for port, value in
+                self.ports if port not in self._fixed_ports]
+
+        return [rel.subs(subs) for rel in rels]

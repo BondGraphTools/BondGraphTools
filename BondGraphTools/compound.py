@@ -289,40 +289,44 @@ class BondGraph(BondGraphBase):
         port_space.update(input_port_space)
         return tangent_space, port_space, control_space
 
+    def _validate_port(self, target, port=None, **kwargs):
+
+
+        if isinstance(target, tuple):
+            return self._validate_port(*target)
+
+        # target is either str or component
+        if isinstance(target, str):
+            comp = self.components[target]
+            port = port
+        elif isinstance(target, int) and target in self._internal_ports:
+            return self, target
+        elif target is self and port in self.ports:
+            return target, port
+        elif isinstance(target, BondGraphBase) and \
+            target in self.components.values():
+            comp = target
+        else:
+            raise InvalidComponentException(
+                "Could not find component %s", target
+            )
+
+        if port in comp.ports:
+            return comp, port
+        else:
+            return self._find_port(comp)
+
     def connect(self, source, destination):
         """
 
         """
         bonds = {v for bond in self.bonds for v in bond}
 
-        try:
-            src, src_port = source
-            if isinstance(src, str):
-                src = self.components[src]
-        except (ValueError, TypeError):
-            if isinstance(source, int) and source in self._internal_ports:
-                src, src_port = (self, source)
-            else:
-                src, src_port = self._find_port(source)
-                if src and src not in self:
-                    self.__add__(src)
+        src, src_port = self._validate_port(source)
 
-        try:
-            dest, dest_port = destination
-            if isinstance(dest, str):
-                dest = self.components[dest]
+        dest, dest_port = self._validate_port(destination)
 
-        except (ValueError, TypeError):
-            if isinstance(destination, int) and \
-                    destination in self._internal_ports:
-                dest, dest_port = self, destination
-            else:
-                dest, dest_port = self._find_port(destination)
-                if dest and dest not in self:
-                    self.__add__(dest)
-
-        if ((src, src_port) in bonds and src_port.isnumneric()) or (
-                (dest, dest_port) in bonds and dest_port.isnumeric()):
+        if ((src, src_port) in bonds) or ((dest, dest_port) in bonds):
             raise InvalidPortException("Could not join %s to %s: "
                                        "Port already in use",
                                        source, destination)
