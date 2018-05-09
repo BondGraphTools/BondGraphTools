@@ -5,8 +5,7 @@ from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
-    inverse_coord_maps, _simplify_nonlinear_terms, _handle_constraints, \
-    _build_nonlinear_operator
+    inverse_coord_maps, _handle_constraints
 
 
 class BondGraph(BondGraphBase):

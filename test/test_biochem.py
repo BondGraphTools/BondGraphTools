@@ -6,6 +6,7 @@ import BondGraphTools as bgt
 from BondGraphTools.base import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps
 
+
 def test_make_a_to_b():
 
     A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
@@ -25,6 +26,7 @@ def test_make_a_to_b():
     assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
     assert list(a_to_b.control_vars.keys()) == ['u_0']
     assert not a_to_b.ports
+
 
 def test_re_con_rel():
     Re = bgt.new("Re", library="BioChem", value={"R": 1, "T": 1})
@@ -113,6 +115,7 @@ def test_a_to_b_model():
     }
     for relation in a_to_b.constitutive_relations:
         assert relation in eqns
+
 
 @pytest.mark.skip
 def test_ab_to_c_model():

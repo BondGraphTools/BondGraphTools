@@ -25,42 +25,6 @@ def extract_coefficients(equation, local_map, global_coords):
     return coeff_dict, nonlinear_terms
 
 
-def _build_nonlinear_operator(coordinates,
-                              nonlinear_pair,
-                              size_tuple):
-    ss_size, js_size, cv_size, n = size_tuple
-
-    linear_part, nonlinear_part = nonlinear_pair
-
-    k = len(nonlinear_part)
-
-    L, F  = augmented_rref(
-        sp.SparseMatrix(k, n, linear_part),
-        sp.Matrix(k, 1, nonlinear_part)
-    )
-
-    return L, F  # ie Lx + F(x) = 0
-
-
-def _simplify_nonlinear_terms(coordinates,
-                              linear_op,
-                              nonlinear_op,
-                              size_tuple):
-    ss_size, js_size, cv_size, n = size_tuple
-
-    R = sp.eye(linear_op.rows) - linear_op
-
-    Rx = sp.Matrix([R.dot(coordinates)]).T + nonlinear_op
-
-    for row in reversed(range(ss_size, ss_size + 2*js_size)):
-
-        nonlinear_op = nonlinear_op.subs(
-            coordinates[row], Rx[row]
-        )
-
-    return linear_op, nonlinear_op
-
-
 def _handle_constraints(linear_op, nonlinear_op, coordinates,
                         size_tuple):
     rows_added = 0

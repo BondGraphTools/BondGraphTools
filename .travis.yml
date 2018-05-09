@@ -24,7 +24,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-script: pytest --cov=BondGraphTools --cov-report=xml test
+script: pytest --runslow --cov=BondGraphTools --cov-report=xml test
 
 after_script:
   ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
