@@ -93,7 +93,7 @@ def test_stiochiometry():
 
     assert Yin.ports == {0:{"name":"Complex","value":-1}, 1:1, 2:1}
 
-@pytest.mark.skip
+
 def test_a_to_b_model():
     A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
     B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
@@ -111,7 +111,6 @@ def test_a_to_b_model():
     eqns ={
         sympy.sympify("dx_0 + x_0 -x_1"), sympy.sympify("dx_1 + x_1 -x_0")
     }
-
     for relation in a_to_b.constitutive_relations:
         assert relation in eqns
 

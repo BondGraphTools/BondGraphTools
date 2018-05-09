@@ -2,7 +2,101 @@ import pytest
 import sympy
 
 import BondGraphTools as bgt
-from BondGraphTools.algebra import extract_coefficients, smith_normal_form, adjacency_to_dict
+from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
+    adjacency_to_dict, augmented_rref
+
+
+def test_extract_coeffs_lin():
+    eqn = sympy.sympify("y -2*x -3")
+    local_map = {
+        sympy.symbols("y"): 0,
+        sympy.symbols("x"): 1
+    }
+    coords = [sympy.symbols("r_1"), sympy.symbols("r_0"), sympy.S(1)]
+
+    lin, nlin = extract_coefficients(eqn, local_map, coords)
+    assert lin[1] == -2
+    assert lin[2] == -3
+    assert lin[0] == 1
+    assert not nlin
+
+
+def test_extract_coeffs_nlin():
+    eqn = sympy.sympify("y -2*x -3 + exp(x)")
+    local_map = {
+        sympy.symbols("y"): 0,
+        sympy.symbols("x"): 1
+    }
+    coords = [sympy.symbols("r_1"), sympy.symbols("r_0"), sympy.S(1)]
+
+    lin, nlin = extract_coefficients(eqn, local_map, coords)
+    assert lin[1] == -2
+    assert lin[2] == -3
+    assert lin[0] == 1
+    assert nlin == sympy.sympify("exp(r_0)")
+
+
+def test_smith_normal_form():
+
+    m = sympy.SparseMatrix(2,3,{(0,2):2, (1,1):1})
+    mp = smith_normal_form(m)
+    assert mp.shape == (3, 3)
+    assert mp[2, 2] != 0
+
+
+def test_smith_normal_form_2():
+    matrix = sympy.eye(3)
+    matrix.row_del(1)
+
+    m = smith_normal_form(matrix)
+
+    diff = sympy.Matrix([[0,0,0],[0,1,0], [0,0,0]])
+
+    assert (sympy.eye(3) - m) == diff
+
+
+def test_aug_rref():
+    matrix = sympy.Matrix([
+        [0, 0, 0, 1],
+        [1, 0, 1, 0],
+        [0, 2, 0, 0],
+        [0, 0, 4, 0]
+    ])
+
+    adj = sympy.eye(4)
+
+    m, a = augmented_rref(matrix.copy(), adj.copy())
+
+    assert m is not matrix
+    assert a is not adj
+
+    assert m != matrix
+    assert a != adj
+
+    assert (m - sympy.eye(4)).is_zero
+
+    assert (a * matrix - sympy.eye(4)).is_zero
+
+
+def test_augmented_rref():
+    M = sympy.Matrix(
+        [[1, 0, 1, 0],
+         [1, 0, 1, 0],
+         [0, 0, 1 ,0]])
+
+    A = sympy.Matrix(3,1, list(sympy.symbols('a,a,c')))
+    target_A = sympy.Matrix(3, 1,
+                            [sympy.sympify('a - c'), sympy.symbols('c'),0])
+    Mr, _ = M.rref()
+
+    assert Mr == sympy.Matrix([[1,0,0,0],
+                               [0,0,1,0],
+                               [0,0,0,0]])
+
+    Maug, Aaug = augmented_rref(M, A)
+
+    assert Maug == Mr
+    assert target_A == Aaug
 
 
 def test_build_relations():
@@ -88,44 +182,6 @@ def test_rlc_basis_vectors(rlc):
     assert len(ports) == 0
 
 
-def test_extract_coeffs_lin():
-    eqn = sympy.sympify("y -2*x -3")
-    local_map = {
-        sympy.symbols("y"): 0,
-        sympy.symbols("x"): 1
-    }
-    coords = [sympy.symbols("r_1"), sympy.symbols("r_0"), sympy.S(1)]
-
-    lin, nlin = extract_coefficients(eqn, local_map, coords)
-    assert lin[1] == -2
-    assert lin[2] == -3
-    assert lin[0] == 1
-    assert not nlin
-
-
-def test_extract_coeffs_nlin():
-    eqn = sympy.sympify("y -2*x -3 + exp(x)")
-    local_map = {
-        sympy.symbols("y"): 0,
-        sympy.symbols("x"): 1
-    }
-    coords = [sympy.symbols("r_1"), sympy.symbols("r_0"), sympy.S(1)]
-
-    lin, nlin = extract_coefficients(eqn, local_map, coords)
-    assert lin[1] == -2
-    assert lin[2] == -3
-    assert lin[0] == 1
-    assert nlin == sympy.sympify("exp(r_0)")
-
-
-def test_smith_normal_form():
-
-    m = sympy.SparseMatrix(2,3,{(0,2):2, (1,1):1})
-    mp = smith_normal_form(m)
-    assert mp.shape == (3,3)
-    assert mp[2, 2] != 0
-
-
 def test_relations_iter():
     c = bgt.new("C", value=1)
 
@@ -162,18 +218,8 @@ def test_cv_relations():
     bg.connect(c,kcl)
     bg.connect(se, kcl)
     bg.connect(r, kcl)
-
+    print(bg.constitutive_relations)
     assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
-
-def test_smith_normal_form_2():
-    matrix = sympy.eye(3)
-    matrix.row_del(1)
-
-    m = smith_normal_form(matrix)
-
-    diff = sympy.Matrix([[0,0,0],[0,1,0], [0,0,0]])
-
-    assert (sympy.eye(3) - m) == diff
 
 
 def test_parallel_crv_relations():
@@ -189,5 +235,4 @@ def test_parallel_crv_relations():
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 - du_0"),
                                          sympy.sympify("x_0 - u_0")]
-
 

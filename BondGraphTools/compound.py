@@ -153,6 +153,12 @@ class BondGraph(BondGraphBase):
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
+        if nlin_op:
+            Rx = (sp.eye(lin_op.rows) - lin_op).dot(coordinates)
+            Rx = [r + nlin_op[i] for i,r in enumerate(Rx)]
+            subs = [pair for pair in zip(coordinates, Rx)]
+            nlin_op = nlin_op.subs(subs)
+
         relations = []
         for row in range(ss_size):
             rel = lin_op[row, :].dot(coordinates)
@@ -186,13 +192,13 @@ class BondGraph(BondGraphBase):
 
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
         nlin_dict = {}
+        nlin_vect = []
         try:
             lin_row = max(row + 1 for row, _ in lin_dict.keys())
         except ValueError:
             lin_row = 0
 
         nlin_row = 0
-
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
             for linear, nonlinear in relations:
@@ -201,15 +207,37 @@ class BondGraph(BondGraphBase):
                                      for k, v in linear.items()})
                     lin_row += 1
                 else:
-                    nlin_dict.update({(nlin_row, n): nonlinear})
+
+                    nlin_dict.update({(nlin_row, c):v for c,v in linear.items()})
+                    nlin_vect.append(nonlinear)
                     nlin_row += 1
 
-        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
 
+        nlin_row = len(nlin_vect)
         if nlin_dict:
-            nonlinear_op = _build_nonlinear_operator(nlin_dict, coordinates)
+            lin_dict.update({
+                (lin_row + row, col): value
+                for (row, col), value in nlin_dict.items()})
+
+            nonlinear_op = sp.zeros(lin_row, 1).col_join(
+                sp.Matrix(nlin_row,1, nlin_vect)
+            )
+
+            linear_op, nonlinear_op = smith_normal_form(
+                sp.SparseMatrix(lin_row + nlin_row, n, lin_dict), nonlinear_op)
         else:
+
+            linear_op = smith_normal_form(
+                sp.SparseMatrix(lin_row + nlin_row, n, lin_dict)
+            )
+
             nonlinear_op = None
+
+        # if nlin_dict:
+        #     nonlinear_op = _build_nonlinear_operator((nlin_dict, nlin_vect),
+        #                                              coordinates)
+        # else:
+        #     nonlinear_op = None
 
         # if we have a constraint like x_0 + x_1 - u_0 = 0
         # turn it into dx_0 + dx_1 - du_0 = 0

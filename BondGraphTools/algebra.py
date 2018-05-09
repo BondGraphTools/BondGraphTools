@@ -26,13 +26,21 @@ def extract_coefficients(equation, local_map, global_coords):
 
 
 def _build_nonlinear_operator(coordinates,
-                              nonlinear_op,
+                              nonlinear_pair,
                               size_tuple):
     ss_size, js_size, cv_size, n = size_tuple
 
-    L,F = None, None
+    linear_part, nonlinear_part = nonlinear_pair
+
+    k = len(nonlinear_part)
+
+    L, F  = augmented_rref(
+        sp.SparseMatrix(k, n, linear_part),
+        sp.Matrix(k, 1, nonlinear_part)
+    )
 
     return L, F  # ie Lx + F(x) = 0
+
 
 def _simplify_nonlinear_terms(coordinates,
                               linear_op,
@@ -79,8 +87,9 @@ def _handle_constraints(linear_op, nonlinear_op, coordinates,
             nonlinear_op = nonlinear_op.col_join(
                 sp.SparseMatrix(rows_added, 1, {})
         )
-
-        linear_op = smith_normal_form(linear_op)
+            linear_op, nonlinear_op = smith_normal_form(linear_op, nonlinear_op)
+        else:
+            linear_op = smith_normal_form(linear_op)
 
     return coordinates, linear_op, nonlinear_op
 
@@ -94,11 +103,58 @@ def flatten(sequence):
             yield item
 
 
+def augmented_rref(matrix, augment=None):
+
+    if augment:
+        assert matrix.rows == augment.rows
+
+    pivot = 0
+
+    for col in range(matrix.cols):
+
+        if matrix[pivot, col] == 0:
+            j = None
+            v_max = 0
+            for row in range(pivot, matrix.rows):
+                val = matrix[row, col]
+                v = abs(val)
+                if v > v_max:
+                    j = row
+                    v_max = v
+            if not j:
+                continue  # all zeros below, skip on to next column
+            else:
+                matrix.row_swap(pivot, j)
+                if augment:
+                    temp = augment[pivot, :]
+                    augment[pivot, :] = augment[j, :]
+                    augment[j, :] = temp
+
+        a = matrix[pivot, col]
+        for i in range(matrix.rows):
+            if i != pivot and matrix[i, col] != 0:
+                b = matrix[i, col]/a
+                matrix[i, :] = matrix[i, :] - b * matrix[pivot, :]
+                if augment:
+                    augment[i, :] = augment[i, :] - b * augment[pivot, :]
+
+        matrix[pivot, :] = matrix[pivot, :] / a
+        if augment:
+            augment[pivot, :] = augment[pivot, :] / a
+
+        pivot += 1
+        if pivot >= matrix.rows:
+            break
+
+    return matrix, augment
+
+
 def smith_normal_form(matrix, augment=None):
     """
     Assume n >= m
     Args:
         matrix:
+        augment:
 
     Returns:
     n x n smith normal form of the matrix.
@@ -129,39 +185,51 @@ def smith_normal_form(matrix, augment=None):
     #
     # return sp.SparseMatrix(n, n, m_dict)
 
-    if isinstance(matrix, dict):
-        n = 0
-        m = 0
-        for (r,c) in matrix.keys():
-            m = max(r + 1, m)
-            n = max(c + 1, n)
-        M,_ = sp.SparseMatrix(m,n,matrix).rref()
-
+    if augment:
+        M, augment = augmented_rref(matrix.copy(), augment.copy())
     else:
-        M, _ = matrix.rref(simplify=False)
+        M, _ = augmented_rref(matrix.copy())
+    # else:
+    #     M, _ = matrix.rref()
 
     m, n = M.shape
+
     Mp = sp.MutableSparseMatrix(0, n, [])
+
+    if augment:
+        k = augment.cols
+        Ap = sp.MutableSparseMatrix(0,k , [])
+
     row = 0
     ins = 0
+
     while row < m:
         col = row
         while col + ins < n and M[row, col + ins] == 0:
             col += 1
         if col >= row + ins:
+
             Mp = Mp.col_join(sp.zeros(col - row, n))
             ins += col - row
+            if augment:
+                Ap = Ap.col_join(sp.zeros(col - row, k))
+
         Mp = Mp.col_join(M.row(row))
+        if augment:
+            Ap = Ap.col_join(augment.row(row))
         row += 1
 
     m, n = Mp.shape
 
     if m < n:
         Mp = Mp.col_join(sp.zeros(n - m, n))
-    elif m > n and Mp[:, n:m].is_zero:
-        Mp = Mp[:n, :n]
+        if augment:
+            Ap = Ap.col_join(sp.zeros(n - m, k))
 
-    return Mp
+    if augment:
+        return Mp, Ap
+    else:
+        return Mp
 
 
 def adjacency_to_dict(nodes, edges, offset=0):
