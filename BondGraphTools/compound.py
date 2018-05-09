@@ -4,7 +4,9 @@ import sympy as sp
 from .base import BondGraphBase, InvalidPortException, \
     InvalidComponentException
 from .view import GraphLayout
-from .algebra import smith_normal_form, adjacency_to_dict, inverse_coord_maps
+from .algebra import smith_normal_form, adjacency_to_dict, \
+    inverse_coord_maps, _simplify_nonlinear_terms, _handle_constraints, \
+    _build_nonlinear_operator
 
 
 class BondGraph(BondGraphBase):
@@ -148,16 +150,20 @@ class BondGraph(BondGraphBase):
         coordinates, mappings, lin_op, nlin_op = self._system_rep()
 
         inv_tm, inv_js, _ = mappings
-        js_size = len(inv_js) # number of ports
-        ss_size = len(inv_tm) # number of state space coords
+        js_size = len(inv_js)  # number of ports
+        ss_size = len(inv_tm)  # number of state space coords
 
         relations = []
         for row in range(ss_size):
-            rel = lin_op[row, :].dot(coordinates) + nlin_op[row]
+            rel = lin_op[row, :].dot(coordinates)
+
+            if nlin_op:
+                rel += nlin_op[row]
             if rel:
                 relations.append(rel)
+
         for row in range(ss_size, ss_size + 2*js_size, 2):
-            if lin_op[row,row] == 0 or lin_op[row+1, row+1] == 0:
+            if lin_op[row, row] == 0 or lin_op[row+1, row+1] == 0:
                 rels = lin_op[row:row+2, :].dot(coordinates)
                 relations += [rel for rel in rels if rel]
 
@@ -174,94 +180,44 @@ class BondGraph(BondGraphBase):
         js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
         cv_size = len(inv_cv)
-
         n = len(coordinates)
 
-        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+        size_tuple = (ss_size, js_size, cv_size, n)
 
+        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+        nlin_dict = {}
         try:
             lin_row = max(row + 1 for row, _ in lin_dict.keys())
         except ValueError:
             lin_row = 0
 
+        nlin_row = 0
+
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
             for linear, nonlinear in relations:
-                lin_dict.update({(lin_row, k): v
-                                 for k, v in linear.items()})
+                if not nonlinear:
+                    lin_dict.update({(lin_row, k): v
+                                     for k, v in linear.items()})
+                    lin_row += 1
+                else:
+                    nlin_dict.update({(nlin_row, n): nonlinear})
+                    nlin_row += 1
 
-                if nonlinear:
-                    lin_dict.update({(lin_row, n): nonlinear})
-                lin_row += 1
+        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n, lin_dict))
 
-        linear_op = smith_normal_form(sp.SparseMatrix(lin_row, n+1, lin_dict))
+        if nlin_dict:
+            nonlinear_op = _build_nonlinear_operator(nlin_dict, coordinates)
+        else:
+            nonlinear_op = None
 
         # if we have a constraint like x_0 + x_1 - u_0 = 0
         # turn it into dx_0 + dx_1 - du_0 = 0
 
-        linear_op.row_del(n)
-        nonlinear_op = linear_op[:, n]
-        linear_op.col_del(n)
-
-        size_tuple = (js_size, ss_size, cv_size, n)
-
-        coordinates, linear_op, nonlinear_op = self._handle_constraints(
+        coordinates, linear_op, nonlinear_op = _handle_constraints(
             linear_op, nonlinear_op, coordinates, size_tuple)
-        if nonlinear_op:
-            linear_op, nonlinear_op = self._simplify_nonlinear_terms(
-                coordinates, linear_op, nonlinear_op, size_tuple
-            )
 
         return coordinates, mappings, linear_op, nonlinear_op
-
-    def _simplify_nonlinear_terms(self, coordinates, linear_op,
-                                  nonlinear_op, size_tuple):
-        js_size, ss_size, cv_size, n = size_tuple
-
-        R = sp.eye(linear_op.rows) - linear_op
-
-        Rx = sp.Matrix([R.dot(coordinates)]).T + nonlinear_op
-
-        for row in reversed(range(ss_size, ss_size + 2*js_size)):
-
-            nonlinear_op = nonlinear_op.subs(
-                coordinates[row], Rx[row]
-            )
-
-        return linear_op, nonlinear_op
-
-    def _handle_constraints(self, linear_op, nonlinear_op, coordinates,
-                            size_tuple):
-        cols_added = False
-
-        js_size, ss_size, cv_size, n = size_tuple
-        for row in range(2*js_size + ss_size, 2*(js_size + ss_size)):
-            if not linear_op[row, 2*(js_size + ss_size):-1].is_zero:
-                if not cols_added:
-                    linear_op = linear_op.row_join(sp.SparseMatrix(
-                        linear_op.rows, cv_size, {}))
-                    cols_added = True
-                    coordinates += [
-                        sp.symbols(f"d{coordinates[i]}")
-                        for i in range(2*(js_size + ss_size), n - 1)
-                    ]
-
-                new_row = linear_op[row, 2*js_size + ss_size: 2*(js_size + ss_size)]
-                new_row = new_row.row_join(sp.SparseMatrix(1, n - ss_size, {}))
-                new_row = new_row.row_join(linear_op[row, 2*(js_size + ss_size):-2])
-                linear_op = linear_op.col_join(new_row)
-
-        if cols_added:
-            nonlinear_op = nonlinear_op.col_join(
-                sp.SparseMatrix(linear_op.rows - nonlinear_op.rows, 1, {})
-            )
-            linear_op = linear_op.row_join(nonlinear_op)
-            linear_op = smith_normal_form(linear_op)
-            linear_op.row_del(linear_op.cols - 1)
-            nonlinear_op = linear_op[:, linear_op.cols -1]
-            linear_op.col_del(linear_op.cols - 1)
-
-        return coordinates, linear_op, nonlinear_op
 
     def _build_internal_basis_vectors(self):
         tangent_space = dict()

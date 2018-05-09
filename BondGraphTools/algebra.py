@@ -25,6 +25,66 @@ def extract_coefficients(equation, local_map, global_coords):
     return coeff_dict, nonlinear_terms
 
 
+def _build_nonlinear_operator(coordinates,
+                              nonlinear_op,
+                              size_tuple):
+    ss_size, js_size, cv_size, n = size_tuple
+
+    L,F = None, None
+
+    return L, F  # ie Lx + F(x) = 0
+
+def _simplify_nonlinear_terms(coordinates,
+                              linear_op,
+                              nonlinear_op,
+                              size_tuple):
+    ss_size, js_size, cv_size, n = size_tuple
+
+    R = sp.eye(linear_op.rows) - linear_op
+
+    Rx = sp.Matrix([R.dot(coordinates)]).T + nonlinear_op
+
+    for row in reversed(range(ss_size, ss_size + 2*js_size)):
+
+        nonlinear_op = nonlinear_op.subs(
+            coordinates[row], Rx[row]
+        )
+
+    return linear_op, nonlinear_op
+
+
+def _handle_constraints(linear_op, nonlinear_op, coordinates,
+                        size_tuple):
+    rows_added = 0
+
+    ss_size, js_size, cv_size, n = size_tuple
+    for row in range(2*js_size + ss_size, 2*(js_size + ss_size)):
+        if not linear_op[row, 2*(js_size + ss_size):-1].is_zero:
+            if rows_added == 0:
+                linear_op = linear_op.row_join(sp.SparseMatrix(
+                    linear_op.rows, cv_size, {}))
+                coordinates += [
+                    sp.symbols(f"d{coordinates[i]}")
+                    for i in range(2*(js_size + ss_size), n - 1)
+                ]
+
+            new_row = linear_op[row, 2*js_size + ss_size: 2*(js_size + ss_size)]
+            new_row = new_row.row_join(sp.SparseMatrix(1, n - ss_size, {}))
+            new_row = new_row.row_join(linear_op[row, 2*(js_size + ss_size):-2])
+            linear_op = linear_op.col_join(new_row)
+            rows_added += 1
+
+    if rows_added:
+        if nonlinear_op:
+            nonlinear_op = nonlinear_op.col_join(
+                sp.SparseMatrix(rows_added, 1, {})
+        )
+
+        linear_op = smith_normal_form(linear_op)
+
+    return coordinates, linear_op, nonlinear_op
+
+
 def flatten(sequence):
     for item in sequence:
         if isinstance(item, (list, tuple)):
@@ -34,7 +94,7 @@ def flatten(sequence):
             yield item
 
 
-def smith_normal_form(matrix):
+def smith_normal_form(matrix, augment=None):
     """
     Assume n >= m
     Args:
@@ -84,7 +144,6 @@ def smith_normal_form(matrix):
     Mp = sp.MutableSparseMatrix(0, n, [])
     row = 0
     ins = 0
-    print(M)
     while row < m:
         col = row
         while col + ins < n and M[row, col + ins] == 0:
@@ -96,7 +155,7 @@ def smith_normal_form(matrix):
         row += 1
 
     m, n = Mp.shape
-    print(Mp[:, -1])
+
     if m < n:
         Mp = Mp.col_join(sp.zeros(n - m, n))
     elif m > n and Mp[:, n:m].is_zero:
