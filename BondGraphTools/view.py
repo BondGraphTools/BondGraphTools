@@ -3,7 +3,7 @@ from itertools import permutations
 
 import numpy as np
 from matplotlib.offsetbox import AnchoredText
-from matplotlib.text import Text
+from matplotlib.text import Text, Annotation
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Rectangle
 import matplotlib.pyplot as plt
@@ -124,14 +124,27 @@ def objective_f(z, eta, level_struct, d):
          for j in target_set if i != j])
     return phi
 
+class PortGlyph:
+    def __init__(self, ax, string, pos, dir, text_dict):
 
-class PortGlyph(Text):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.width = 0.075
-        self.height = 0.075
-        self.x = 0
-        self.y = 0
+        self.width = 0.1
+        self.height = 0.1
+
+        self.text = Annotation(
+            string, pos, **text_dict
+        )
+        ax.add_artist(self.text)
+
+        self.x, self.y = pos
+        if dir == 'top':
+            self.y += self.height/2
+        elif dir == 'bottom':
+            self.y -= self.height / 2
+        elif dir == 'right':
+            self.x += self.width/2
+        else:
+            self.x -= self.width / 2
+
     @property
     def pos(self):
         return (self.x, self.y)
@@ -184,8 +197,6 @@ class Glyph:
 
         dx,dy = dir
         text_dict = {
-            's':string,
-            'xy':self.pos,
             'size': FONT_SM
         }
 
@@ -196,22 +207,26 @@ class Glyph:
                 'verticalalignment': 'bottom'
                 }
             )
+            dir = 'top'
         elif -dy > abs(dx):
+
             text_dict.update({
                 'xytext':(self.x, self.y-self.height/2),
                 'horizontalalignment':'center',
                 'verticalalignment': 'top'
                 }
             )
+            dir= 'bottom'
 
         elif dx >= abs(dy):
+
             text_dict.update({
                 'xytext':(self.x+self.width/2, self.y),
                 'horizontalalignment': 'left',
                 'verticalalignment': 'center'
                 }
             )
-
+            dir = 'right'
         else:
             text_dict.update({
                 'xytext': (self.x - self.width / 2, self.y),
@@ -219,18 +234,16 @@ class Glyph:
                 'verticalalignment': 'center'
             }
             )
-        text = Text(text_dict)
-        self.axes.add_artist(text)
-        port = PortGlyph()
-        port.text = text
+            dir = 'left'
 
-        return self
+        port = PortGlyph(self.axes, string, self.pos,dir, text_dict)
+        self.ports[dir] = port
 
 
+        return port
 
 
 class Bond(Line2D):
-
     def __init__(self, port_1, port_2, *args, **kwargs):
         self.port_1 = port_1
         self.port_2 = port_2

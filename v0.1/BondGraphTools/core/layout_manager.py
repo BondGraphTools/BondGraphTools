@@ -187,6 +187,7 @@ def branch_and_bound(nodes, edges):
 
     return pos
 
+
 def _distance_matrix(nodes):
 
     n = len(nodes)
@@ -197,6 +198,7 @@ def _distance_matrix(nodes):
             #M[i, j] = max(abs(x1 - x2), abs(y1 - y2))
             M[i, j] = ((x1 - x2)**2 + (y1 - y2)**2)**0.5
     return M
+
 
 def force_directed(nodes, edges):
 
@@ -355,6 +357,7 @@ def metro_map(nodes, edge_list):
     zmin = np.abs(Z[Z!=0]).min()
 
     return [(zp.real/zmin, zp.imag/zmin) for zp in z.flatten()]
+
 
 def permute(z, N, r, indicies):
     i_len = len(indicies)
