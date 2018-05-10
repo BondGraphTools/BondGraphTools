@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base import ModelException
+from .exceptions import ModelException
 from .algebra import inverse_coord_maps
 import logging
 logger = logging.getLogger(__name__)

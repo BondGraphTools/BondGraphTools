@@ -1,8 +1,8 @@
 
 import sympy as sp
 
-from .base import BondGraphBase, InvalidPortException, \
-    InvalidComponentException
+from .base import BondGraphBase
+from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
     inverse_coord_maps, _handle_constraints
@@ -21,7 +21,7 @@ class BondGraph(BondGraphBase):
         self.bonds = list()
         self._internal_ports = []
         self.type = "Composite"
-        self.view = GraphLayout()
+        self.view = GraphLayout(self)
         """Graphical Layout of internal components"""
 
         self.cv_map = dict()

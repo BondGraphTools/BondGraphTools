@@ -7,6 +7,7 @@ import copy
 
 from .component_manager import get_component, base_id
 from .algebra import extract_coefficients
+
 logger = logging.getLogger(__name__)
 
 
@@ -166,14 +167,3 @@ class BondGraphBase:
             yield extract_coefficients(relation, local_map, coordinates)
 
 
-class InvalidPortException(Exception):
-    pass
-
-class InvalidComponentException(Exception):
-    pass
-
-class ModelParsingError(Exception):
-    pass
-
-class ModelException(Exception):
-    pass

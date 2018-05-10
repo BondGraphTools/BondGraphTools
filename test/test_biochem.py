@@ -3,7 +3,7 @@ import pytest
 import sympy
 
 import BondGraphTools as bgt
-from BondGraphTools.base import InvalidPortException
+from BondGraphTools.exceptions import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps
 
 

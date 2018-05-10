@@ -3,7 +3,7 @@ import numpy as np
 
 import BondGraphTools as bgt
 
-from BondGraphTools.base import ModelException
+from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _build_dae
 
 

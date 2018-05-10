@@ -1,11 +1,10 @@
 from collections import OrderedDict
 import sympy as sp
 
-from .base import BondGraphBase, ModelParsingError, InvalidPortException
+from .base import BondGraphBase
+from .exceptions import *
 from .compound import BondGraph
 from .view import Glyph
-from .algebra import extract_coefficients
-
 
 class BaseComponent(BondGraphBase):
     """
@@ -20,7 +19,7 @@ class BaseComponent(BondGraphBase):
 
         self._params = params
 
-        self.view = Glyph()
+        self.view = Glyph(self)
         self.type = type
         self._constitutive_relations = constitutive_relations
 

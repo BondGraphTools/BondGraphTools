@@ -1,7 +1,7 @@
 import pytest
 
 import BondGraphTools as bgt
-from BondGraphTools.base import InvalidComponentException, InvalidPortException
+from BondGraphTools.exceptions import InvalidComponentException, InvalidPortException
 from BondGraphTools.atomic import BaseComponent
 
 
