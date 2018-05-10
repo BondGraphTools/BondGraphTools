@@ -8,6 +8,7 @@ python:
   - "3.6"
 
 before_install:
+  - sudo apt-get install libstdc++6
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
   - tar xf julia-0.6.2-linux-x86_64.tar.gz
   - export PATH=$PATH:./julia-d386e40c17/bin/
