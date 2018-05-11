@@ -1,20 +1,63 @@
 {
-  "desc": "Electical Components",
+  "name": "Electrical Components",
   "id":"elec",
   "components": {
     "Di": {
-      "desc":"Diode",
+      "name":"Diode",
+      "class": "BaseComponent",
       "ports":{
         "0":null
       },
-      "local_params":{
-        "Is":{"desc":"Forward Current"},
-        "n": {"desc":"Material Number"},
-        "Vb":{"desc":"Breakdown Voltage"}
+      "params":{
+        "Is":{
+          "name":"Forward Current"
+        },
+        "n": {
+          "name":"Material Number",
+          "value": 1
+        },
+        "Vt":{
+          "name":"Thermal Voltage",
+          "value": 0.0258563
+        }
       },
      "constitutive_relations":[
-       "f_0 - Is*(exp(e_0/n/Vb) - 1)"
+       "f_0 - Is*(exp(e_0/n/Vt) - 1)"
      ]
+    },
+    "BJT":{
+      "name": "Bipolar Junction Transistor",
+      "class": "BaseComponent",
+      "ports":{
+        "0": {"name": "Collector"},
+        "1": {"name": "Base"},
+        "2": {"name": "Emitter"}
+      },
+      "params": {
+        "Is":{
+          "name":"Reverse Saturation Current",
+          "value": "10**-12"
+        },
+        "beta_f":{
+          "name":"Forward common current emitter gain",
+          "value": 100,
+          "range":[20,500]
+        },
+        "beta_r":{
+          "name":"Reverse common current emitter gain",
+          "value":5,
+          "range":[0,20]
+        },
+        "Vt":{
+          "name":"Thermal Voltage kT/q",
+          "value": 0.026
+        }
+      },
+      "constitutive_relations":[
+        "f_0 + f_1+ f_2",
+        "f_1 - Is*((exp((e_1 - e_2)/Vt) - 1)/beta_f + (exp((e_1 -e_0)/Vt) -1)/beta_r)",
+        "f_2 - Is*((exp((e_1 - e_2)/Vt) - exp((e_1 -e_0)/Vt)) + (exp((e_1 -e_2)/Vt) -1)/beta_f)"
+      ]
     }
   }
 }

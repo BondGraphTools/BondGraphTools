@@ -1,44 +1,56 @@
 {
-  "desc": "Biochemical Components",
+  "name": "Biochemical Components",
   "id":"BioChem",
   "components":{
     "Ce":{
-      "desc":"Concentration of Chemical Species",
+      "name":"Concentration of Chemical Species",
+      "class": "BaseComponent",
       "ports":{
         "0":null
       },
-      "local_params":{
-        "e0":{
-          "desc":"Standard Free Energy",
-          "bounds":[0, "inf"]
-        }
+      "params":{
+        "k":{"name": "Biochemical Constant; exp(mu_0/RT)/V"},
+        "R":{"name":"Universal Gas Constant"},
+        "T":{"name": "Temperature"}
       },
-      "global_params":{
-        "R":{"desc":"Universal Gas Constant"},
-        "T":{"desc": "Temperature"},
-        "V":{"desc": "Volume of the vessel"}
+      "state_vars":{
+        "q_0":"Molar Quantity"
       },
       "constitutive_relations":[
-        "e_0 - e0 - R*T*log(q_0/V)"
+        "e_0 - R*T*log(k*q_0)"
       ]
     },
     "Re":{
-      "desc": "Biochemical Reaction",
+      "name": "Biochemical Reaction",
+      "class": "BaseComponent",
       "ports":{
-        "0": {"desc": "Reactants"},
-        "1": {"desc": "Products"}
+        "0": {"name": "Primary"},
+        "1": {"name": "Secondary"}
       },
-      "local_params":{
-        "k":{"desc":"Reaction Rate"}
-      },
-      "global_params":{
-        "R":{"desc":"Universal Gas Constant"},
-        "T":{"desc": "Temperature"}
+      "params":{
+        "r":{"name":"Reaction Rate"},
+        "R":{"name":"Universal Gas Constant"},
+        "T":{"name": "Temperature"}
       },
       "constitutive_relations":[
         "f_0 + f_1",
-        "f_0 - k *(exp(e_0/R/T) - exp(e_1/R/T))"
+        "f_0 - r *(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
-    }
+    },
+  "Y":{
+    "name": "Stoichiometry",
+    "class": "NPortWeighted",
+    "ports":{
+      "0": {
+        "name":"Complex",
+        "value": -1
+      },
+      "i": null
+    },
+    "constitutive_relations":[
+      "sum(c_i*e_i)",
+      "c_0*f_0 - f_i/c_i"
+    ]
+  }
   }
 }

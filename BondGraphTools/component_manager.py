@@ -10,7 +10,7 @@ Component Libraries are expected to be in json format.
 The structure must be::
     {
         "id": The unique library id (str),
-        "desc": The description of this library
+        "name": The description of this library
         "components": {
             "component_id": component dictionary,
             ...
@@ -19,16 +19,16 @@ The structure must be::
 
 Each Component dictionary must be of the form::
     {
-        "desc": Human friendly description (str)
+        "name": Human friendly description (str)
         "cls": ("OnePort", "TwoPort", "IOPort", "ManyPort")
         "string": (optional) Overrides display string
         "ports": See Note,
-        "local_params": (optional) See Note
+        "params": (optional) See Note
         "global_params": (optional) See Note
         "constitutive_relations": See Note
     }
 """
-
+import copy
 import json
 import pathlib
 import os
@@ -36,9 +36,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-__base_dir, _ = os.path.split(os.path.dirname(__file__))
-LIB_DIR = os.path.join(__base_dir, "components")
+__dir, _ = os.path.split(__file__)
+__LIB_DIR = os.path.join(__dir, "components")
 __libraries = dict()
 base_id = "base"
 
@@ -60,7 +59,7 @@ def load_library(filename):
             del lib["id"]
             if lib_id in __libraries:
                 raise KeyError("Invalid Library ID")
-            elif set(lib.keys()) != {"desc", "components"}:
+            elif set(lib.keys()) != {"name", "components"}:
                 raise KeyError("Invalid Library")
             __libraries[lib_id] = lib
         except json.JSONDecodeError as ex:
@@ -83,7 +82,7 @@ def get_library_list():
         list of (library id, description) tuples
     """
 
-    return [(l, __libraries[l]["desc"]) for l in __libraries if l != base_id]
+    return [(l, __libraries[l]["name"]) for l in __libraries if l != base_id]
 
 
 def get_components_list(library):
@@ -98,21 +97,21 @@ def get_components_list(library):
     """
     components = __libraries[library]["components"]
 
-    return [(comp_id, components[comp_id]["desc"]) for comp_id in components]
+    return [(comp_id, components[comp_id]["name"]) for comp_id in components]
 
 
-def get_component_data(library, component):
+def get_component(component, library=base_id):
     """
     Fetches the component data for the specified component
     Args:
-        library: The id of the library to which the component belongs
         component: The id of the specific component
+        library: The id of the library to which the component belongs
 
     Returns:
         dict - the component dictionary
 
     """
-    return __libraries[library]["components"][component]
+    return copy.deepcopy(__libraries[library]["components"][component])
 
 
 def find(component, restrict_to=None, find_all=False, ensure_unique=False):
@@ -126,9 +125,9 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
         find_all: `False` if the function should return only the first instance
          of the component, `True` if the function should return all such
          instances
-         ensure_unique: If true, this assumes that the component id must be
-          unique across libraries, and hence will raise an exception if this is
-          assumption is violated.
+        ensure_unique: If true, this assumes that the component id must be
+         unique across libraries, and hence will raise an exception if this is
+         assumption is violated.
 
     Returns: the library id, or a list of library_id in which this component
      can be found.
@@ -166,5 +165,5 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
 
 
 ## On Import actions
-for filename in pathlib.Path(LIB_DIR).glob("**/*.json"):
-    load_library(filename)
+for lib_file in pathlib.Path(__LIB_DIR).glob("**/*.json"):
+    load_library(lib_file)
