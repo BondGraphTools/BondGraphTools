@@ -1,7 +1,0 @@
-pytest>=3.1.2
-sympy>=1.0
-matplotlib>=2.0.0
-numpy>=1.13.3
-scipy>=1.0.0
-pytest-cov>=2.5.1
-coverage>=2.5.1
