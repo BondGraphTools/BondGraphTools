@@ -226,6 +226,7 @@ class NPortWeighted(NPort):
             del self._params[f"c_{port}"]
 
     def _build_relations(self):
+
         rels = super()._build_relations()
         subs = []
 

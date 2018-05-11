@@ -154,7 +154,7 @@ class BondGraph(BondGraphBase):
 
         if nlin_op:
             Rx = (sp.eye(lin_op.rows) - lin_op).dot(coordinates)
-            Rx = [r + nlin_op[i] for i,r in enumerate(Rx)]
+            Rx = [r - nlin_op[i] for i,r in enumerate(Rx)]
             subs = [pair for pair in zip(coordinates, Rx)]
             nlin_op = nlin_op.subs(subs)
 
@@ -198,6 +198,7 @@ class BondGraph(BondGraphBase):
             lin_row = 0
 
         nlin_row = 0
+
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
             for linear, nonlinear in relations:
@@ -211,19 +212,18 @@ class BondGraph(BondGraphBase):
                     nlin_vect.append(nonlinear)
                     nlin_row += 1
 
-
-        nlin_row = len(nlin_vect)
         if nlin_dict:
             lin_dict.update({
                 (lin_row + row, col): value
                 for (row, col), value in nlin_dict.items()})
 
             nonlinear_op = sp.zeros(lin_row, 1).col_join(
-                sp.Matrix(nlin_row,1, nlin_vect)
+                sp.Matrix(nlin_row, 1, nlin_vect)
             )
 
             linear_op, nonlinear_op = smith_normal_form(
                 sp.SparseMatrix(lin_row + nlin_row, n, lin_dict), nonlinear_op)
+
         else:
 
             linear_op = smith_normal_form(

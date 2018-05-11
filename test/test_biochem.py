@@ -5,7 +5,7 @@ import sympy
 import BondGraphTools as bgt
 from BondGraphTools.exceptions import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps
-
+from BondGraphTools.reation_builder import Reaction_Network
 
 def test_make_a_to_b():
 
@@ -101,15 +101,16 @@ def test_a_to_b_model():
     B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
 
     Re = bgt.new("Re", library="BioChem", value={'k':1, "R": 1, "T": 1})
-    tf_in = bgt.new("Tf", value=-1)
-    tf_out = bgt.new("Tf", value=-1)
-    a_to_b = A + Re + B + tf_in + tf_out
 
-    a_to_b.connect(A, (tf_in,0))
-    a_to_b.connect(B, (tf_out, 1))
-    a_to_b.connect((Re, 0), (tf_in,1))
-    a_to_b.connect((Re, 1), (tf_out, 0))
+    Y_A = bgt.new('Y', library="BioChem")
+    Y_B = bgt.new('Y', library="BioChem")
 
+    a_to_b = A + Re + B + Y_A + Y_B
+
+    a_to_b.connect(A, (Y_A, 1))
+    a_to_b.connect(B, (Y_B, 1))
+    a_to_b.connect((Re, 0), (Y_A, 0))
+    a_to_b.connect((Re, 1), (Y_B, 0))
     eqns ={
         sympy.sympify("dx_0 + x_0 -x_1"), sympy.sympify("dx_1 + x_1 -x_0")
     }
@@ -117,7 +118,6 @@ def test_a_to_b_model():
         assert relation in eqns
 
 
-@pytest.mark.skip
 def test_ab_to_c_model():
 
     A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
@@ -149,4 +149,16 @@ def test_ab_to_c_model():
 
     for relation in bg.constitutive_relations:
         assert relation in eqns
+
+
+def test_new_reaction_network():
+
+    rn = Reaction_Network(name="A+B to C")
+    rn.add_reaction(
+        "A+B=C"
+    )
+    assert rn.species ==["A","B","C"]
+    assert rn.forward_stoichiometry == sympy.Matrix([[0],[0],[1]])
+    assert rn.reverse_stoichiometry == sympy.Matrix([[1], [1], [0]])
+    assert rn.stoichiometry == sympy.Matrix([[-1],[-1],[1]])
 

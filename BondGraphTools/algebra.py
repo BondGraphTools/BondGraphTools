@@ -158,38 +158,19 @@ def smith_normal_form(matrix, augment=None):
 
     m, n = M.shape
 
-    Mp = sp.MutableSparseMatrix(0, n, [])
+    Mp = sp.MutableSparseMatrix(n, n, {})
 
     if augment:
         k = augment.cols
-        Ap = sp.MutableSparseMatrix(0,k , [])
+        Ap = sp.MutableSparseMatrix(n, k, {})
 
-    row = 0
-    ins = 0
-
-    while row < m:
-        col = row
-        while col + ins < n and M[row, col + ins] == 0:
-            col += 1
-        if col >= row + ins:
-
-            Mp = Mp.col_join(sp.zeros(col - row, n))
-            ins += col - row
-            if augment:
-                Ap = Ap.col_join(sp.zeros(col - row, k))
-
-        Mp = Mp.col_join(M.row(row))
-        if augment:
-            Ap = Ap.col_join(augment.row(row))
-        row += 1
-
-    m, n = Mp.shape
-
-    if m < n:
-        Mp = Mp.col_join(sp.zeros(n - m, n))
-        if augment:
-            Ap = Ap.col_join(sp.zeros(n - m, k))
-
+    for row in range(m):
+        for col in range(row, n):
+            if M[row, col] != 0:
+                Mp[col, :] = M[row, :]
+                if augment:
+                    Ap[col, :] = augment[row, :]
+                break
     if augment:
         return Mp, Ap
     else:

@@ -51,7 +51,7 @@
     },
     "constitutive_relations":[
       "sum(c_i*e_i)",
-      "c_0*f_0 + f_i/c_i"
+      "c_0*f_0 - f_i/c_i"
     ]
   }
   }
