@@ -79,7 +79,7 @@ class Reaction_Network(object):
 
         species_anchor = self._build_species(system, param_dict_Ce)
         self._build_reactions(system, species_anchor, param_dict_Re)
-        self._build_controls(system, species_anchor)
+
         return system
 
     def _build_reactions(self, system, species_anchors, param_dict):
@@ -139,9 +139,6 @@ class Reaction_Network(object):
                 this_species.initial_values['p_0'] = self._chemostats[species]
 
         return species_anchors
-
-
-
 
     def add_reaction(self, reaction,
                      forward_rates=None, reverse_rates=None, name=""):
