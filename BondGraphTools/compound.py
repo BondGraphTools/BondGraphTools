@@ -85,6 +85,11 @@ class BondGraph(BondGraphBase):
     # def __iadd__(self, other):
     #     return self.__add__(other)
 
+    def add(self, component, *args):
+        self.__add__(component)
+        if args:
+            self.add(*args)
+
     @property
     def params(self):
         return {
@@ -124,6 +129,7 @@ class BondGraph(BondGraphBase):
         for v in self.components.values():
             for i in v.control_vars:
                 out.update({f"u_{j}":(v,i)})
+                j += 1
         return out
 
     @property

@@ -96,6 +96,7 @@ class BondGraphBase:
         """
         #super().__init__(name, parent)
         self.name = name
+        self.type = "base"
         if ports:
             self._ports = {
                 (int(p) if p.isnumeric() else p):v for p,v in ports.items()
@@ -142,7 +143,7 @@ class BondGraphBase:
         return self.__dict__ == other.__dict__
 
     def __repr__(self):
-        return self.name
+        return f"{self.type}:{self.name}"
 
     def get_relations_iterator(self, mappings, coordinates):
         local_tm, local_js, local_cv = self.basis_vectors

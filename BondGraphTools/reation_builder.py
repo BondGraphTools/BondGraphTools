@@ -2,15 +2,19 @@ from sympy import SparseMatrix
 from collections import defaultdict
 import logging
 
+from .base import new
+
 logger = logging.getLogger(__name__)
 
-## Gas constant, J/Mo/K
+# Gas constant, J/Mo/K
 R = 8.3144598
+
+# Component Library
 LIBRARY = "BioChem"
 
 
 class Reaction_Network(object):
-    def __init__(self, reactions=None, name=None, T=300):
+    def __init__(self, reactions=None, name=None, temperature=300, volume=1):
         """
         Args:
             reactions:
@@ -21,7 +25,8 @@ class Reaction_Network(object):
         self._flowstats = {}
         self._chemostats = {}
         self._species = defaultdict(int)
-        self._bond_graph = None
+        self._T = temperature
+        self._V = volume
         if name:
             self.name = name
         else:
@@ -32,15 +37,6 @@ class Reaction_Network(object):
             for reaction in reactions:
                 self.add_reaction(reaction)
 
-    @property
-    def bond_graph(self):
-        """
-        The bond graph representation of this particular reaction network.
-        """
-        if not self._bond_graph:
-            self._build_bond_graph()
-
-        return self._bond_graph
     @property
     def species(self):
         return list(self._species.keys())
@@ -59,6 +55,7 @@ class Reaction_Network(object):
                 matrix[(self.species.index(species), col)] = qty
 
         return matrix
+
     @property
     def reverse_stoichiometry(self):
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
@@ -69,71 +66,82 @@ class Reaction_Network(object):
 
         return matrix
 
+    def as_network_model(self, normalised=False):
+
+        system = new(name=self.name)
+
+        if normalised:
+            param_dict_Ce = {"R": 1, "T": 1, "V":1}
+            param_dict_Re = {"R": 1, "T": 1}
+        else:
+            param_dict_Ce = {"R": R, "T": self._T, "V": self._V}
+            param_dict_Re = {"R": R, "T": self._T}
+
+        species_anchor = self._build_species(system, param_dict_Ce)
+        self._build_reactions(system, species_anchor, param_dict_Re)
+        self._build_controls(system, species_anchor)
+        return system
+
+    def _build_reactions(self, system, species_anchors, param_dict):
+
+        for reaction_name, (bck_sto, fwd_sto, _, _) in self._reactions.items():
+            reaction = new("Re", library=LIBRARY,
+                           name=reaction_name, value=param_dict)
+            fwd_name = "".join(
+                list(fwd_sto.keys())
+            )
+            bck_name = "".join(
+                list(bck_sto.keys())
+            )
+            forward_complex = new("Y", library=LIBRARY, name=fwd_name)
+            reverse_complex = new("Y", library=LIBRARY, name=bck_name)
+            system.add(reaction, forward_complex, reverse_complex)
+            system.connect((reaction, 0), (reverse_complex, 0))
+            system.connect((reaction, 1), (forward_complex, 0))
+
+            self._connect_complex(
+                system, species_anchors, forward_complex, fwd_sto
+            )
+            self._connect_complex(
+                system, species_anchors, reverse_complex, bck_sto
+            )
+
+    def _connect_complex(self, system, species_anchors, complex, stoichiometry):
+        for i, (species, qty) in enumerate(stoichiometry.items()):
+            port = i + 1
+            complex.make_port(port=port, value=qty)
+            system.connect((complex, port), species_anchors[species])
+
+    def _build_species(self, system, param_dict):
+        species_anchors = {}
+        for species, n_reactions in self._species.items():
+            this_species = new(
+                "Ce", library=LIBRARY, name=species, value=param_dict
+            )
+            system.add(this_species)
+
+            if n_reactions == 1:
+                species_anchors[species] = this_species
+            else:
+                anchor = new("0", name=species)
+                system.add(anchor)
+                system.connect(this_species, anchor)
+                species_anchors[species] = anchor
+
+            if species in self._flowstats:
+                flowstat = new("Sf", value=self._flowstats[species], name=species)
+                system.add(flowstat)
+                system.connect(flowstat, species_anchors[species])
+
+            if species in self._chemostats:
+                chemostat = new("Se", value=0, name=species)
+                system.connect(chemostat, species_anchors[species])
+                this_species.initial_values['p_0'] = self._chemostats[species]
+
+        return species_anchors
 
 
-    # def _build_bond_graph(self):
-    #     graph = BondGraph(self.name)
-    #     species_base = {}
-    #     for species, ref in self._species.items():
-    #         c = graph.add_component(component="Ce",
-    #                                 library=LIBRARY,
-    #                                 name=species)
-    #         if ref == 1:
-    #             species_base[species] = c
-    #         else:
-    #             z = graph.add_component("0")
-    #             graph.add_bond(z, c)
-    #             species_base[species] = z
-    #
-    #     for species, concentration in self._chemostats.items():
-    #         cs = graph.add_component(
-    #             'Se', name=species,
-    #             local_params={"e": concentration}
-    #         )
-    #         graph.add_bond(cs, species_base[species])
-    #
-    #     for species, flux in self._flowstats.items():
-    #         fs = graph.add_component(
-    #             "Sf", name=species, local_params={"f": flux}
-    #          )
-    #         graph.add_bond(fs, species_base[species])
-    #
-    #     for idx in self._reactions:
-    #         re = graph.add_component("Re", name=idx, library=LIBRARY)
-    #         reactants, products, _, _ = self._reactions[idx]
-    #
-    #         if len(reactants) == 1:
-    #             in_pipe = {"to_component":re, "to_port": 0}
-    #         else:
-    #             cplex = graph.add_component("1")
-    #             graph.add_bond(cplex, re, None, 0)
-    #             in_pipe = {"to_component":cplex, "to_port": None}
-    #
-    #         if len(products) == 1:
-    #             out_pipe = {"from_component":re, "from_port": 1}
-    #         else:
-    #             cplex = graph.add_component("1")
-    #             graph.add_bond(cplex, re, None, 1)
-    #             out_pipe = {"from_component":cplex, "from_port": None}
-    #
-    #         for sp, factor in reactants.items():
-    #             if factor == 1:
-    #                 graph.add_bond(species_base[sp], **in_pipe)
-    #             else:
-    #                 tf = graph.add_component("TF", a=factor)
-    #                 graph.add_bond(species_base[sp], tf, to_port=0)
-    #                 graph.add_bond(tf, from_port=1, **in_pipe)
-    #
-    #         for sp, factor in products.items():
-    #             if factor == 1:
-    #                 graph.add_bond(**out_pipe, to_component=species_base[sp])
-    #             else:
-    #                 tf = graph.add_component("TF", a=factor)
-    #                 graph.add_bond(**out_pipe, to_component=tf, to_port=0)
-    #                 graph.add_bond(tf, from_port=1,
-    #                                to_component=species_base[sp])
-    #
-    #     self._bond_graph = graph
+
 
     def add_reaction(self, reaction,
                      forward_rates=None, reverse_rates=None, name=""):
@@ -195,7 +203,6 @@ class Reaction_Network(object):
              free parameter if None
         """
         if species not in self._chemostats:
-            self._bond_graph = None
             self._species[species] += 1
 
         self._chemostats[species] = concentration
@@ -218,9 +225,7 @@ class Reaction_Network(object):
              added/removed. Left as a free paramter if None
 
         """
-        self._bond_graph = None
         if species not in self._flowstats:
-            self._bond_graph = None
             self._species[species] += 1
 
         self._flowstats[species] = flux

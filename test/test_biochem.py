@@ -162,3 +162,11 @@ def test_new_reaction_network():
     assert rn.reverse_stoichiometry == sympy.Matrix([[1], [1], [0]])
     assert rn.stoichiometry == sympy.Matrix([[-1],[-1],[1]])
 
+
+def test_rn_to_bond_graph():
+    rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
+
+    system = rn.as_network_model(normalised=True)
+
+    assert len(system.state_vars) == 3
+    assert len(system.control_vars) == 4
