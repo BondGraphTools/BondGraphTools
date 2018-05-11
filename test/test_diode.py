@@ -9,7 +9,7 @@ def test_make_diode():
     d = bgt.new("Di", library="elec", value={"Is": 5*10**-6})
     assert d.type == "Di"
     assert len(d.ports) == 1
-    assert d.params["Is"] == 5*10**-6
+    assert d.params["Is"]["value"] == 5*10**-6
 
 
 def test_diode_model():
