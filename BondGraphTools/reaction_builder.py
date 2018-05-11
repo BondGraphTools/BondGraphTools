@@ -75,7 +75,6 @@ class Reaction_Network(object):
         else:
             param_dict = {"R": R, "T": self._T}
 
-
         species_anchor = self._build_species(system, param_dict)
         self._build_reactions(system, species_anchor, param_dict)
 
