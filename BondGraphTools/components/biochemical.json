@@ -9,17 +9,15 @@
         "0":null
       },
       "params":{
-        "e0":{"name":"Standard Free Energy",
-              "bounds":[0, "inf"]},
+        "k":{"name": "Biochemical Constant; exp(mu_0/RT)/V"},
         "R":{"name":"Universal Gas Constant"},
-        "T":{"name": "Temperature"},
-        "V":{"name": "Volume of the vessel"}
+        "T":{"name": "Temperature"}
       },
       "state_vars":{
         "q_0":"Molar Quantity"
       },
       "constitutive_relations":[
-        "e_0 - e0 - R*T*log(q_0/V)"
+        "e_0 - R*T*log(k*q_0)"
       ]
     },
     "Re":{
@@ -30,13 +28,13 @@
         "1": {"name": "Secondary"}
       },
       "params":{
-        "k":{"name":"Reaction Rate"},
+        "r":{"name":"Reaction Rate"},
         "R":{"name":"Universal Gas Constant"},
         "T":{"name": "Temperature"}
       },
       "constitutive_relations":[
         "f_0 + f_1",
-        "f_0 - k *(exp(e_0/R/T) - exp(e_1/R/T))"
+        "f_0 - r *(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
     },
   "Y":{

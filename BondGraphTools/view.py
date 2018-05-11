@@ -16,6 +16,14 @@ from .exceptions import InvalidComponentException
 FONT = 14
 FONT_SM = 10
 
+def draw(system):
+    fig = plt.figure(
+        figsize=(12, 9), dpi=80
+    )
+    plt.ioff()
+    ax = fig.gca()
+    return system.view.draw(ax)
+
 
 def _build_graph(system):
 
@@ -124,6 +132,7 @@ def objective_f(z, eta, level_struct, d):
          for j in target_set if i != j])
     return phi
 
+
 class PortGlyph:
     def __init__(self, ax, string, pos, dir, text_dict):
 
@@ -148,7 +157,6 @@ class PortGlyph:
     @property
     def pos(self):
         return (self.x, self.y)
-
 
 class Glyph:
     def __init__(self, node):
@@ -267,13 +275,7 @@ class Bond(Line2D):
 
 
 class GraphLayout(Glyph):
-    def draw(self, layout=_metro_layout):
-
-        fig = plt.figure(
-            figsize=(12, 9), dpi=80
-        )
-
-        ax = fig.gca()
+    def draw(self, ax, layout=_metro_layout):
 
         graph = _build_graph(self._node)
 
@@ -294,14 +296,20 @@ class GraphLayout(Glyph):
             y_max = max(y, y_max)
 
             component.view.pos = (x,y)
-
-            component.view.string = local_name
+            if component.type not in {'0','1'}:
+                component.view.string = "\mathbf{{{t}}}: {n}".format(
+                    t=component.type, n=component.name)
+            else:
+                component.view.string = "\mathbf{{{t}}}".format(
+                    t=component.type)
             component.view.axes = ax
 
         for (c1, port_1), (c2, port_2) in self._node.bonds:
 
-            label_1 = f"[{port_1}]"
-            label_2 = f"[{port_2}]"
+            p1_v = c1.ports[port_1]
+            p2_v = c2.ports[port_2]
+            label_1 = f"[{p1_v}]" if p1_v and not isinstance(p1_v, dict) else ""
+            label_2 = f"[{p2_v}]" if p2_v and not isinstance(p2_v, dict) else ""
 
             dx = c2.view.x - c1.view.x
             dy = c2.view.y - c1.view.y
@@ -316,7 +324,6 @@ class GraphLayout(Glyph):
             bond.calc_lines()
 
         ax.axis([x_min - 1, x_max + 1, y_min - 1, y_max + 1])
-        return fig
 
 
 def find_renderer(fig):

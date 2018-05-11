@@ -71,14 +71,13 @@ class Reaction_Network(object):
         system = new(name=self.name)
 
         if normalised:
-            param_dict_Ce = {"R": 1, "T": 1, "V":1}
-            param_dict_Re = {"R": 1, "T": 1}
+            param_dict = {"R": 1, "T": 1}
         else:
-            param_dict_Ce = {"R": R, "T": self._T, "V": self._V}
-            param_dict_Re = {"R": R, "T": self._T}
+            param_dict = {"R": R, "T": self._T}
 
-        species_anchor = self._build_species(system, param_dict_Ce)
-        self._build_reactions(system, species_anchor, param_dict_Re)
+
+        species_anchor = self._build_species(system, param_dict)
+        self._build_reactions(system, species_anchor, param_dict)
 
         return system
 
@@ -106,7 +105,8 @@ class Reaction_Network(object):
                 system, species_anchors, reverse_complex, bck_sto
             )
 
-    def _connect_complex(self, system, species_anchors, complex, stoichiometry):
+    @staticmethod
+    def _connect_complex(system, species_anchors, complex, stoichiometry):
         for i, (species, qty) in enumerate(stoichiometry.items()):
             port = i + 1
             complex.make_port(port=port, value=qty)
@@ -142,20 +142,19 @@ class Reaction_Network(object):
 
     def add_reaction(self, reaction,
                      forward_rates=None, reverse_rates=None, name=""):
+
         reaction_step = []
         remaining_reactions = reaction
 
-        self._bond_graph = None
-
         if not name or name in self._reactions:
             n = 1
-
-            while "r{}_1".format(n) in self._reactions:
+            while "r_{{{base}}}".format(base=str(n)+';0') in self._reactions:
                 n += 1
-
-            idx = "r{}_{{}}".format((n))
+            base = str(n) + ';'
+            idx = "r_{{{base}}}"
         else:
-            idx = "{name}_{{}}".format(name=name)
+            idx = "{name}_{{{base}}}".format(name=name)
+            base = ""
 
         while remaining_reactions:
             in_react, _, remaining_reactions = remaining_reactions.partition(
@@ -180,7 +179,7 @@ class Reaction_Network(object):
             for sp in reaction_step[i+1]:
                 self._species[sp] += 1
 
-            self._reactions[idx.format(i)] = (reaction_step[i],
+            self._reactions[idx.format(base=base+str(i))] = (reaction_step[i],
                                               reaction_step[i+1],
                                               f_rate, r_rate)
 

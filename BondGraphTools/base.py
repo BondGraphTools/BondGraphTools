@@ -68,7 +68,10 @@ def _update_build_params(build_args, value):
             build_args["params"][param]["value"] = v
     elif isinstance(value, dict):
         for param, v in value.items():
-            build_args["params"][param] = v
+            if isinstance(build_args["params"][param], dict):
+                build_args["params"][param]["value"] = v
+            else:
+                build_args["params"][param] = v
     else:
         p = next(iter(build_args["params"]))
         build_args["params"][p] = value

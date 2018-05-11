@@ -181,7 +181,7 @@ class BondGraph(BondGraphBase):
         rels = lin_op[(ss_size + 2 * js_size):, :].dot(coordinates)
         relations += [rel for rel in rels if rel]
 
-        return relations
+        return [r.nsimplify() for r in relations]
 
     def _system_rep(self):
         mappings, coordinates = inverse_coord_maps(

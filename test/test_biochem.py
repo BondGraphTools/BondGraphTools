@@ -5,12 +5,12 @@ import sympy
 import BondGraphTools as bgt
 from BondGraphTools.exceptions import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps
-from BondGraphTools.reation_builder import Reaction_Network
+from BondGraphTools.reaction_builder import Reaction_Network
 
 def test_make_a_to_b():
 
-    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
 
     Re = bgt.new("Re", library="BioChem", value={"R": 1, "T": 1})
 
@@ -22,7 +22,7 @@ def test_make_a_to_b():
     a_to_b.connect(A, (Re, 0))
     a_to_b.connect(B, (Re, 1))
 
-    assert Re.control_vars == ['k']
+    assert Re.control_vars == ['r']
     assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
     assert list(a_to_b.control_vars.keys()) == ['u_0']
     assert not a_to_b.ports
@@ -33,7 +33,7 @@ def test_re_con_rel():
 
     r = Re.constitutive_relations[1]
 
-    coords = list(sympy.sympify("e_0,f_0,e_1,f_1,k"))
+    coords = list(sympy.sympify("e_0,f_0,e_1,f_1,r"))
     local_map = {c:i for i,c in enumerate(coords)}
 
     coeff_dict, nlin = extract_coefficients(r, local_map, coords)
@@ -47,7 +47,7 @@ def test_re_con_rel():
 
     for r in Re.get_relations_iterator(mappings, coords):
         assert r in [
-            ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-k*exp(e_0) + k*exp(e_1)"))
+            ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
         ]
 
 #
@@ -73,10 +73,10 @@ def test_re_con_rel():
 
 
 def test_stiochiometry():
-    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
 
-    Re = bgt.new("Re", library="BioChem", value={'k': 1, "R": 1, "T": 1})
+    Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
     Yin = bgt.new('Y', library="BioChem")
     bg = A + B + Re + Yin
 
@@ -97,10 +97,10 @@ def test_stiochiometry():
 
 
 def test_a_to_b_model():
-    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
+    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
 
-    Re = bgt.new("Re", library="BioChem", value={'k':1, "R": 1, "T": 1})
+    Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
 
     Y_A = bgt.new('Y', library="BioChem")
     Y_B = bgt.new('Y', library="BioChem")
@@ -120,10 +120,10 @@ def test_a_to_b_model():
 
 def test_ab_to_c_model():
 
-    A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    C = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-    Re = bgt.new("Re", library="BioChem", value={'k': 1, "R": 1, "T": 1})
+    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    C = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
     Y_AB = bgt.new('Y', library="BioChem")
     Y_C = bgt.new('Y', library="BioChem")
 
@@ -167,6 +167,27 @@ def test_rn_to_bond_graph():
     rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
 
     system = rn.as_network_model(normalised=True)
+    for comp in system.components.values():
+        if comp.type == 'Y':
+            for port in comp.ports:
+                if port !=0:
+                    assert comp.ports[port] == 1
 
     assert len(system.state_vars) == 3
     assert len(system.control_vars) == 4
+
+def test_cat_rn():
+    reactions = [
+        "E + S = ES = E+P"
+    ]
+    rn = Reaction_Network(reactions=reactions, name="Catalysed Reaction")
+
+    assert len(rn._reactions) == 2
+
+def test_cat_rn():
+    reactions = [
+        "E + S = ES", "ES = E+P"
+    ]
+    rn = Reaction_Network(reactions=reactions, name="Catalysed Reaction")
+    assert rn._species["ES"] == 2
+    assert len(rn._reactions) == 2
