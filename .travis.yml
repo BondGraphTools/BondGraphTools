@@ -19,7 +19,7 @@ before_install:
   - chmod +x ./julia-d386e40c17/bin/julia
 
 install:
-  - julia BondGraphTools/build.jl
+  - julia setup.jl
   - python -m pip install -r requirements.txt
   - python -m pip install pytest coverage mock pytest-cov
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
