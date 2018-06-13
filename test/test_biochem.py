@@ -170,19 +170,12 @@ def test_rn_to_bond_graph():
     for comp in system.components.values():
         if comp.type == 'Y':
             for port in comp.ports:
-                if port !=0:
+                if port != 0:
                     assert comp.ports[port] == 1
 
     assert len(system.state_vars) == 3
     assert len(system.control_vars) == 4
 
-def test_cat_rn():
-    reactions = [
-        "E + S = ES = E+P"
-    ]
-    rn = Reaction_Network(reactions=reactions, name="Catalysed Reaction")
-
-    assert len(rn._reactions) == 2
 
 def test_cat_rn():
     reactions = [
@@ -191,3 +184,5 @@ def test_cat_rn():
     rn = Reaction_Network(reactions=reactions, name="Catalysed Reaction")
     assert rn._species["ES"] == 2
     assert len(rn._reactions) == 2
+
+

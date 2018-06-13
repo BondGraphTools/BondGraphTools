@@ -1,3 +1,6 @@
+import logging
+import logging.config
+
 class InvalidPortException(Exception):
     pass
 

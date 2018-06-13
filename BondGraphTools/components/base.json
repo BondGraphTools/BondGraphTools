@@ -51,7 +51,7 @@
         "0": null
       },
       "params": {
-        "c": {
+        "C": {
           "name": "Capacitance",
           "value": 1000,
           "range": [
@@ -64,7 +64,7 @@
         "q_0":"Generalised Position"
       },
       "constitutive_relations": [
-        "q_0 - c*e_0"
+        "q_0 - C * e_0"
       ]
     },
     "I": {
@@ -116,7 +116,7 @@
         "f_0 + f"
       ]
     },
-    "Tf": {
+    "TF": {
       "name": "Linear Transformer",
       "class": "BaseComponent",
       "ports": {
@@ -128,17 +128,17 @@
         }
       },
       "params": {
-        "a": {
+        "r": {
           "name": "Ratio",
           "value": 1
         }
       },
       "constitutive_relations": [
-        "e_1 - a*e_0",
-        "f_0 - a*f_1"
+        "e_1 - r * e_0",
+        "f_0 + r * f_1"
       ]
     },
-    "Gy": {
+    "GY": {
       "name": "Linear Gyrator",
       "class": "BaseComponent",
       "ports": {

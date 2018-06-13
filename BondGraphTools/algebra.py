@@ -10,9 +10,18 @@ def extract_coefficients(equation, local_map, global_coords):
     subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
 
     for term in equation.expand().args:
-        prod_iter = flatten(term.as_coeff_mul())
-        coeff = next(prod_iter)
-        base = list(prod_iter)
+
+        factors = list(flatten(term.as_coeff_mul()))
+
+        coeff = sp.S(1)
+        base = []
+        while factors:
+            factor = factors.pop()
+            if factor.is_number:
+                coeff *= factor
+            else:
+                base.append(factor)
+
         if not base:
             coeff_dict[len(global_coords)-1] = coeff
         elif len(base) == 1 and base[0] in local_map:
@@ -226,6 +235,7 @@ def inverse_coord_maps(tangent_space, port_space, control_space):
         coordinates.append(x)
     for u in control_space:
         coordinates.append(u)
+
     coordinates.append(sp.S("c"))
 
     return (inverse_tm, inverse_js, inverse_cm), coordinates

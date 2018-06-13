@@ -1,4 +1,4 @@
-
+import logging
 import sympy as sp
 
 from .base import BondGraphBase
@@ -6,6 +6,8 @@ from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
     inverse_coord_maps, _handle_constraints
+
+logger = logging.getLogger(__name__)
 
 
 class BondGraph(BondGraphBase):
@@ -162,6 +164,7 @@ class BondGraph(BondGraphBase):
             Rx = (sp.eye(lin_op.rows) - lin_op).dot(coordinates)
             Rx = [r - nlin_op[i] for i,r in enumerate(Rx)]
             subs = [pair for pair in zip(coordinates, Rx)]
+            logger.info("Substituting with subs:", subs)
             nlin_op = nlin_op.subs(subs)
 
         relations = []
@@ -436,6 +439,15 @@ class BondGraph(BondGraphBase):
             del self._ports[port]
             del self._internal_ports[port]
 
-
+    def find(self, name, component=None):
+        out = [obj for obj in self.components.values() if
+               (not component or obj.type == component) and
+               obj.name == name]
+        if len(out) > 1:
+            raise NotImplementedError("Object is not unique")
+        elif len(out) == 1:
+            return out.pop()
+        else:
+            return None
 
 

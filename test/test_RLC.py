@@ -76,3 +76,16 @@ def test_add_forcing(rlc):
     assert rlc.constitutive_relations == list(
         sympy.sympify("dx_0 - x_1, dx_1 + f_0 + x_0 + x_1, e_0 - x_1")
     )
+
+
+def test_tf():
+    l = bgt.new("I", value=1)
+    c = bgt.new("C", value=1)
+    tf = bgt.new("TF", value=0.5)
+
+    tflc = tf + l + c
+    tflc.connect(l, (tf, 1))
+    tflc.connect(c, (tf, 0))
+
+    c,m,lp,nlp = tflc._system_rep()
+    assert not nlp

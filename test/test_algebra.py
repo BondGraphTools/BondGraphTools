@@ -107,7 +107,7 @@ def test_build_relations():
 
     eqn = eqns.pop()
 
-    test_eqn = sympy.sympify("q_0 - c*e_0")
+    test_eqn = sympy.sympify("q_0 - C*e_0")
 
     assert eqn == test_eqn
 
@@ -199,6 +199,17 @@ def test_relations_iter():
         assert lin in (d1, d2, d1m, d2m)
 
 
+def test_relation_iter_twoport():
+    tf = bgt.new("TF", value=1)
+    mappings = ({},{(tf,0):0, (tf,1):1},{})
+    coords = list(sympy.sympify("e_0,f_0,e_1,f_1"))
+    # d1 = {0: 1, 2: -1}
+    # d2 = {1: 1, 2: 1}
+    relations = tf.get_relations_iterator(mappings, coords)
+    for lin, nlin in relations:
+        assert not nlin
+
+
 @pytest.mark.usefixture("rlc")
 def test_interal_basis_vectors(rlc):
     tangent, ports, cv = rlc._build_internal_basis_vectors()
@@ -218,9 +229,8 @@ def test_cv_relations():
     bg.connect(c,kcl)
     bg.connect(se, kcl)
     bg.connect(r, kcl)
-    print(bg.constitutive_relations)
-    assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
+    assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
 def test_parallel_crv_relations():
     c = bgt.new("C", value=1)
@@ -235,4 +245,6 @@ def test_parallel_crv_relations():
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 - du_0"),
                                          sympy.sympify("x_0 - u_0")]
+
+
 
