@@ -36,7 +36,7 @@ def new(component=None, name=None, library=base_id, value=None):
 
         if name:
             build_args.update({"name": name})
-        if value:
+        if value or isinstance(value, (int, float, complex)):
             _update_build_params(build_args, value)
 
         cls =_find_subclass(
@@ -166,8 +166,11 @@ class BondGraphBase:
         for (e, f), port in local_js.items():
             local_map[e] = 2*inv_js[port] + num_state_vars
             local_map[f] = 2*inv_js[port] + num_state_vars + 1
-
+        logger.info("Getting relations iterator for %s", repr(self))
         for relation in self.constitutive_relations:
-            yield extract_coefficients(relation, local_map, coordinates)
+            if relation:
+                yield extract_coefficients(relation, local_map, coordinates)
+            else:
+                yield {}, 0.0
 
 

@@ -89,3 +89,13 @@ def test_tf():
 
     c,m,lp,nlp = tflc._system_rep()
     assert not nlp
+
+
+def test_se():
+
+    Se = bgt.new('Se', value=1)
+    c = bgt.new('C', value=1)
+    vc = Se + c
+    assert Se.constitutive_relations == [sympy.sympify("e_0 - 1")]
+    vc.connect(Se, c)
+    assert vc.constitutive_relations == [sympy.sympify("dx_0"), sympy.sympify("x_0 - 1")]

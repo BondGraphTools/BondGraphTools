@@ -1,4 +1,10 @@
+
+import logging
 import sympy as sp
+
+from .exceptions import SymbolicException
+
+logger = logging.getLogger(__name__)
 
 
 def extract_coefficients(equation, local_map, global_coords):
@@ -8,52 +14,111 @@ def extract_coefficients(equation, local_map, global_coords):
     subs = [(k, global_coords[v]) for k, v in local_map.items()]
 
     subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
+    logger.info("Extracting coefficients from %s", repr(equation))
+    logger.info("Using local-to-global substitutions %s", repr(subs))
 
-    for term in equation.expand().args:
-
-        factors = list(flatten(term.as_coeff_mul()))
-
-        coeff = sp.S(1)
-        base = []
-        while factors:
-            factor = factors.pop()
-            if factor.is_number:
-                coeff *= factor
-            else:
-                base.append(factor)
-
-        if not base:
-            coeff_dict[len(global_coords)-1] = coeff
-        elif len(base) == 1 and base[0] in local_map:
-            coeff_dict[local_map[base[0]]] = coeff
+    terms = equation.expand().args
+    if not terms:
+        if equation in local_map:
+            coeff_dict[local_map[equation]] = sp.S(1)
+        elif equation.is_number:
+            coeff_dict[len(global_coords)-1] = equation
         else:
-            new_term = term
-            new_term = new_term.subs(subs)
-            nonlinear_terms = sp.Add(new_term, nonlinear_terms)
+            nonlinear_terms = equation
+    else:
+        for term in terms:
+            factors = list(flatten(term.as_coeff_mul()))
+            logger.info("Factors: %s", repr(factors))
+            coeff = sp.S(1)
+            base = []
+            while factors:
+                factor = factors.pop()
+                if factor.is_number:
+                    coeff *= factor
+                else:
+                    base.append(factor)
+            logger.info("Base: %s", repr(base))
+            if not base:
+                coeff_dict[len(global_coords)-1] = coeff
+            elif len(base) == 1 and base[0] in local_map:
+                coeff_dict[local_map[base[0]]] = coeff
+            else:
+                new_term = term
+                new_term = new_term.subs(subs)
+                nonlinear_terms = sp.Add(new_term, nonlinear_terms)
+
+    logger.info("Linear terms: %s", repr(coeff_dict))
+    logger.info("Nonlinear terms: %s", repr(nonlinear_terms))
 
     return coeff_dict, nonlinear_terms
 
 
 def _handle_constraints(linear_op, nonlinear_op, coordinates,
                         size_tuple):
+    """
+    Args:
+        linear_op: Linear part of the constitutive relations. Assumed to be
+        a matrix in smith normal form.
+        nonlinear_op: The corresponding nonlinear part; a symbolic vector with
+        the same number of rows.
+        coordinates:
+        size_tuple:
+
+    Returns:
+
+    """
+
     rows_added = 0
+    added_cvs = []
+
+    logger.info("Handling algebraic constraints")
 
     ss_size, js_size, cv_size, n = size_tuple
-    for row in range(2*js_size + ss_size, 2*(js_size + ss_size)):
-        if not linear_op[row, 2*(js_size + ss_size):-1].is_zero:
-            if rows_added == 0:
-                linear_op = linear_op.row_join(sp.SparseMatrix(
-                    linear_op.rows, cv_size, {}))
-                coordinates += [
-                    sp.symbols(f"d{coordinates[i]}")
-                    for i in range(2*(js_size + ss_size), n - 1)
-                ]
+    offset = 2*js_size + ss_size
 
-            new_row = linear_op[row, 2*js_size + ss_size: 2*(js_size + ss_size)]
-            new_row = new_row.row_join(sp.SparseMatrix(1, n - ss_size, {}))
-            new_row = new_row.row_join(linear_op[row, 2*(js_size + ss_size):-2])
-            linear_op = linear_op.col_join(new_row)
-            rows_added += 1
+    for row in range(offset, offset + ss_size):
+        logger.info("Testing row %s: %s", repr(row),
+                    repr(linear_op[row, :].dot(coordinates)))
+
+        if linear_op[row, offset:-1].is_zero:
+            continue
+
+        state_constraint = linear_op[row, offset: offset + ss_size]
+        control_constraint = linear_op[row, offset + ss_size:-1]
+        if nonlinear_op:
+            nonlinear_constraint = nonlinear_op[row]
+
+            if nonlinear_constraint:
+                logger.warning("Nonlinear constraints not yet implemented")
+                continue
+
+        row = state_constraint.row_join(sp.SparseMatrix(1, offset + cv_size, {}))
+
+        cv_dict = {}
+        if not control_constraint.is_zero:
+            logging.info("Found higher order control constraint")
+            for cv_col in range(control_constraint.cols):
+                const = control_constraint[cv_col]
+                if not const:
+                    continue
+
+                try:
+                    idx = added_cvs.index(cv_col)
+                except ValueError:
+                    idx = len(added_cvs)
+                    added_cvs.append(cv_col)
+                    linear_op= linear_op.col_insert(
+                        -1, sp.SparseMatrix(linear_op.rows, 1, {}))
+                    coord = coordinates[offset + ss_size + cv_col]
+                    d_coord = sp.Symbol(f"d{str(coord)}")
+                    coordinates.insert(-1, d_coord)
+
+                cv_dict[(0,idx)] = const
+
+        row = row.row_join(sp.SparseMatrix(1, len(added_cvs) + 1, cv_dict))
+
+        linear_op = linear_op.col_join(row)
+        rows_added += 1
 
     if rows_added:
         if nonlinear_op:
@@ -236,7 +301,7 @@ def inverse_coord_maps(tangent_space, port_space, control_space):
     for u in control_space:
         coordinates.append(u)
 
-    coordinates.append(sp.S("c"))
+    coordinates.append(sp.S(1))
 
     return (inverse_tm, inverse_js, inverse_cm), coordinates
 

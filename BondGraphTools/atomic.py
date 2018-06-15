@@ -1,10 +1,12 @@
-from collections import OrderedDict
+import logging
 import sympy as sp
 
 from .base import BondGraphBase
 from .exceptions import *
 from .compound import BondGraph
 from .view import Glyph
+
+logger = logging.getLogger(__name__)
 
 class BaseComponent(BondGraphBase):
     """
@@ -30,7 +32,8 @@ class BaseComponent(BondGraphBase):
     def control_vars(self):
         if self.params:
             return [param for param, value in self.params.items()
-                    if not value or (isinstance(value, dict) and "value"
+                    if ((not value) and not isinstance(value,(int,float, complex)))
+                    or (isinstance(value, dict) and "value"
                     not in value)]
         else:
             return []
@@ -70,6 +73,7 @@ class BaseComponent(BondGraphBase):
 
         subs = []
         for param, value in self.params.items():
+
             if isinstance(value, (int, float, complex)):
                 subs.append((sp.symbols(param), value))
             elif isinstance(value, str) and value.isnumeric():
