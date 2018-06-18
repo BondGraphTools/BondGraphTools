@@ -42,6 +42,12 @@ class BaseComponent(BondGraphBase):
     def params(self):
         return self._params if self._params else {}
 
+    def set_param(self, param, value):
+        if isinstance(self._params[param], dict):
+            self._params[param]["value"] = value
+        else:
+            self._params[param] = value
+
     @property
     def state_vars(self):
         return self._state_vars if self._state_vars else []
@@ -226,7 +232,8 @@ class NPortWeighted(NPort):
     def release_port(self, port):
         if port not in self._fixed_ports:
             self.delete_port(port)
-            del self._params[f"c_{port}"]
+
+            #del self._params[f"c_{port}"]
 
     def _build_relations(self):
 

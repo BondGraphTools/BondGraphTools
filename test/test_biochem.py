@@ -185,4 +185,29 @@ def test_cat_rn():
     assert rn._species["ES"] == 2
     assert len(rn._reactions) == 2
 
+@pytest.mark.xfail
+def test_nlin_se():
+    rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
+    system = rn.as_network_model(normalised=True)
+
+    for param in system.params:
+        system.set_param(param, 1)
+
+    Ce_A = system.find(name="A", component="Ce")
+    Y = system.find(component="Y", name="AB")
+
+    system.disconnect(Ce_A, Y)
+
+    J_A = bgt.new("0", name="Ce_A")
+    Se_A = bgt.new('Se', value='1', name='1')
+
+    system.add(J_A, Se_A)
+    system.connect(J_A, Y)
+    system.connect(Ce_A, J_A)
+    system.connect(Se_A, J_A)
+
+    relations = system.constitutive_relations
+
+    assert False
+
 

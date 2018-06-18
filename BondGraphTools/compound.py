@@ -99,6 +99,10 @@ class BondGraph(BondGraphBase):
             for p in v.params if not isinstance(p, (float,complex, int))
         }
 
+    def set_param(self, param, value):
+        c, v = param
+        self.components[c].set_param(v, value)
+
     @property
     def ports(self):
         bonds = {v for bond in self.bonds for v in bond}
@@ -413,11 +417,10 @@ class BondGraph(BondGraphBase):
                        or (cmp((c1, port_1), dest) and cmp((c2, port_2), src))
 
         target_bonds = [bond for bond in self.bonds if is_target(*bond)]
-
         for bond in target_bonds:
-            self.bonds.remove(bond)
             for c, p in bond:
                 c.release_port(p)
+        self.bonds = [bond for bond in self.bonds if bond not in target_bonds]
 
     def make_port(self, port=None):
         if port and not isinstance(port, int):
@@ -449,5 +452,4 @@ class BondGraph(BondGraphBase):
             return out.pop()
         else:
             return None
-
 

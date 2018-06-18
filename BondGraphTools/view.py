@@ -1,20 +1,26 @@
-from collections import namedtuple
+import logging
 from itertools import permutations
 
 import numpy as np
-from matplotlib.offsetbox import AnchoredText
+#from matplotlib.offsetbox import AnchoredText
 from matplotlib.text import Text, Annotation
 from matplotlib.lines import Line2D
-from matplotlib.patches import Circle, Rectangle
+#from matplotlib.patches import Circle, Rectangle
 import matplotlib.pyplot as plt
 
 from scipy.sparse import dok_matrix
 from scipy.sparse.csgraph import floyd_warshall
 
+import networkx as nx
+
 from .exceptions import InvalidComponentException
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 FONT = 14
 FONT_SM = 10
+
 
 def draw(system):
     fig = plt.figure(
@@ -63,6 +69,17 @@ def _metro_layout(graph):
     zmin = np.abs(Z[Z != 0]).min()
 
     return [(round(zp.real / zmin), round(zp.imag / zmin)) for zp in z.flatten()]
+
+
+def _networkx_layout(graph):
+
+    nx_graph = nx.Graph(graph)
+    #layout = nx.spring_layout(nx_graph, k=1)
+    layout = nx.kamada_kawai_layout(nx_graph, scale=20)
+    pos = [(pair[0],pair[1]) for pair in list(layout.values())]
+
+    return pos
+
 
 
 def permute(z, N, r, indicies):
@@ -275,7 +292,7 @@ class Bond(Line2D):
 
 
 class GraphLayout(Glyph):
-    def draw(self, ax, layout=_metro_layout):
+    def draw(self, ax, layout=_networkx_layout):
 
         graph = _build_graph(self._node)
 

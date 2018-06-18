@@ -187,6 +187,8 @@ def test_disconnect_ports():
     assert c1 in (c, se)
     assert c2 in (c, se)
 
+    bg.disconnect(c, se)
+    assert not bg.bonds
 
 def test_many_port():
 

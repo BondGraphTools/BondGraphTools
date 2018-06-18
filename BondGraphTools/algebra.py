@@ -6,6 +6,9 @@ from .exceptions import SymbolicException
 
 logger = logging.getLogger(__name__)
 
+class NotInvertible(Exception):
+    pass
+
 
 def extract_coefficients(equation, local_map, global_coords):
 
@@ -75,22 +78,33 @@ def _handle_constraints(linear_op, nonlinear_op, coordinates,
 
     ss_size, js_size, cv_size, n = size_tuple
     offset = 2*js_size + ss_size
+    for row in range(offset, linear_op.rows):
+        logger.info("Testing row %s: %s + %s", repr(row),
+                    repr(linear_op[row, :].dot(coordinates)),
+                    repr(nonlinear_op[row]) if nonlinear_op else '')
 
-    for row in range(offset, offset + ss_size):
-        logger.info("Testing row %s: %s", repr(row),
-                    repr(linear_op[row, :].dot(coordinates)))
-
-        if linear_op[row, offset:-1].is_zero:
+        if nonlinear_op:
+            nonlinear_constraint = nonlinear_op[row]
+        else:
+             nonlinear_constraint = None
+        if linear_op[row, offset:-1].is_zero and not nonlinear_constraint:
             continue
 
         state_constraint = linear_op[row, offset: offset + ss_size]
         control_constraint = linear_op[row, offset + ss_size:-1]
-        if nonlinear_op:
-            nonlinear_constraint = nonlinear_op[row]
 
-            if nonlinear_constraint:
-                logger.warning("Nonlinear constraints not yet implemented")
-                continue
+        if nonlinear_constraint:
+            logger.warning("Nonlinear constraints not yet implemented")
+
+            iX = set(coordinates[0:offset+ss_size]) & nonlinear_constraint.atoms()
+
+            # case 1: constraint is f(x,u, c)= 0 for ONE x in iX
+            #         and f(x) is invertible;
+
+            # case 2: function
+
+
+
 
         row = state_constraint.row_join(sp.SparseMatrix(1, offset + cv_size, {}))
 
@@ -112,7 +126,8 @@ def _handle_constraints(linear_op, nonlinear_op, coordinates,
                     coord = coordinates[offset + ss_size + cv_col]
                     d_coord = sp.Symbol(f"d{str(coord)}")
                     coordinates.insert(-1, d_coord)
-
+                    cv_size += 1
+                    n+=1
                 cv_dict[(0,idx)] = const
 
         row = row.row_join(sp.SparseMatrix(1, len(added_cvs) + 1, cv_dict))
