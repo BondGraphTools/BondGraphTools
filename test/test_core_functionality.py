@@ -5,7 +5,6 @@ from BondGraphTools.exceptions import InvalidComponentException, InvalidPortExce
 from BondGraphTools.atomic import BaseComponent
 
 
-
 def test_new():
     c = bgt.new("C")
 
@@ -273,3 +272,36 @@ def test_connect_unadded():
         bg.connect(se, j)
 
 
+def test_disconnect_multiport():
+    zero = bgt.new("0")
+    r = bgt.new("R")
+    c = bgt.new("C")
+    one = bgt.new("1")
+
+    bg = zero+r+c+one
+
+    bg.connect((zero,0), (one,0))
+    bg.connect(r,zero)
+    bg.connect(c, one)
+
+    assert len(bg.bonds) == 3
+    bg.disconnect(zero, one)
+    assert len(bg.bonds) == 2
+    assert ((zero, 0), (one,0)) not in bg.bonds
+
+
+def test_disconnect_component():
+    zero = bgt.new("0")
+    r = bgt.new("R")
+    c = bgt.new("C")
+    one = bgt.new("1")
+
+    bg = zero+r+c+one
+
+    bg.connect((zero,0), (one,0))
+    bg.connect(r,zero)
+    bg.connect(c, one)
+
+    assert len(bg.bonds) == 3
+    bg.disconnect(c)
+    assert len(bg.bonds) == 2

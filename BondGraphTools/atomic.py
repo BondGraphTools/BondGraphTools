@@ -225,6 +225,21 @@ class NPort(BaseComponent):
 
 
 class NPortWeighted(NPort):
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        return self.__dict__ == self.__dict__
+
+    def __add__(self, other):
+        return BondGraph(
+            name="{}+{}".format(self.name, other.name),
+            components=[self, other]
+        )
 
     def make_port(self, port=None, value=1):
         return super().make_port(port=port, value=value)

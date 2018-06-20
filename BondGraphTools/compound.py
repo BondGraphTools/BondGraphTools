@@ -5,7 +5,7 @@ from .base import BondGraphBase
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
-    inverse_coord_maps, _handle_constraints
+    inverse_coord_maps, reduce_model
 
 logger = logging.getLogger(__name__)
 
@@ -158,39 +158,43 @@ class BondGraph(BondGraphBase):
     @property
     def constitutive_relations(self):
 
-        coordinates, mappings, lin_op, nlin_op = self._system_rep()
+        coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
 
         inv_tm, inv_js, _ = mappings
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
-        if nlin_op:
-            Rx = (sp.eye(lin_op.rows) - lin_op).dot(coordinates)
-            Rx = [r - nlin_op[i] for i,r in enumerate(Rx)]
-            subs = [pair for pair in zip(coordinates, Rx)]
-            logger.info("Substituting with subs:", subs)
-            nlin_op = nlin_op.subs(subs)
+        # Rx = (sp.eye(lin_op.rows) - lin_op)
+        # Rxs = [r - nlin_op[i] for i, r in enumerate(Rx.dot(coordinates))]
+        # subs = [pair for i, pair in enumerate(zip(coordinates, Rxs)) if
+        #         Rx[i,i] == 0]
+        # logger.info("Substituting with subs: %s", subs)
+        # nlin_op = nlin_op.subs(subs)
+        #
+        # for k,c in enumerate(coordinates):
+        #     if Rx[k,k] == 0:
+        #         subs.append(
+        #             (c, c - nlin_op[k])
+        #
+        #         )
 
-        relations = []
-        for row in range(ss_size):
-            rel = lin_op[row, :].dot(coordinates)
+        relations = [
+            sp.Add(l,r) for i, (l,r) in enumerate(zip(
+                lin_op.dot(coordinates),nlin_op))
+            if not ss_size <= i < ss_size + 2*js_size
+        ]
+        if isinstance(constraints, list):
+            for constraint in constraints:
+                logger.info("Adding constrain %s", repr(constraint))
+                if constraint:
+                    relations.append(constraint)
+        else:
+            logger.warning("Constraints %s is not a list. Discarding",
+                           repr(constraints))
 
-            if nlin_op:
-                rel += nlin_op[row]
-            if rel:
-                relations.append(rel)
+        return [r.nsimplify() for r in relations if r]
 
-        for row in range(ss_size, ss_size + 2*js_size, 2):
-            if lin_op[row, row] == 0 or lin_op[row+1, row+1] == 0:
-                rels = lin_op[row:row+2, :].dot(coordinates)
-                relations += [rel for rel in rels if rel]
-
-        rels = lin_op[(ss_size + 2 * js_size):, :].dot(coordinates)
-        relations += [rel for rel in rels if rel]
-
-        return [r.nsimplify() for r in relations]
-
-    def _system_rep(self):
+    def system_model(self):
         mappings, coordinates = inverse_coord_maps(
             *self._build_internal_basis_vectors()
         )
@@ -204,60 +208,28 @@ class BondGraph(BondGraphBase):
 
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
         nlin_dict = {}
-        nlin_vect = []
-        try:
-            lin_row = max(row + 1 for row, _ in lin_dict.keys())
-        except ValueError:
-            lin_row = 0
 
-        nlin_row = 0
+        try:
+            row = max(row + 1 for row, _ in lin_dict.keys())
+        except ValueError:
+            row = 0
 
         for component in self.components.values():
             relations = component.get_relations_iterator(mappings, coordinates)
             for linear, nonlinear in relations:
-                if not nonlinear:
-                    lin_dict.update({(lin_row, k): v
-                                     for k, v in linear.items()})
-                    lin_row += 1
-                else:
+                lin_dict.update({(row, k): v
+                                 for k, v in linear.items()})
+                nlin_dict.update({(row, 0): nonlinear})
+                row += 1
 
-                    nlin_dict.update({(nlin_row, c):v for c,v in linear.items()})
-                    nlin_vect.append(nonlinear)
-                    nlin_row += 1
+        linear_op = sp.SparseMatrix(row, n, lin_dict)
+        nonlinear_op = sp.SparseMatrix(row, 1, nlin_dict)
 
-        if nlin_dict:
-            lin_dict.update({
-                (lin_row + row, col): value
-                for (row, col), value in nlin_dict.items()})
+        coordinates, linear_op, nonlinear_op, constraints = reduce_model(
+                linear_op, nonlinear_op, coordinates, size_tuple
+        )
 
-            nonlinear_op = sp.zeros(lin_row, 1).col_join(
-                sp.Matrix(nlin_row, 1, nlin_vect)
-            )
-
-            linear_op, nonlinear_op = smith_normal_form(
-                sp.SparseMatrix(lin_row + nlin_row, n, lin_dict), nonlinear_op)
-
-        else:
-
-            linear_op = smith_normal_form(
-                sp.SparseMatrix(lin_row + nlin_row, n, lin_dict)
-            )
-
-            nonlinear_op = None
-
-        # if nlin_dict:
-        #     nonlinear_op = _build_nonlinear_operator((nlin_dict, nlin_vect),
-        #                                              coordinates)
-        # else:
-        #     nonlinear_op = None
-
-        # if we have a constraint like x_0 + x_1 - u_0 = 0
-        # turn it into dx_0 + dx_1 - du_0 = 0
-
-        coordinates, linear_op, nonlinear_op = _handle_constraints(
-            linear_op, nonlinear_op, coordinates, size_tuple)
-
-        return coordinates, mappings, linear_op, nonlinear_op
+        return coordinates, mappings, linear_op, nonlinear_op, constraints
 
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
@@ -299,7 +271,7 @@ class BondGraph(BondGraphBase):
         elif target is self and port in self.ports:
             return target, port
         elif isinstance(target, BondGraphBase) and \
-            target in self.components.values():
+                target in self.components.values():
             comp = target
         else:
             raise InvalidComponentException(
@@ -324,9 +296,9 @@ class BondGraph(BondGraphBase):
         dest, dest_port = self._validate_port(destination)
 
         if ((src, src_port) in bonds) or ((dest, dest_port) in bonds):
-            raise InvalidPortException("Could not join %s to %s: "
+            raise InvalidPortException("Could not join %s:%s to %s:%s "
                                        "Port already in use",
-                                       source, destination)
+                                       src, src_port,dest, dest_port)
 
         bond = (src, src_port), (dest, dest_port)
 
@@ -396,10 +368,13 @@ class BondGraph(BondGraphBase):
             raise InvalidComponentException(
                 "Could not find %s: not contained in %s", component_2, self
             )
+        else:
+            c2 = None
         if component_2 and port_2 and port_2 not in c2.ports:
             raise InvalidPortException("Could not find port %s on %s",
                                        port_2, component_2)
 
+        logger.info("Removing %s, %s from %s, %s" % (c1, port_1,c2, port_2))
         def cmp(target, test):
             p, q = target
             r, s = test
@@ -412,15 +387,20 @@ class BondGraph(BondGraphBase):
             if not c2:
                 return cmp((c1, port_1), src) or cmp((c1, port_1), dest)
             else:
-                return (
-                   cmp((c1, port_1), src) and cmp((c2, port_2), dest)) \
+                return (cmp((c1, port_1), src) and cmp((c2, port_2), dest)) \
                        or (cmp((c1, port_1), dest) and cmp((c2, port_2), src))
 
-        target_bonds = [bond for bond in self.bonds if is_target(*bond)]
-        for bond in target_bonds:
+        remaining_bonds = []
+        removed_bonds = []
+        for bond in self.bonds:
+            if is_target(*bond):
+                removed_bonds.append(bond)
+            else:
+                remaining_bonds.append(bond)
+        for bond in removed_bonds:
             for c, p in bond:
                 c.release_port(p)
-        self.bonds = [bond for bond in self.bonds if bond not in target_bonds]
+        self.bonds = remaining_bonds
 
     def make_port(self, port=None):
         if port and not isinstance(port, int):

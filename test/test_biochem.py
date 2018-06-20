@@ -7,6 +7,7 @@ from BondGraphTools.exceptions import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps
 from BondGraphTools.reaction_builder import Reaction_Network
 
+
 def test_make_a_to_b():
 
     A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
@@ -49,27 +50,6 @@ def test_re_con_rel():
         assert r in [
             ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
         ]
-
-#
-# def test_a_to_b_system():
-#     A = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-#     B = bgt.new("Ce", library="BioChem", value=[0, 1, 1, 1])
-#
-#     Re = bgt.new("Re", library="BioChem", value={'k':1, "R": 1, "T": 1})
-#     tf_in = bgt.new("Tf", value=-1)
-#     tf_out = bgt.new("Tf", value=-1)
-#     a_to_b = A + Re + B + tf_in + tf_out
-#
-#     a_to_b.connect(A, (tf_in,0))
-#     a_to_b.connect(B, (tf_out, 1))
-#     a_to_b.connect((Re, 0), (tf_in,1))
-#     a_to_b.connect((Re, 1), (tf_out, 0))
-#
-#     coords, mappings, linear_op, nonlinear_op = a_to_b._system_rep()
-#     print(coords)
-#     print(mappings)
-#     print([linear_op, nonlinear_op])
-#     assert False
 
 
 def test_stiochiometry():
@@ -185,7 +165,7 @@ def test_cat_rn():
     assert rn._species["ES"] == 2
     assert len(rn._reactions) == 2
 
-@pytest.mark.xfail
+
 def test_nlin_se():
     rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
     system = rn.as_network_model(normalised=True)
@@ -194,20 +174,25 @@ def test_nlin_se():
         system.set_param(param, 1)
 
     Ce_A = system.find(name="A", component="Ce")
+    Ce_B = system.find(name="B", component="Ce")
+    assert Ce_A is not Ce_B
+
     Y = system.find(component="Y", name="AB")
 
     system.disconnect(Ce_A, Y)
 
     J_A = bgt.new("0", name="Ce_A")
-    Se_A = bgt.new('Se', value='1', name='1')
+    Se_A = bgt.new('Se', value=1, name='1')
 
     system.add(J_A, Se_A)
     system.connect(J_A, Y)
     system.connect(Ce_A, J_A)
     system.connect(Se_A, J_A)
 
-    relations = system.constitutive_relations
+    eqns= "dx_0, dx_1 + E * x_1 - x_2,dx_2 - E * x_1 + x_2, x_0 - E"
+    relations = set(system.constitutive_relations)
+    solutions = set(sympy.sympify(eqns))
 
-    assert False
+    assert not solutions ^ relations
 
 

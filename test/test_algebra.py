@@ -3,7 +3,7 @@ import sympy
 
 import BondGraphTools as bgt
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
-    adjacency_to_dict, augmented_rref
+    adjacency_to_dict, augmented_rref,_generate_substitutions
 
 
 def test_extract_coeffs_lin():
@@ -16,9 +16,8 @@ def test_extract_coeffs_lin():
 
     lin, nlin = extract_coefficients(eqn, local_map, coords)
     assert lin[1] == -2
-    assert lin[2] == -3
     assert lin[0] == 1
-    assert not nlin
+    assert nlin == sympy.sympify("-3")
 
 
 def test_extract_coeffs_nlin():
@@ -31,15 +30,14 @@ def test_extract_coeffs_nlin():
 
     lin, nlin = extract_coefficients(eqn, local_map, coords)
     assert lin[1] == -2
-    assert lin[2] == -3
     assert lin[0] == 1
-    assert nlin == sympy.sympify("exp(r_0)")
+    assert nlin == sympy.sympify("exp(r_0) - 3")
 
 
 def test_smith_normal_form():
 
     m = sympy.SparseMatrix(2,3,{(0,2):2, (1,1):1})
-    mp = smith_normal_form(m)
+    mp,_,_ = smith_normal_form(m)
     assert mp.shape == (3, 3)
     assert mp[2, 2] != 0
 
@@ -48,7 +46,7 @@ def test_smith_normal_form_2():
     matrix = sympy.eye(3)
     matrix.row_del(1)
 
-    m = smith_normal_form(matrix)
+    m,_,_ = smith_normal_form(matrix)
 
     diff = sympy.Matrix([[0,0,0],[0,1,0], [0,0,0]])
 
@@ -64,9 +62,12 @@ def test_aug_rref():
     ])
 
     adj = sympy.eye(4)
+    M = matrix.row_join(adj)
+    assert M.shape == (4, 8)
+    MA = augmented_rref(M, 4)
 
-    m, a = augmented_rref(matrix.copy(), adj.copy())
-
+    m = MA[:, :4]
+    a = MA[:, 4:]
     assert m is not matrix
     assert a is not adj
 
@@ -93,10 +94,32 @@ def test_augmented_rref():
                                [0,0,1,0],
                                [0,0,0,0]])
 
-    Maug, Aaug = augmented_rref(M, A)
+    MA = M.row_join(A)
+    MA = augmented_rref(MA, 1)
+    assert MA[:,:-1]== Mr
+    assert target_A == MA[:,-1:]
 
-    assert Maug == Mr
-    assert target_A == Aaug
+
+def test_augmented_rref_2():
+    M = sympy.Matrix(
+        [[1, 0, 1, 0],
+         [1, 0, 1, 0],
+         [0, 0, 1 ,0]])
+
+    A = sympy.Matrix(3,1, [sympy.symbols('a'),sympy.symbols('a'), 1])
+    target_A = sympy.Matrix(3, 1,
+                            [sympy.sympify('a - 1'), 1, 0])
+    Mr, _ = M.rref()
+
+    assert Mr == sympy.Matrix([[1,0,0,0],
+                               [0,0,1,0],
+                               [0,0,0,0]])
+    assert M.shape == (3,4)
+    assert A.shape == (3, 1)
+    MA = M.row_join(A)
+    MA = augmented_rref(MA, 1)
+    assert MA[:, :-1] == Mr
+    assert target_A == MA[:, -1:]
 
 
 def test_build_relations():
@@ -232,6 +255,7 @@ def test_cv_relations():
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
+
 def test_parallel_crv_relations():
     c = bgt.new("C", value=1)
     se = bgt.new("Se")
@@ -247,4 +271,26 @@ def test_parallel_crv_relations():
                                          sympy.sympify("x_0 - u_0")]
 
 
+def test_generate_subs():
 
+    w, x, y, z = sympy.sympify("w,x,y,z")
+    size_tuple  =(0, 2, 0,4 )
+    coords = [w, x, y, z]
+    #  w + w^2 + x^2
+    #  x + 1 + y^2   < should appear in subs as x = -y^2  - 1
+    #  y + 1         <                          y = - 1
+    #  0 + z^2 + w^2
+
+    L = sympy.SparseMatrix(4, 4, {(0,0): 1,
+                                  (1,1): 1,
+                                  (2,2): 1})
+
+    N = sympy.SparseMatrix(4, 1, {(0, 0): w**2 + x**2,
+                                  (1, 0): 1 + y**2,
+                                  (2, 0): 1,
+                                  (3, 0): z**2 + w**2})
+
+    subs = _generate_substitutions(L, N, coords, size_tuple)
+    target_subs = [(y,-1), (x, -1-y**2)]
+
+    assert subs == target_subs
