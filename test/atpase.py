@@ -5,8 +5,9 @@ path = os.path.relpath(path=".")
 sys.path.insert(0, os.path.abspath(path))
 
 import BondGraphTools as bgt
-
+log_file = "profile.log"
 def atpase():
+
     # Reaction Conductance in fmol/s
     reactions = [
         # reactants, products, rate

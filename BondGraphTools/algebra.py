@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 class NotInvertible(Exception):
     pass
 
+
 def extract_coefficients(equation, local_map, global_coords):
 
     coeff_dict = {}
@@ -51,21 +52,33 @@ def extract_coefficients(equation, local_map, global_coords):
     return coeff_dict, nonlinear_terms
 
 
-def _generate_substitutions(linear_op, nonlinear_op, coords, size_tup):
+def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_tup):
 
     # Lx + F(x) = 0 =>  Ix = (I - L)x - F(x) = Rx - F(x)
     # Since L is in smith normal form (rref and square)
     # If (Rx)_{ii} = 0, and F(x)_i doesn't depend upon x_i
     # then we have x_i = (Rx)_i - F_i(x)
+    c_atoms = set(coords)
+    atoms = nonlinear_op.atoms() & c_atoms
+    for constraint in constraints:
+        atoms |= (constraint.atoms() & c_atoms)
+
+    if not atoms:
+        logger.info("No substitutions required")
+        return []
 
     Rx = (sp.eye(linear_op.rows) - linear_op)
 
-    ss_size, js_size,cv_size,n = size_tup
+    ss_size, js_size, cv_size, n = size_tup
     substitutions = []
     for i in reversed(range(2*(ss_size  + js_size))):
-        if Rx[i,i] == 0 and coords[i] not in nonlinear_op[i].atoms():
+        co = coords[i]
+        if Rx[i,i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
+
             eqn = Rx[i,:].dot(coords) - nonlinear_op[i]
             pair = (coords[i], eqn)
+            logger.info("Generating substition %s = %s",
+                        repr(coords[i]), repr(eqn))
             substitutions = [
                 (c, s.subs(*pair)) for c, s in substitutions
             ]
@@ -86,11 +99,12 @@ def _process_constraints(linear_op,
 
     while constraints:
         constraint, _ = sp.fraction(constraints.pop())
-
+        logger.info("Processing constraint: %s",repr(constraint))
         atoms = constraint.atoms() & set(coordinates)
         if len(atoms) == 1:
             c = atoms.pop()
-            solns = sp.solve(constraint, c)
+            logger.info("Attempting to find inverse")
+            solns = list(sp.solveset(constraint, c))
             if len(solns) == 1:
                 idx = coordinates.index(c)
                 sol = solns.pop()
@@ -195,26 +209,24 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
     # First; substitute as much of the junction space as possible.
     #
     subs_list = _generate_substitutions(
-        linear_op, nonlinear_op, coordinates, size_tuple
+        linear_op, nonlinear_op, constraints, coordinates, size_tuple
     )
+    logger.info("Applying substitutions")
 
-    for x, y in subs_list:
-        nonlinear_op = nonlinear_op.subs(x, y)
-        constraints = [c.subs(x, y) for c in constraints]
+    nonlinear_op = nonlinear_op.subs(subs_list)
+    constraints = [c.subs(subs_list) for c in constraints]
 
+    logger.info("Reducing purely algebraic constraints")
     # second, reduce the order of all nonlinear constraints
     linear_op, nonlinear_op, constraints, coordinates, size_tuple =\
         _process_constraints(linear_op, nonlinear_op,
                              constraints, coordinates, size_tuple)
-
+    logger.info("Applying substitutions, round 2")
     subs_list = _generate_substitutions(
-        linear_op, nonlinear_op, coordinates, size_tuple
+        linear_op, nonlinear_op, constraints, coordinates, size_tuple
     )
-
-    for x, y in subs_list:
-        nonlinear_op = nonlinear_op.subs(x, y)
-        constraints = [c.subs(x, y) for c in constraints]
-
+    nonlinear_op = nonlinear_op.subs(subs_list)
+    constraints = [c.subs(subs_list) for c in constraints]
     ##
     # Split the constraints into:
     # - Linear constraints; ie Lx = 0

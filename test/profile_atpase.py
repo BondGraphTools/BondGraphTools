@@ -1,10 +1,20 @@
+import logging
 from cProfile import Profile
-from atpase import atpase
+from atpase import atpase, bgt
 
-FILENAME = "./stats/atpase_profile.kgrind"
+FILENAME = "atpase_profile.kgrind"
+LOG = "profile.log"
 profiler = Profile()
-profiler.runcall(atpase)
+logger = bgt.logger
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename=LOG,mode='w')
+logger.addHandler(handler)
 
+try:
+    profiler.runcall(atpase)
+except KeyboardInterrupt as ex:
+    handler.flush()
+    raise ex
 from pyprof2calltree import convert, visualize
 
 convert(profiler.getstats(), FILENAME)

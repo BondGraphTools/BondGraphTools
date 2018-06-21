@@ -287,10 +287,10 @@ def test_generate_subs():
 
     N = sympy.SparseMatrix(4, 1, {(0, 0): w**2 + x**2,
                                   (1, 0): 1 + y**2,
-                                  (2, 0): 1,
-                                  (3, 0): z**2 + w**2})
+                                  (2, 0): 1})
 
-    subs = _generate_substitutions(L, N, coords, size_tuple)
+    constraint = [z**2 + w**2]
+    subs = _generate_substitutions(L, N,constraint, coords, size_tuple)
     target_subs = [(y,-1), (x, -1-y**2)]
 
     assert subs == target_subs
