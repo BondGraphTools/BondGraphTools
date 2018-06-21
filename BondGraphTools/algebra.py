@@ -101,6 +101,8 @@ def _process_constraints(linear_op,
         constraint, _ = sp.fraction(constraints.pop())
         logger.info("Processing constraint: %s",repr(constraint))
         atoms = constraint.atoms() & set(coordinates)
+
+        # todo: check to see if we can solve f(x) = u => g(u) = x
         if len(atoms) == 1:
             c = atoms.pop()
             logger.info("Attempting to find inverse")
@@ -306,13 +308,13 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
 
         nlin_row = sp.S(0)
 
-        if jac_dx:
+        if any(x!=0 for x in jac_dx):
             logger.warning("Second order constriants not implemented: %s",
                            jac_dx)
-        if jac_junciton:
+        if any(x!=0 for x in jac_junciton):
             logger.warning("First order junciton constriants not implemented: %s",
                            jac_cv)
-        if jac_x:
+        if any(x!=0 for x in jac_x):
             logger.info("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
             logger.info(repr(fx))
@@ -378,9 +380,9 @@ def augmented_rref(matrix, augment=0):
         for i in range(matrix.rows):
             if i != pivot and matrix[i, col] != 0:
                 b = matrix[i, col]/a
-                matrix[i, :] = matrix[i, :] - b * matrix[pivot, :]
+                matrix[i, :] += - b * matrix[pivot, :]
 
-        matrix[pivot, :] = matrix[pivot, :] / a
+        matrix[pivot, :] *= 1 / a
 
         pivot += 1
 

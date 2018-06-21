@@ -18,11 +18,15 @@ def start_julia():
     import julia
 
     j = julia.Julia()
+    j.using("NLsolve")
     logger.info("Julia Interpreter Loaded.")
 
 
 def simulate(system,
-             timespan, initial, control_vars=None):
+             timespan,
+             x0,
+             dx0=None,
+             control_vars=None):
     """
     Simulate the system dynamics.
 
@@ -44,8 +48,11 @@ def simulate(system,
         raise ModelException("Control variable not specified")
 
     func, diffs = _build_dae(system, control_vars)
-    dx0, x0 = initial
-    DX0 = np.array(dx0, dtype=np.float64)
+    if dx0:
+        DX0 = np.array(dx0, dtype=np.float64)
+    else:
+        DX0 = _initialise(func, x0)
+
     X0 = np.array(x0, dtype=np.float64)
     tspan = tuple(float(t) for t in timespan)
     if not de:
@@ -54,6 +61,16 @@ def simulate(system,
     sol = de.solve(problem)
 
     return np.transpose(sol.t), np.transpose(sol.u)
+
+def _initialise(func, X0):
+
+    jf_str = """
+    function factory(f,X0,p,t)
+        return x -> f(x,X0,p,t) 
+    end
+    """
+    fx = j.eval(jf_str)(func, X0, 0, 0)
+    return j.nlsolve(fx, np.zeros(X0.shape))
 
 
 def _build_dae(system, control_vars=None):
@@ -107,3 +124,5 @@ def _build_dae(system, control_vars=None):
     return func, differential_vars
 
 
+def julia():
+    global j

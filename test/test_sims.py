@@ -6,7 +6,7 @@ import BondGraphTools as bgt
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _build_dae
 
-
+@pytest.mark.xfail
 def test_c_sim_fail():
 
     c = bgt.new("C")
