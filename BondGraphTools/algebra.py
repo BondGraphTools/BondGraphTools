@@ -238,8 +238,6 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
                 if v:
                     cv_diff_dict.update({(rows_added, idx): v})
 
-
-
     for row in range(offset, linear_op.rows):
         logger.info("Testing row %s: %s + %s", repr(row),
                     repr(linear_op[row, :].dot(coordinates)),
