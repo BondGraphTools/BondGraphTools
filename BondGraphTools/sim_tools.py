@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import broyden1
 
 from .exceptions import ModelException
 from .algebra import inverse_coord_maps
@@ -48,29 +49,45 @@ def simulate(system,
         raise ModelException("Control variable not specified")
 
     func, diffs = _build_dae(system, control_vars)
+    X0 = np.array(x0, dtype=np.float64)
+
     if dx0:
         DX0 = np.array(dx0, dtype=np.float64)
     else:
-        DX0 = _initialise(func, x0)
+        DX0 = _initialise(func, X0)
+        # replace with a julia initialiser
+        #DX0 = broyden1(lambda x: func(x, X0, 0, 0), dx0, f_tol=1e-4)
 
-    X0 = np.array(x0, dtype=np.float64)
     tspan = tuple(float(t) for t in timespan)
     if not de:
         start_julia()
     problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
     sol = de.solve(problem)
+    t = np.transpose(sol.t)
 
-    return np.transpose(sol.t), np.transpose(sol.u)
+    return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
+
+
+# def _initialise(func, X0):
+#
+#     jf_str = """
+#     function factory(f,X0,p,t)
+#
+#         function f!(F,x)
+#             F = f(x,X0,p,t)
+#         end
+#
+#         return f!
+#     end
+#     """
+#     fx = j.eval(jf_str)(func, X0, 0, 0)
+#     return j.nlsolve(fx, np.zeros(X0.shape))
 
 def _initialise(func, X0):
 
-    jf_str = """
-    function factory(f,X0,p,t)
-        return x -> f(x,X0,p,t) 
-    end
-    """
-    fx = j.eval(jf_str)(func, X0, 0, 0)
-    return j.nlsolve(fx, np.zeros(X0.shape))
+    dx0 = np.zeros(X0.shape)
+
+    return broyden1(lambda x: func(x, X0, 0, 0), dx0, f_tol=1e-3)
 
 
 def _build_dae(system, control_vars=None):
@@ -96,9 +113,9 @@ def _build_dae(system, control_vars=None):
         temp_string = str(relation)
         for k, v in cv_map.items():
             if isinstance(control_vars, dict):
-                temp_string = temp_string.replace(f"u_{v}", control_vars[k])
+                temp_string = temp_string.replace(f"u_{v}", str(control_vars[k]))
             elif isinstance(control_vars, list):
-                temp_string = temp_string.replace(f"u_{v}", control_vars[v])
+                temp_string = temp_string.replace(f"u_{v}", str(control_vars[v]))
             elif len(cv_map) == 1 and isinstance(control_vars, str):
                 temp_string = temp_string.replace(f"u_{v}", control_vars)
             else:
@@ -126,3 +143,26 @@ def _build_dae(system, control_vars=None):
 
 def julia():
     global j
+
+
+class Simulation(object):
+
+    def __init__(self, system,
+                 timespan=None,
+                 x0=None,
+                 dx_0=None,
+                 control_vars=None):
+
+        coords, mapping, linear, nonlinear, constraints = system.system_model()
+
+        # Construct mapping to dynamic parameters
+        # Y = JX and X = MY such that
+        # AY' = BY + F(Y, U, U')
+        # G(Y,U, U') = 0
+
+        self._solver = None
+
+    def run(self, x0, timespan):
+        pass
+
+

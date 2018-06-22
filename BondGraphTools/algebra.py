@@ -97,10 +97,19 @@ def _process_constraints(linear_op,
     ss_size, js_size, cv_size, n = size_tup
     offset = 2 * js_size + ss_size
 
+    coord_atoms = set(coordinates[0:offset+ss_size])
+    cv_constraints = [
+        linear_op[i,:].dot(coordinates) + nonlinear_op[i,0]
+        for i in range(offset+ss_size, n)
+    ]
+    constraints += [cons for cons in cv_constraints if cons]
+    linear_op = linear_op[:offset+ss_size, :]
+    nonlinear_op = nonlinear_op[:offset+ss_size, :]
+
     while constraints:
         constraint, _ = sp.fraction(constraints.pop())
         logger.info("Processing constraint: %s",repr(constraint))
-        atoms = constraint.atoms() & set(coordinates)
+        atoms = constraint.atoms() & set(coord_atoms)
 
         # todo: check to see if we can solve f(x) = u => g(u) = x
         if len(atoms) == 1:
@@ -117,10 +126,18 @@ def _process_constraints(linear_op,
                 nonlinear_op = nonlinear_op.col_join(
                     sp.SparseMatrix(1, 1, {(0,0): -sol})
                 )
+                constraint = c - sol
         else:
+            logger.warning("..skipping %s", repr(constraint))
             initial_constraints.append(constraint)
+        try:
+            partials = [constraint.diff(c) for c in coordinates]
+        except Exception as ex:
+            logger.exception("Could not differentiate %s with respect to %s",
+                         repr(constraint),repr(coordinates)
+             )
+            raise ex
 
-        partials = [constraint.diff(c) for c in coordinates]
         if any(p != 0 for p in partials[0:offset]):
             logger.warning("Cannot yet reduce order of %s", repr(constraint))
             initial_constraints.append(constraint)
@@ -146,7 +163,7 @@ def _process_constraints(linear_op,
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
                     cv = coordinates[offset+ss_size+idx]
-                    dvc = cv.diff(sp.Symbol('t'))
+                    dvc = sp.Symbol(f"d{str(cv)}")
                     try:
                         dc_idx = coordinates.index(dvc)
                     except ValueError:
@@ -154,12 +171,14 @@ def _process_constraints(linear_op,
                         coordinates.append(dvc)
                         cv_size += 1
                         n += 1
-                        linear_op = linear_op.row_join(linear_op.rows, 1, {})
+                        linear_op = linear_op.row_join(
+                            sp.SparseMatrix(linear_op.rows, 1, {})
+                        )
                     eqn = coeff/factor
                     if eqn.is_number:
                         lin_dict.update({(0, dc_idx): eqn})
                     else:
-                        nlin += eqn
+                        nlin += eqn*dvc
             linear_op = linear_op.col_join(
                 sp.SparseMatrix(1,linear_op.cols, lin_dict)
             )
@@ -173,6 +192,49 @@ def _process_constraints(linear_op,
 
     return linear_op, nonlinear_op, new_constraints + initial_constraints, \
            coordinates, (ss_size, js_size, cv_size, n)
+
+
+def create_dynamical_system(coords, mapping, linear, nonlinear, constraints):
+
+    ss_size = len(mapping[0])
+    js_size = len(mapping[1])
+
+    ##
+    # We'd hope that the Linear Operator is in block form
+    #
+    # L =  [[A_1 B_1 C_1  D_1],
+    #       [0   B_2 C_2  D_2],
+    #
+    # X = [[dx, l, x, u]]
+    #
+    # So that L.dot(X) + F(X) = 0
+    #
+
+    A_1 = linear[0:ss_size, 0:ss_size]
+    B_1 = linear[0:ss_size, ss_size: 2*js_size + ss_size]
+    C_1 = linear[0:ss_size, 2*js_size + ss_size:2*(js_size + ss_size)]
+    D_1 = linear[0:ss_size, 2*(js_size + ss_size):]
+    F_1 = nonlinear[0:ss_size,:]
+
+    B_2 = linear[ss_size: 2*js_size + ss_size, ss_size: 2*js_size + ss_size]
+    C_2 = linear[ss_size: 2 * js_size + ss_size,
+          2 * js_size + ss_size:2 * (js_size + ss_size)]
+    D_2 = linear[ss_size: 2 * js_size + ss_size, 2 * (js_size + ss_size):]
+    F_2 = nonlinear[ss_size: 2 * js_size + ss_size, :]
+
+    assert (B_2 - sp.eye(B_2.rows)).is_zero
+    assert linear[2*js_size + ss_size:,:].is_zero
+
+    assert (A_1 - sp.eye(A_1.rows)).is_zero
+    assert B_1.is_zero
+
+    # dX = -C_1*X + -D_1*U - F_1(X)
+    # J = -C_2*X - -D_2*U - F_2(X)
+    #
+    # x=(y,z) s.t. [dy,dz] = [0, f(y,z,u)]
+    # set x = [[ M_1^T ]  (y
+    #          [ M_2^T ]]  z)
+    #
 
 
 def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
@@ -204,8 +266,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
 
     logger.info("Handling algebraic constraints")
 
-    ss_size, js_size, cv_size, n = size_tuple
-    offset = 2*js_size + ss_size
+
 
     ##
     # First; substitute as much of the junction space as possible.
@@ -238,7 +299,8 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
     # that are not in the derivative subspace, and have a zero nonlinear part
     #
     # ## New Code
-
+    ss_size, js_size, cv_size, n = size_tuple
+    offset = 2 * js_size + ss_size
     for row in reversed(range(linear_op.rows, offset)):
         atoms = nonlinear_op[row].atoms()
         if not atoms & set(coordinates) and linear_op[row].nnz() > 1:
@@ -311,10 +373,13 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
         if any(x!=0 for x in jac_dx):
             logger.warning("Second order constriants not implemented: %s",
                            jac_dx)
-        if any(x!=0 for x in jac_junciton):
+        elif any(x!=0 for x in jac_junciton):
             logger.warning("First order junciton constriants not implemented: %s",
                            jac_cv)
-        if any(x!=0 for x in jac_x):
+        elif any(x!=0 for x in jac_cv):
+            logger.warning("First order control constriants not implemented: %s",
+                           jac_cv)
+        elif any(x!=0 for x in jac_x):
             logger.info("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
             logger.info(repr(fx))
@@ -331,9 +396,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
 
             else:
                 nlin_row += fx
-        if jac_cv:
-            logger.warning("First order control constriants not implemented: %s",
-                           jac_cv)
+
 
         nonlinear_op = nonlinear_op.col_join(sp.SparseMatrix(1,1,[nlin_row]))
 

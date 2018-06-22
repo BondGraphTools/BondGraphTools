@@ -42,6 +42,8 @@ def test_smith_normal_form():
     assert mp[2, 2] != 0
 
 
+
+
 def test_smith_normal_form_2():
     matrix = sympy.eye(3)
     matrix.row_del(1)
@@ -51,6 +53,14 @@ def test_smith_normal_form_2():
     diff = sympy.Matrix([[0,0,0],[0,1,0], [0,0,0]])
 
     assert (sympy.eye(3) - m) == diff
+
+
+def test_smith_normal_form_3():
+    m = sympy.SparseMatrix(5,3,{(0,1):1, (1,0):1,
+                                (4,2):1})
+    mp,_,_ = smith_normal_form(m)
+    assert mp.shape == (3, 3)
+    assert (mp - sympy.eye(3)).is_zero
 
 
 def test_aug_rref():

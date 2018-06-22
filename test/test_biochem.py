@@ -175,6 +175,7 @@ def test_nlin_se():
 
     Ce_A = system.find(name="A", component="Ce")
     Ce_B = system.find(name="B", component="Ce")
+
     assert Ce_A is not Ce_B
 
     Y = system.find(component="Y", name="AB")

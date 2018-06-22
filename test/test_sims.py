@@ -6,13 +6,13 @@ import BondGraphTools as bgt
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _build_dae
 
-@pytest.mark.xfail
+
 def test_c_sim_fail():
 
     c = bgt.new("C")
     with pytest.raises(ModelException):
 
-        t, x = simulate(c, timespan=[0, 1], initial=([1],[1]))
+        t, x = simulate(c, timespan=[0, 1], x0=[1],dx0=[1])
 
 @pytest.mark.slow
 def test_c_se_build_ode():
@@ -51,11 +51,11 @@ def test_c_se_sim():
 
     with pytest.raises(ModelException) as ex:
         t, x = simulate(
-            c, timespan=[0, 10], initial=([0], [1])
+            c, timespan=[0, 10], x0=[0], dx0=[1]
         )
         assert "Control variable not specified" in ex.args
     t, x = simulate(
-        bg, timespan=[0,10], initial=([0], [1]), control_vars=['-exp(-t)']
+        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=['-exp(-t)']
     )
 
     assert t[0] == 0
@@ -63,7 +63,7 @@ def test_c_se_sim():
     t_cols, = t.shape
     assert t_cols > 1
     assert (1, t_cols) == x.shape
-    assert x[0, 0] == 1
+    assert x[0, 0] == 0
 
     solution = (1+t)*np.exp(-t)
     solution = solution.reshape(1, t_cols)
@@ -85,7 +85,7 @@ def test_c_se_sum_switch():
     bang_bang = ["x_0 >= 1 ?  1.5: -2 "]
 
     t, x = simulate(
-        bg, timespan=[0, 10], initial=([0], [1]), control_vars=bang_bang
+        bg, timespan=[0, 10], x0=[0],dx0=[1], control_vars=bang_bang
     )
 
     assert (x[0, -1] - 1) < 0.001
