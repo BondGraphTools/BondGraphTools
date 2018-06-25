@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-
+import sympy as sp
 import BondGraphTools as bgt
 
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _build_dae
-
+from BondGraphTools.algebra import inverse_coord_maps
 
 def test_c_sim_fail():
 
@@ -60,13 +60,13 @@ def test_c_se_sim():
 
     assert t[0] == 0
     assert t[-1] == 10
-    t_cols, = t.shape
+    t_cols, _ = t.shape
     assert t_cols > 1
-    assert (1, t_cols) == x.shape
+    assert (t_cols, 1) == x.shape
     assert x[0, 0] == 0
 
     solution = (1+t)*np.exp(-t)
-    solution = solution.reshape(1, t_cols)
+    solution = solution.reshape(t_cols, 1)
 
     assert ((x - solution) < 0.001).all()
 

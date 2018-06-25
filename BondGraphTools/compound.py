@@ -194,7 +194,7 @@ class BondGraph(BondGraphBase):
 
         return [r.nsimplify() for r in relations if r]
 
-    def system_model(self):
+    def system_model(self, control_vars=None):
         mappings, coordinates = inverse_coord_maps(
             *self._build_internal_basis_vectors()
         )
@@ -226,7 +226,8 @@ class BondGraph(BondGraphBase):
         nonlinear_op = sp.SparseMatrix(row, 1, nlin_dict)
 
         coordinates, linear_op, nonlinear_op, constraints = reduce_model(
-                linear_op, nonlinear_op, coordinates, size_tuple
+                linear_op, nonlinear_op, coordinates, size_tuple,
+            control_vars=control_vars
         )
 
         return coordinates, mappings, linear_op, nonlinear_op, constraints

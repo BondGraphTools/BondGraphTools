@@ -1,8 +1,9 @@
 import numpy as np
+import sympy as sp
 from scipy.optimize import broyden1
 
 from .exceptions import ModelException
-from .algebra import inverse_coord_maps
+from .algebra import inverse_coord_maps, create_ds
 import logging
 logger = logging.getLogger(__name__)
 j = None
@@ -102,28 +103,83 @@ def _build_dae(system, control_vars=None):
 
     # construct julia coords
 
-    julia_string = "function f(dX, X, p, t)\n"
+
+    x = [sp.symbols(f"x_{i}") for i in range(m)]
+    subs = list(zip([sp.symbols(f"dx_{i}") for i in range(m)],
+                [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
+
+    subs += list(zip(x, [sp.symbols(f"X[{i+1}]") for i in range(m)]))
+
+    # subs, cv_text = _generate_cv_subs(control_vars, subs)
     derivatives = set(coords[0:m])
     differential_vars = []
+
+    t = sp.S('t')
+    string_subs = {}
+
+    if isinstance(control_vars, (float, int, complex)) and\
+            len(k) == 1:
+        subs += [
+            (sp.Symbol('u_0'), control_vars),
+            (sp.Symbol('du_0'), 0)
+        ]
+
+    elif isinstance(control_vars, list) and len(control_vars) == k:
+        for i, cv_string in enumerate(control_vars):
+            u = sp.Symbol(f'u_{i}')
+            du = sp.Symbol(f'du_{i}')
+            try:
+                fx = sp.sympify(cv_string)
+                dfx = sum(fx.diff(x_i) for x_i in x) + fx.diff(t)
+                subs.append((u, fx))
+                subs.append((du, dfx))
+            except sp.SympifyError:
+                u_str = f"u[{i+1}]"
+                for i in reversed(range(m)):
+                    cv_string = cv_string.replace(
+                        f"x_{i}", f"X[{i+1}]"
+                    )
+                print(cv_string)
+                string_subs[u_str] = cv_string
+                subs.append(sp.symbols(f"u_{i}, {u_str}"))
+
+    elif isinstance(control_vars, dict):
+        for key, cv_string in control_vars:
+            u = sp.Symbol(f'{key}')
+            du = sp.Symbol(f'd{key}')
+            try:
+                fx = sp.sympify(cv_string)
+                dfx = sum(fx.diff(x_i) for x_i in x) + fx.diff(t)
+                pair = [(du, dfx), (u, fx)]
+                for pp in pair:
+                    subs = [
+                        s.subs(pp) for s in subs
+                    ]
+                    subs.append(pp)
+
+            except sp.SympifyError:
+                u_str = f"u[{len(string_subs)}]"
+                for i in reversed(range(m)):
+                    cv_string = cv_string.replace(
+                        f"x_{i}", f"X[{i+1}]"
+                    )
+
+                string_subs[u_str] = cv_string
+                subs.append(sp.symbols(f"{key}, {u_str}"))
+    else:
+        raise ValueError("Invalid control variables: %s", repr(control_vars))
+
+    julia_string = "function f(dX, X, p, t)\n"
     end_string = "    return ["
     for i, relation in enumerate(system.constitutive_relations):
         differential_vars.append(
-            derivatives ^ relation.atoms() != set()
+            derivatives & relation.atoms() != set()
         )
-        temp_string = str(relation)
-        for k, v in cv_map.items():
-            if isinstance(control_vars, dict):
-                temp_string = temp_string.replace(f"u_{v}", str(control_vars[k]))
-            elif isinstance(control_vars, list):
-                temp_string = temp_string.replace(f"u_{v}", str(control_vars[v]))
-            elif len(cv_map) == 1 and isinstance(control_vars, str):
-                temp_string = temp_string.replace(f"u_{v}", control_vars)
-            else:
-                raise NotImplementedError("No control var for %s",
-                                          control_vars)
 
-        for k, idx in ss_map.items():
-            temp_string = temp_string.replace(f"x_{idx}", f"X[{idx+1}]")
+        temp_string = str(relation.subs(subs))
+
+        for var in string_subs:
+            temp_string = temp_string.replace(var, string_subs[var])
 
         julia_string += f"    res{i+1} = {temp_string}\n"
         if i > 0:
@@ -133,12 +189,15 @@ def _build_dae(system, control_vars=None):
 
     end_string += "]\nend"
     julia_string += end_string
-
+    print(julia_string)
     if not j: start_julia()
 
     func = j.eval(julia_string)
 
     return func, differential_vars
+
+
+
 
 
 def julia():
@@ -147,22 +206,29 @@ def julia():
 
 class Simulation(object):
 
-    def __init__(self, system,
+    def __init__(self, model,
                  timespan=None,
                  x0=None,
                  dx_0=None,
                  control_vars=None):
 
-        coords, mapping, linear, nonlinear, constraints = system.system_model()
+        coords, mapping, linear, nonlinear, constraints = model.system_model(
+            control_vars=control_vars
+        )
 
-        # Construct mapping to dynamic parameters
-        # Y = JX and X = MY such that
-        # AY' = BY + F(Y, U, U')
-        # G(Y,U, U') = 0
+        self._state_map, self._port_map, self._cv_map = mapping
+
+        d_system, port_func, constraints = create_ds(
+            coords, mapping, linear, nonlinear, constraints
+        )
+
 
         self._solver = None
 
+
     def run(self, x0, timespan):
         pass
+
+
 
 

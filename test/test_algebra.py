@@ -3,7 +3,8 @@ import sympy
 
 import BondGraphTools as bgt
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
-    adjacency_to_dict, augmented_rref,_generate_substitutions
+    adjacency_to_dict, augmented_rref,_generate_substitutions,\
+    inverse_coord_maps, _generate_cv_substitutions
 
 
 def test_extract_coeffs_lin():
@@ -304,3 +305,60 @@ def test_generate_subs():
     target_subs = [(y,-1), (x, -1-y**2)]
 
     assert subs == target_subs
+
+
+def test_cv_subs_func():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    kcl = bgt.new("1")
+    bg = c + se + kcl + r
+
+    bg.connect(c,kcl)
+    bg.connect(r, kcl)
+    bg.connect(se, kcl)
+
+    cv_s = {'u_0': ' -exp(-t)'}
+
+    subs = [(sympy.Symbol('u_0'), sympy.sympify('-exp(-t)'))]
+
+    mappings, coords = inverse_coord_maps(*bg.basis_vectors)
+    assert _generate_cv_substitutions(cv_s, mappings,coords) == subs
+
+
+def test_cv_subs_const():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    kcl = bgt.new("1")
+    bg = c + se + kcl + r
+
+    bg.connect(c,kcl)
+    bg.connect(r, kcl)
+    bg.connect(se, kcl)
+
+    cv_s = {'u_0': ' 2'}
+
+    subs = [(sympy.Symbol('u_0'), sympy.S(2))]
+
+    mappings, coords = inverse_coord_maps(*bg.basis_vectors)
+    assert _generate_cv_substitutions(cv_s, mappings,coords) == subs
+
+
+def test_cv_subs_state_func():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    kcl = bgt.new("1")
+    bg = c + se + kcl + r
+
+    bg.connect(c,kcl)
+    bg.connect(r, kcl)
+    bg.connect(se, kcl)
+
+    cv_s = {'u_0': ' -exp(-x_0)'}
+
+    subs = [(sympy.Symbol('u_0'), sympy.sympify('-exp(-x_0)'))]
+
+    mappings, coords = inverse_coord_maps(*bg.basis_vectors)
+    assert _generate_cv_substitutions(cv_s, mappings,coords) == subs

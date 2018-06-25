@@ -1,6 +1,7 @@
 
 import logging
 import sympy as sp
+import numpy as np
 from .exceptions import SymbolicException
 
 logger = logging.getLogger(__name__)
@@ -194,7 +195,7 @@ def _process_constraints(linear_op,
            coordinates, (ss_size, js_size, cv_size, n)
 
 
-def create_dynamical_system(coords, mapping, linear, nonlinear, constraints):
+def create_ds(coords, mapping, linear, nonlinear, constraints):
 
     ss_size = len(mapping[0])
     js_size = len(mapping[1])
@@ -202,12 +203,12 @@ def create_dynamical_system(coords, mapping, linear, nonlinear, constraints):
     ##
     # We'd hope that the Linear Operator is in block form
     #
-    # L =  [[A_1 B_1 C_1  D_1],
-    #       [0   B_2 C_2  D_2],
+    # L =  [[A_1 B_1 C_1],
+    #       [0   B_2 C_2],
     #
-    # X = [[dx, l, x, u]]
+    # X = [[dx, l, x]]
     #
-    # So that L.dot(X) + F(X) = 0
+    # So that L.dot(X) + F(X,t) = 0
     #
 
     A_1 = linear[0:ss_size, 0:ss_size]
@@ -223,10 +224,18 @@ def create_dynamical_system(coords, mapping, linear, nonlinear, constraints):
     F_2 = nonlinear[ss_size: 2 * js_size + ss_size, :]
 
     assert (B_2 - sp.eye(B_2.rows)).is_zero
-    assert linear[2*js_size + ss_size:,:].is_zero
-
     assert (A_1 - sp.eye(A_1.rows)).is_zero
-    assert B_1.is_zero
+
+    ds = (
+        np.array(A_1).astype(np.float64),
+        np.array(C_1).astype(np.float64),
+        np.array(D_1).astype(np.float64)
+    )
+
+    def port_func(x,t):
+
+        pass
+
 
     # dX = -C_1*X + -D_1*U - F_1(X)
     # J = -C_2*X - -D_2*U - F_2(X)
@@ -237,7 +246,33 @@ def create_dynamical_system(coords, mapping, linear, nonlinear, constraints):
     #
 
 
-def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
+def _generate_cv_substitutions(subs_pairs, mappins, coords):
+    state_map, port_map, control_map = mappins
+    ss_size = len(state_map)
+
+    cv_offset = 2*(ss_size + len(port_map))
+
+    control_vars = {str(c) for c in coords[cv_offset:]}
+    print(control_vars)
+    subs = []
+    for var, fx_str in subs_pairs.items():
+
+        if var in control_vars:
+            u = sp.S(var)
+        elif var in control_map:
+            u = sp.S(f"u_{control_map[var]}")
+        else:
+            raise SymbolicException("Could not substitute control variable %s",
+                                    str(var))
+        fx = sp.sympify(fx_str)
+
+        subs.append((u, fx))
+
+    return subs
+
+
+def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
+                 control_vars=None):
     """
     Args:
         linear_op: Linear part of the constitutive relations.
@@ -266,11 +301,14 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
 
     logger.info("Handling algebraic constraints")
 
-
-
-    ##
-    # First; substitute as much of the junction space as possible.
+    ###
+    # First; take care of control variables
     #
+
+    #
+    # Then substitute as much of the junction space as possible.
+    #
+
     subs_list = _generate_substitutions(
         linear_op, nonlinear_op, constraints, coordinates, size_tuple
     )
@@ -396,7 +434,6 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple):
 
             else:
                 nlin_row += fx
-
 
         nonlinear_op = nonlinear_op.col_join(sp.SparseMatrix(1,1,[nlin_row]))
 
