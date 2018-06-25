@@ -1,6 +1,5 @@
 import numpy as np
 import sympy as sp
-from scipy.optimize import broyden1
 
 from .exceptions import ModelException
 from .algebra import inverse_coord_maps, create_ds
@@ -20,7 +19,6 @@ def start_julia():
     import julia
 
     j = julia.Julia()
-    j.using("NLsolve")
     logger.info("Julia Interpreter Loaded.")
 
 
@@ -46,74 +44,92 @@ def simulate(system,
             "Cannot Simulate %s: unconnected ports %s",
             system, system.ports)
 
-    if system.control_vars and not input:
+    if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
-    func, diffs = _build_dae(system, control_vars)
-    X0 = np.array(x0, dtype=np.float64)
-
-    if dx0:
-        DX0 = np.array(dx0, dtype=np.float64)
-    else:
-        DX0 = _initialise(func, X0)
-        # replace with a julia initialiser
-        #DX0 = broyden1(lambda x: func(x, X0, 0, 0), dx0, f_tol=1e-4)
-
-    tspan = tuple(float(t) for t in timespan)
     if not de:
         start_julia()
-    problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
+
+
+    tspan = tuple(float(t) for t in timespan)
+    X0 = np.array(x0, dtype=np.float64)
+    assert len(X0) == len(system.state_vars)
+    try:
+        func = _build_ode(system, control_vars)
+        problem = de.ODEProblem(func, X0, tspan)
+    except NotImplementedError:
+        func, diffs = _build_dae(system, control_vars)
+        if dx0:
+            DX0 = np.array(dx0, dtype=np.float64)
+        else:
+            DX0 = np.zeros(X0.shape, dtype=np.float64)
+        problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
+
     sol = de.solve(problem)
     t = np.transpose(sol.t)
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
 
-# def _initialise(func, X0):
-#
-#     jf_str = """
-#     function factory(f,X0,p,t)
-#
-#         function f!(F,x)
-#             F = f(x,X0,p,t)
-#         end
-#
-#         return f!
-#     end
-#     """
-#     fx = j.eval(jf_str)(func, X0, 0, 0)
-#     return j.nlsolve(fx, np.zeros(X0.shape))
+def _build_ode(system, control_vars=None):
+    coords, mappings, linear, nonlinear, constraints = system.system_model()
 
-def _initialise(func, X0):
-
-    dx0 = np.zeros(X0.shape)
-
-    return broyden1(lambda x: func(x, X0, 0, 0), dx0, f_tol=1e-3)
-
-
-def _build_dae(system, control_vars=None):
-
-    mappings, coords = inverse_coord_maps(*system.basis_vectors)
     ss_map, js_map, cv_map = mappings
+    m = len(ss_map)
+    offset = m + 2*len(js_map)
 
+    A = linear[0:m, 0:m]
+    B = linear[0:m, m:offset]
+
+    if not B.is_zero or not (A - sp.eye(m)).is_zero:
+        raise NotImplementedError("DAE's not yet implemented")
+    x, subs, string_subs = _generate_cv_subs(mappings, control_vars)
+
+    L = -linear[0:m, offset:offset+m]
+
+    Lu = linear[0:m, offset+m:].dot(coords[offset + m:])
+
+    if isinstance(Lu, sp.Symbol):
+        Lu = [Lu]
+
+    Nu = nonlinear[0:m, :]
+    N = [-sp.Add(left, right).subs(subs) for left, right in zip(Lu, Nu)]
+
+    # DX = LX + N(X, t)
+    julia_string = """function dxdt(dX, X, p, t)\n"""
+
+    for var, var_string in string_subs.items():
+        julia_string += f"    {var} = {var_string}\n"
+
+    for i in range(m):
+        julia_string += f"    dX[{i+1}] ="
+        lx = sp.simplify(L[i,:].dot(x))
+        nl = sp.sympify(N[i])
+
+        if lx:
+            julia_string += f"{repr(lx)}"
+
+        julia_string += repr(nl) + "\n"
+
+    julia_string += "end"
+    julia_string = julia_string.replace("**","^")
+    func = j.eval(julia_string)
+
+    return func
+
+
+def _generate_cv_subs(mappings, control_vars=None):
+
+    ss_map, js_map, cv_map = mappings
     m = len(ss_map)
     k = len(cv_map)
-    if len(js_map) > 0:
-        raise NotImplementedError("Bond Graph has unconnected Ports")
-
-    # construct julia coords
-
 
     x = [sp.symbols(f"x_{i}") for i in range(m)]
+    X = [sp.symbols(f"X[{i+1}]") for i in range(m)]
     subs = list(zip([sp.symbols(f"dx_{i}") for i in range(m)],
-                [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
+                    [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
 
-    subs += list(zip(x, [sp.symbols(f"X[{i+1}]") for i in range(m)]))
-
-    # subs, cv_text = _generate_cv_subs(control_vars, subs)
-    derivatives = set(coords[0:m])
-    differential_vars = []
-
+    subs += list(zip(x, X))
     t = sp.S('t')
     string_subs = {}
 
@@ -134,12 +150,11 @@ def _build_dae(system, control_vars=None):
                 subs.append((u, fx))
                 subs.append((du, dfx))
             except sp.SympifyError:
-                u_str = f"u[{i+1}]"
+                u_str = f"u{i+1}"
                 for i in reversed(range(m)):
                     cv_string = cv_string.replace(
                         f"x_{i}", f"X[{i+1}]"
                     )
-                print(cv_string)
                 string_subs[u_str] = cv_string
                 subs.append(sp.symbols(f"u_{i}, {u_str}"))
 
@@ -158,7 +173,7 @@ def _build_dae(system, control_vars=None):
                     subs.append(pp)
 
             except sp.SympifyError:
-                u_str = f"u[{len(string_subs)}]"
+                u_str = f"u{len(string_subs)}"
                 for i in reversed(range(m)):
                     cv_string = cv_string.replace(
                         f"x_{i}", f"X[{i+1}]"
@@ -169,27 +184,62 @@ def _build_dae(system, control_vars=None):
     else:
         raise ValueError("Invalid control variables: %s", repr(control_vars))
 
+    return X, subs, string_subs
+
+
+def _build_dae(system, control_vars=None):
+
+    mappings, coords = inverse_coord_maps(*system.basis_vectors)
+    ss_map, js_map, cv_map = mappings
+
+    m = len(ss_map)
+
+    if len(js_map) > 0:
+        raise NotImplementedError("Bond Graph has unconnected Ports")
+
+    derivatives = set(coords[0:m])
+    differential_vars = []
+
+    # construct julia coords
+
+    # x = [sp.symbols(f"x_{i}") for i in range(m)]
+    # subs = list(zip([sp.symbols(f"dx_{i}") for i in range(m)],
+    #             [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
+    #
+    # subs += list(zip(x, [sp.symbols(f"X[{i+1}]") for i in range(m)]))
+
+    # subs, cv_text = _generate_cv_subs(control_vars, subs)
+    x, subs, string_subs = _generate_cv_subs(mappings, control_vars)
+
     julia_string = "function f(dX, X, p, t)\n"
     end_string = "    return ["
-    for i, relation in enumerate(system.constitutive_relations):
+    i = 0
+
+    for var, var_string in string_subs.items():
+        julia_string += f"    {var} = {var_string}\n"
+
+    for relation in system.constitutive_relations:
+        r = relation.subs(subs)
+        if not r:
+            continue
+
         differential_vars.append(
             derivatives & relation.atoms() != set()
         )
 
-        temp_string = str(relation.subs(subs))
-
-        for var in string_subs:
-            temp_string = temp_string.replace(var, string_subs[var])
+        temp_string = str(r)
 
         julia_string += f"    res{i+1} = {temp_string}\n"
+
         if i > 0:
             end_string += ', '
-
         end_string += f"res{i+1}"
-
+        i += 1
+    assert len(differential_vars) == i
     end_string += "]\nend"
     julia_string += end_string
-    print(julia_string)
+    logger.warning("Julia Function")
+    logger.warning(julia_string)
     if not j: start_julia()
 
     func = j.eval(julia_string)
@@ -198,14 +248,11 @@ def _build_dae(system, control_vars=None):
 
 
 
-
-
 def julia():
     global j
 
 
 class Simulation(object):
-
     def __init__(self, model,
                  timespan=None,
                  x0=None,
@@ -222,9 +269,8 @@ class Simulation(object):
             coords, mapping, linear, nonlinear, constraints
         )
 
-
         self._solver = None
-
+        self._julia_func = None
 
     def run(self, x0, timespan):
         pass
