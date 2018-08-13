@@ -44,10 +44,10 @@ class Reaction_Network(object):
     @property
     def stoichiometry(self):
 
-        return self.forward_stoichiometry - self.reverse_stoichiometry
+        return self.reverse_stoichiometry - self.forward_stoichiometry
 
     @property
-    def forward_stoichiometry(self):
+    def reverse_stoichiometry(self):
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (_, forward_species, _, _) in enumerate(
                 self._reactions.values()):
@@ -57,7 +57,7 @@ class Reaction_Network(object):
         return matrix
 
     @property
-    def reverse_stoichiometry(self):
+    def forward_stoichiometry(self):
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (back_species,_, _, _) in enumerate(
                 self._reactions.values()):
