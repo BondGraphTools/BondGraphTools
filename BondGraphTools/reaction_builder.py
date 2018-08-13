@@ -114,9 +114,16 @@ class Reaction_Network(object):
     def _build_species(self, system, param_dict):
         species_anchors = {}
         for species, n_reactions in self._species.items():
-            this_species = new(
-                "Ce", library=LIBRARY, name=species, value=param_dict
-            )
+            # edit: create new component for chemostat
+            if species in self._chemostats:
+                this_species = new(
+                        "Se", name=species
+                )
+                n_reactions = n_reactions-1
+            else:
+                this_species = new(
+                        "Ce", library=LIBRARY, name=species, value=param_dict
+                )
             system.add(this_species)
 
             if n_reactions == 1:
@@ -132,10 +139,10 @@ class Reaction_Network(object):
                 system.add(flowstat)
                 system.connect(flowstat, species_anchors[species])
 
-            if species in self._chemostats:
-                chemostat = new("Se", value=0, name=species)
-                system.connect(chemostat, species_anchors[species])
-                this_species.initial_values['p_0'] = self._chemostats[species]
+#            if species in self._chemostats:
+#                chemostat = new("Se", value=0, name=species)
+#                system.connect(chemostat, species_anchors[species])
+#                this_species.initial_values['p_0'] = self._chemostats[species]
 
         return species_anchors
 
