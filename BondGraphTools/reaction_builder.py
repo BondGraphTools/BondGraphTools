@@ -152,7 +152,7 @@ class Reaction_Network(object):
             base = str(n) + ';'
             idx = "r_{{{base}}}"
         else:
-            idx = "{name}_{{{base}}}".format(name=name)
+            idx = "{name}".format(name=name) # edit: removed base for named reactions
             base = ""
 
         while remaining_reactions:
