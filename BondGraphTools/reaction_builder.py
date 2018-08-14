@@ -159,8 +159,9 @@ class Reaction_Network(object):
             base = str(n) + ';'
             idx = "r_{{{base}}}"
         else:
-            idx = "{name}".format(name=name) # edit: removed base for named reactions
+            idx = "{name}".format(name=name)  
             base = ""
+
 
         while remaining_reactions:
             in_react, _, remaining_reactions = remaining_reactions.partition(
