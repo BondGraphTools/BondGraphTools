@@ -157,7 +157,7 @@
       },
       "constitutive_relations": [
         "e_1 - R*f_0",
-        "e_1 + R*f_1"
+        "e_0 + R*f_1"
       ]
     }
   }

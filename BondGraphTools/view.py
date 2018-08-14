@@ -173,7 +173,8 @@ class PortGlyph:
 
     @property
     def pos(self):
-        return (self.x, self.y)
+        return self.x, self.y
+
 
 class Glyph:
     def __init__(self, node):
@@ -264,8 +265,11 @@ class Glyph:
         port = PortGlyph(self.axes, string, self.pos,dir, text_dict)
         self.ports[dir] = port
 
-
         return port
+
+
+class ZeroGlyph(Glyph):
+    pass
 
 
 class Bond(Line2D):
