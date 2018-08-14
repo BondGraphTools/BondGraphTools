@@ -1,7 +1,7 @@
-from sympy import SparseMatrix
+from sympy import SparseMatrix, symbols, Pow, Matrix
 from collections import defaultdict
 import logging
-
+from math import log
 from .base import new
 
 logger = logging.getLogger(__name__)
@@ -66,43 +66,73 @@ class Reaction_Network(object):
 
         return matrix
 
+    def fluxes(self):
+        coords = symbols(",".join([f"x_{{{s}}}" for s in self.species]))
+        fluxes = []
+        for col, (back_species, forward_species, _, _) in enumerate(
+                self._reactions.values()):
+            prod = 1
+            subst = 1
+            for s, qty in forward_species.items():
+                subst *= Pow(symbols(f"k_{{{s}}}") *
+                             symbols(f"x_{{{s}}}"), qty)
+
+            for s, qty in back_species.items():
+                prod *= Pow(symbols(f"k_{{{s}}}") *
+                            symbols(f"x_{{{s}}}"), qty)
+            eqn = prod - subst
+            fluxes.append(eqn)
+        matrix = Matrix(len(fluxes),1, fluxes )
+        return matrix, coords
+
     def as_network_model(self, normalised=False):
 
         system = new(name=self.name)
+        species_anchor = self._build_species(system, normalised)
+        self._build_reactions(system, species_anchor, normalised)
+
+        return system
+
+    def _build_reactions(self, system, species_anchors, normalised):
 
         if normalised:
             param_dict = {"R": 1, "T": 1}
         else:
             param_dict = {"R": R, "T": self._T}
 
-        species_anchor = self._build_species(system, param_dict)
-        self._build_reactions(system, species_anchor, param_dict)
-
-        return system
-
-    def _build_reactions(self, system, species_anchors, param_dict):
-
         for reaction_name, (bck_sto, fwd_sto, _, _) in self._reactions.items():
             reaction = new("Re", library=LIBRARY,
                            name=reaction_name, value=param_dict)
+            system.add(reaction)
             fwd_name = "".join(
                 list(fwd_sto.keys())
             )
             bck_name = "".join(
                 list(bck_sto.keys())
             )
-            forward_complex = new("Y", library=LIBRARY, name=fwd_name)
-            reverse_complex = new("Y", library=LIBRARY, name=bck_name)
-            system.add(reaction, forward_complex, reverse_complex)
-            system.connect((reaction, 0), (reverse_complex, 0))
-            system.connect((reaction, 1), (forward_complex, 0))
+            if len(bck_sto) == 1 and list(bck_sto.values())[0] == 1:
+                species = list(bck_sto.keys()).pop()
+                system.connect((reaction, 0), species_anchors[species])
+            else:
+                reverse_complex = new("Y", library=LIBRARY, name=bck_name)
+                system.add(reverse_complex)
+                system.connect((reaction, 0), (reverse_complex, 0))
+                self._connect_complex(
+                    system, species_anchors, reverse_complex, bck_sto
+                )
+            if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
+                species = list(fwd_sto.keys()).pop()
+                system.connect((reaction, 1), species_anchors[species])
+            else:
+                forward_complex = new("Y", library=LIBRARY, name=fwd_name)
+                system.add(forward_complex)
 
-            self._connect_complex(
-                system, species_anchors, forward_complex, fwd_sto
-            )
-            self._connect_complex(
-                system, species_anchors, reverse_complex, bck_sto
-            )
+                system.connect((reaction, 1), (forward_complex, 0))
+
+                self._connect_complex(
+                    system, species_anchors, forward_complex, fwd_sto
+                )
+
 
     @staticmethod
     def _connect_complex(system, species_anchors, complex, stoichiometry):
@@ -111,7 +141,12 @@ class Reaction_Network(object):
             complex.make_port(port=port, value=qty)
             system.connect((complex, port), species_anchors[species])
 
-    def _build_species(self, system, param_dict):
+    def _build_species(self, system, normalised):
+        if normalised:
+            param_dict = {"R": 1, "T": 1}
+        else:
+            param_dict = {"R": R, "T": self._T}
+
         species_anchors = {}
         for species, n_reactions in self._species.items():
             this_species = new(
@@ -128,14 +163,23 @@ class Reaction_Network(object):
                 species_anchors[species] = anchor
 
             if species in self._flowstats:
-                flowstat = new("Sf", value=self._flowstats[species], name=species)
+                flowstat = new(
+                    "Sf", value=self._flowstats[species], name=species
+                )
                 system.add(flowstat)
                 system.connect(flowstat, species_anchors[species])
 
             if species in self._chemostats:
-                chemostat = new("Se", value=0, name=species)
+                conc = self._chemostats[species]
+                if conc and normalised:
+                    value = 1
+                else:
+                    value = None
+                chemostat = new(
+                    "Se", value=value, name=species
+                )
+                system.add(chemostat)
                 system.connect(chemostat, species_anchors[species])
-                this_species.initial_values['p_0'] = self._chemostats[species]
 
         return species_anchors
 

@@ -50,7 +50,6 @@ def simulate(system,
     if not de:
         start_julia()
 
-
     tspan = tuple(float(t) for t in timespan)
     X0 = np.array(x0, dtype=np.float64)
     assert len(X0) == len(system.state_vars)
@@ -65,7 +64,12 @@ def simulate(system,
             DX0 = np.zeros(X0.shape, dtype=np.float64)
         problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
 
-    sol = de.solve(problem)
+    sol = de.solve(problem, dense=True)
+
+    if sol.retcode not in ("Default", "Success"):
+        raise SolverException("Integration error: Solver returned %s "
+                              % sol.retcode, sol)
+
     t = np.transpose(sol.t)
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
@@ -278,3 +282,5 @@ class Simulation(object):
 
 
 
+class SolverException(Exception):
+    pass
