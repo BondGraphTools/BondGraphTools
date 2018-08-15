@@ -138,8 +138,8 @@ def test_new_reaction_network():
         "A+B=C"
     )
     assert rn.species ==["A","B","C"]
-    assert rn.forward_stoichiometry == sympy.Matrix([[0],[0],[1]])
-    assert rn.reverse_stoichiometry == sympy.Matrix([[1], [1], [0]])
+    assert rn.forward_stoichiometry == sympy.Matrix([[1],[1],[0]])
+    assert rn.reverse_stoichiometry == sympy.Matrix([[0], [0], [1]])
     assert rn.stoichiometry == sympy.Matrix([[-1],[-1],[1]])
 
 
