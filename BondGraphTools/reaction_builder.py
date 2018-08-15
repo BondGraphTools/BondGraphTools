@@ -44,10 +44,10 @@ class Reaction_Network(object):
     @property
     def stoichiometry(self):
 
-        return self.forward_stoichiometry - self.reverse_stoichiometry
+        return self.reverse_stoichiometry - self.forward_stoichiometry
 
     @property
-    def forward_stoichiometry(self):
+    def reverse_stoichiometry(self):
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (_, forward_species, _, _) in enumerate(
                 self._reactions.values()):
@@ -57,7 +57,7 @@ class Reaction_Network(object):
         return matrix
 
     @property
-    def reverse_stoichiometry(self):
+    def forward_stoichiometry(self):
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (back_species,_, _, _) in enumerate(
                 self._reactions.values()):
@@ -149,9 +149,16 @@ class Reaction_Network(object):
 
         species_anchors = {}
         for species, n_reactions in self._species.items():
-            this_species = new(
-                "Ce", library=LIBRARY, name=species, value=param_dict
-            )
+            # edit: create new component for chemostat
+            if species in self._chemostats:
+                this_species = new(
+                        "Se", name=species, value=self._chemostats[species]
+                )
+                n_reactions = n_reactions-1
+            else:
+                this_species = new(
+                        "Ce", library=LIBRARY, name=species, value=param_dict
+                )
             system.add(this_species)
 
             if n_reactions == 1:
@@ -169,17 +176,11 @@ class Reaction_Network(object):
                 system.add(flowstat)
                 system.connect(flowstat, species_anchors[species])
 
-            if species in self._chemostats:
-                conc = self._chemostats[species]
-                if conc and normalised:
-                    value = 1
-                else:
-                    value = None
-                chemostat = new(
-                    "Se", value=value, name=species
-                )
-                system.add(chemostat)
-                system.connect(chemostat, species_anchors[species])
+
+#            if species in self._chemostats:
+#                chemostat = new("Se", value=0, name=species)
+#                system.connect(chemostat, species_anchors[species])
+#                this_species.initial_values['p_0'] = self._chemostats[species]
 
         return species_anchors
 
@@ -196,7 +197,7 @@ class Reaction_Network(object):
             base = str(n) + ';'
             idx = "r_{{{base}}}"
         else:
-            idx = "{name}_{{{base}}}".format(name=name)
+            idx = "{name}".format(name=name)
             base = ""
 
         while remaining_reactions:
