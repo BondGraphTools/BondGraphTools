@@ -29,7 +29,7 @@ Python dependencies:
 
 Julia dependencies:
  - PyCall
- - DifferentialEquations
+ - DifferentialEquations.jl
 
 ### Instructions:
 1. Install python 3.6 for your operating system.
