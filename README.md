@@ -34,7 +34,7 @@ Julia dependencies:
 ### Instructions:
 1. Install python 3.6 for your operating system.
 2. Install Julia 0.6 (https://julialang.org/downloads/) for your operating
- system
+ system. _WARNING: Julia 0.7 and 1.0 are not yet supported_
 3. Make sure Julia 0.6 is in your os path. (test this by running `julia -v')
 4. checkout or download this repo
 5. Set up Julia dependencies by executing the julia setup file `julia setup.jl'
