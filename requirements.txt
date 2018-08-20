@@ -1,6 +1,6 @@
-sympy>=1.1.1
-numpy>=1.14
+sympy==1.1.1
+numpy==1.14.5
 scipy>=1.0.1
-matplotlib>=2.2.2
+matplotlib==2.2.2
 networkx>=2.1
-requests==2.18.4
+requests>=2.18.4
