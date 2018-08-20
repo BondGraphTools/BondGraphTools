@@ -4,7 +4,7 @@ import platform
 import os
 import shutil
 import requests
-from subprocess import Popen, PIPE, run
+from subprocess import Popen, PIPE, run, call
 _S3HOST = 'https://julialang-s3.julialang.org/bin'
 
 julia_path = pathlib.Path(__file__).parent.absolute() / \
@@ -66,9 +66,12 @@ def _install_win64():
     julia_file = _S3HOST + '/winnt/x64/0.6/julia-0.6.4-win64.exe'
 
 
-def install_dependancies():
+def install_julia_deps():
+    run([julia_exec, 'setup.jl'])
 
-    p = run([julia_exec, 'setup.jl'])
+
+def install_python_deps():
+    call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.text'])
 
 
 def check_julia():
@@ -99,7 +102,8 @@ if not check_julia():
             "Please manually install and add julia to the environment path."
         )
 
-install_dependancies()
+install_julia_deps()
+install_python_deps()
 
 
 

@@ -13,14 +13,9 @@ python:
 before_install:
   - sudo apt-get update
   - sudo apt-get install libstdc++6-4.7-dev
-  - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz > julia-0.6.4-linux-x86_64.tar.gz
-  - tar xf julia-0.6.4-linux-x86_64.tar.gz
-  - export PATH=$PATH:./julia-9d11f62bcb/bin/
-  - chmod +x ./jjulia-9d11f62bcb/bin/julia
 
 install:
-  - julia setup.jl
-  - python -m pip install -r requirements.txt
+  - python setup.py
   - python -m pip install pytest coverage mock pytest-cov
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
   - export LD_LIBRARY_PATH
