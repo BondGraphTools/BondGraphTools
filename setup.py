@@ -1,10 +1,7 @@
-import pathlib
-import sys
-import platform
-import os
-import shutil
+import os, sys, platform, shutil,pathlib, stat
 import requests
 from subprocess import Popen, PIPE, run, call
+
 _S3HOST = 'https://julialang-s3.julialang.org/bin'
 
 julia_path = pathlib.Path(__file__).parent.absolute() / \
@@ -13,7 +10,7 @@ julia_path = pathlib.Path(__file__).parent.absolute() / \
 julia_exec = julia_path / "bin" / "julia"
 
 base = pathlib.Path(__file__).parent.absolute()
-
+mask = stat.S_IXUSR | stat.S_IXGRP|stat.S_IXOTH
 
 def web_copy(url, local_file):
     response = requests.get(url, stream=True)
@@ -38,7 +35,7 @@ def _install_osx():
 
     p = run(['hdiutil', 'unmount', mount_point], stdout=None, stderr=None)
     os.remove(temp_file)
-    os.chmod(julia_exec, 0o777)
+    os.chmod(julia_exec, mask)
 
 
 def _install_linux():
@@ -55,7 +52,7 @@ def _install_linux():
 
     shutil.unpack_archive(temp_file, format='gztar')
     shutil.move(extract_path, julia_path)
-    os.chmod(julia_exec, 0o777)
+    os.chmod(julia_exec, mask)
 
 
 def _install_win32():
