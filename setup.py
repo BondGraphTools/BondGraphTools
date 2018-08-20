@@ -71,7 +71,7 @@ def install_julia_deps():
 
 
 def install_python_deps():
-    call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.text'])
+    call([sys.executable, '-m', 'pip', 'install', 'diffeqpy==0.4'])
 
 
 def check_julia():

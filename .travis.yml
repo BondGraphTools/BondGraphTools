@@ -15,6 +15,7 @@ before_install:
   - sudo apt-get install libstdc++6-4.7-dev
 
 install:
+  - python -m pip install -r requirements.txt
   - python setup.py
   - python -m pip install pytest coverage mock pytest-cov
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
