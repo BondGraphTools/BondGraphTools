@@ -15,7 +15,7 @@ def start_julia():
     global de
 
     import julia
-    path = pathlib.Path(__file__).parent.absolute() / "julia" / "bin"
+    path = pathlib.Path(__file__).parent.absolute() / "julia" / "bin" / "julia"
     j = julia.Julia(jl_runtime_path=path)
 
     logger.info("Starting Julia Interpreter.")

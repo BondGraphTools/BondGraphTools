@@ -10,7 +10,12 @@ julia_path = pathlib.Path(__file__).parent.absolute() / \
 julia_exec = julia_path / "bin" / "julia"
 
 base = pathlib.Path(__file__).parent.absolute()
-mask = stat.S_IXUSR | stat.S_IXGRP|stat.S_IXOTH
+
+def make_executable(file):
+    if os.name == 'posix':
+        # Make the resource executable
+        mode = ((os.stat(file).st_mode) | 0o555) & 0o7777
+        os.chmod(file, mode)
 
 def web_copy(url, local_file):
     response = requests.get(url, stream=True)
@@ -35,7 +40,7 @@ def _install_osx():
 
     p = run(['hdiutil', 'unmount', mount_point], stdout=None, stderr=None)
     os.remove(temp_file)
-    os.chmod(julia_exec, mask)
+    make_executable(julia_exec)
 
 
 def _install_linux():
@@ -52,7 +57,7 @@ def _install_linux():
 
     shutil.unpack_archive(temp_file, format='gztar')
     shutil.move(extract_path, julia_path)
-    os.chmod(julia_exec, mask)
+    make_executable(julia_exec)
 
 
 def _install_win32():
