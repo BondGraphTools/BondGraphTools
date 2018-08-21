@@ -69,7 +69,9 @@ def _install_win64():
 
 
 def install_julia_deps():
-    run([julia_exec, 'setup.jl'])
+    env = {**os.environ, "JULIA_PKGDIR":str(julia_path)+"/pkg"}
+    env["PYTHON"] = sys.executable
+    run([julia_exec, 'setup.jl'], env=env)
 
 
 def install_python_deps():

@@ -1,6 +1,7 @@
 import numpy as np
 import sympy as sp
 import pathlib
+import os, sys
 
 from .exceptions import ModelException
 from .algebra import inverse_coord_maps, create_ds
@@ -15,8 +16,11 @@ def start_julia():
     global de
 
     import julia
-    path = pathlib.Path(__file__).parent.absolute() / "julia" / "bin" / "julia"
-    j = julia.Julia(jl_runtime_path=path)
+    j_path = pathlib.Path(__file__).parent.absolute() / "julia"
+    j_exec = j_path / "bin" / "julia"
+    os.environ["PYTHON"] = sys.executable
+    os.environ["JULIA_PKGDIR"] = str(j_path / "pkg")
+    j = julia.Julia(jl_runtime_path=j_exec)
 
     logger.info("Starting Julia Interpreter.")
     from diffeqpy import de as de
