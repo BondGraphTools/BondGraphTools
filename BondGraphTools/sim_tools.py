@@ -1,6 +1,6 @@
 import numpy as np
 import sympy as sp
-import pathlib
+from .config import config
 import os, sys
 
 from .exceptions import ModelException
@@ -16,11 +16,9 @@ def start_julia():
     global de
 
     import julia
-    j_path = pathlib.Path(__file__).parent.absolute() / "julia"
-    j_exec = j_path / "bin" / "julia"
     os.environ["PYTHON"] = sys.executable
-    os.environ["JULIA_PKGDIR"] = str(j_path / "pkg")
-    j = julia.Julia(jl_runtime_path=j_exec)
+    j = julia.Julia(jl_runtime_path=config.julia.executable)
+    j.eval("""ENV["JULIA_PKGDIR"]="""+config.julia.packages+"\n")
 
     logger.info("Starting Julia Interpreter.")
     from diffeqpy import de as de
