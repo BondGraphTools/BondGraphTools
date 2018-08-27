@@ -1,3 +1,6 @@
 .idea/
 *.pyc
 BondGraphTools/julia/*
+*.exe
+
+\.pytest_cache/
