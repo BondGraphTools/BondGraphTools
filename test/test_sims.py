@@ -90,3 +90,22 @@ def test_c_se_sum_switch():
 
     assert (x[0, -1] - 1) < 0.001
 
+
+@pytest.mark.slow
+def test_rlc():
+    c = bgt.new("C", value=1)
+    se = bgt.new("Se")
+    r = bgt.new("R", value=1)
+    l = bgt.new("I", value=1)
+    kvl = bgt.new("0")
+    bg = c + se + kvl + r + l
+
+    bg.connect(c, kvl)
+    bg.connect(r, kvl)
+    bg.connect(se, kvl)
+    bg.connect(l, kvl)
+
+    t, x = simulate(
+        bg, timespan=[0, 10], x0=[0,0], control_vars=[1]
+    )
+

@@ -26,6 +26,7 @@ def simulate(system,
              timespan,
              x0,
              dx0=None,
+             dt=0.1,
              control_vars=None):
     """
     Simulate the system dynamics.
@@ -36,7 +37,7 @@ def simulate(system,
         initial list(float):
         control_vars (str,list(str), dict(str)):
 
-    Returns:
+    Returns: t, X
 
     """
     if system.ports:
@@ -64,7 +65,7 @@ def simulate(system,
             DX0 = np.zeros(X0.shape, dtype=np.float64)
         problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
 
-    sol = de.solve(problem, dense=True)
+    sol = de.solve(problem, dense=True, saveat=float(dt))
 
     if sol.retcode not in ("Default", "Success"):
         raise SolverException("Integration error: Solver returned %s "
@@ -91,6 +92,7 @@ def _build_ode(system, control_vars=None):
 
     L = -linear[0:m, offset:offset+m]
 
+    
     Lu = linear[0:m, offset+m:].dot(coords[offset + m:])
 
     if isinstance(Lu, sp.Symbol):
@@ -113,7 +115,8 @@ def _build_ode(system, control_vars=None):
         if lx:
             julia_string += f"{repr(lx)}"
 
-        julia_string += repr(nl) + "\n"
+        if nl:
+            julia_string += '+' + repr(nl) + "\n"
 
     julia_string += "end"
     julia_string = julia_string.replace("**","^")
@@ -136,8 +139,9 @@ def _generate_cv_subs(mappings, control_vars=None):
     subs += list(zip(x, X))
     t = sp.S('t')
     string_subs = {}
-
-    if isinstance(control_vars, (float, int, complex)) and\
+    if not control_vars and k==0:
+        pass
+    elif isinstance(control_vars, (float, int, complex)) and\
             len(k) == 1:
         subs += [
             (sp.Symbol('u_0'), control_vars),
