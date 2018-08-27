@@ -6,3 +6,5 @@ BondGraphTools/julia/*
 \.pytest_cache/
 
 \.ipynb_checkpoints/
+
+\.cache/v/cache/

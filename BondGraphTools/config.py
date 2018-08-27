@@ -36,6 +36,7 @@ class Config:
     def __init__(self, julia_executable=None, python_executable=None, **kwargs):
 
         self._julia = None
+        self._de = None
         new_config = False
         rebuild = False
 
@@ -53,6 +54,9 @@ class Config:
             self.python_executable = pathlib.Path(sys.executable).resolve()
 
         if new_config:
+            if not self.base.exists():
+                self.base.mkdir()
+                self.file.touch()
             self.install_dependencies(rebuild)
             self.save()
 
@@ -104,23 +108,24 @@ class Config:
 
     @property
     def julia(self):
-        import julia
         if not self._julia:
             self.start_julia()
-        return julia
+
+        return self._julia
 
     def start_julia(self):
-        import julia
-        self._julia = julia.Julia()
-
-    @property
-    def diffeqpy(self):
-        if not self._julia:
-            self.start_julia()
 
         import diffeqpy
+        from diffeqpy import de
 
-        return diffeqpy
+        self._julia = diffeqpy.setup()
+        self._de = de
+
+    @property
+    def de(self):
+        if not self._julia: self.start_julia()
+        return self._de
+
 
     @staticmethod
     def load():
@@ -136,9 +141,6 @@ class Config:
             return Config(**kwargs)
 
     def save(self):
-        if not self.base.exists():
-            self.base.mkdir()
-            self.file.touch()
 
         config_dict = {
             'julia_executable': as_str(self.julia_executable),

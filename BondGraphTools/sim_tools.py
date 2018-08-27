@@ -27,7 +27,7 @@ def simulate(system,
 
     """
 
-    de = config.diffeqpy
+    de = config.de
 
     if system.ports:
         raise ModelException(
