@@ -2,16 +2,15 @@ import pytest
 import numpy as np
 import sympy as sp
 import BondGraphTools as bgt
-
+from BondGraphTools.config import config
 from BondGraphTools.exceptions import ModelException
-from BondGraphTools.sim_tools import simulate, _build_dae
+from BondGraphTools.sim_tools import simulate, to_julia_function_string
 from BondGraphTools.algebra import inverse_coord_maps
 
 def test_c_sim_fail():
 
     c = bgt.new("C")
     with pytest.raises(ModelException):
-
         t, x = simulate(c, timespan=[0, 1], x0=[1],dx0=[1])
 
 @pytest.mark.slow
@@ -30,7 +29,13 @@ def test_c_se_build_ode():
     # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
 
-    func, diff_vars = _build_dae(bg, control_vars=['-exp(-t)'])
+
+    j = config.julia
+    func_str, diff_vars = to_julia_function_string(bg,
+                                                   control_vars=['-exp(-t)'],
+                                                   in_place=False)
+
+    func = j.eval(func_str)
 
     assert func(0, 0, 0, 0) == -1
     assert func(2, 0, 0, 0) == 1
