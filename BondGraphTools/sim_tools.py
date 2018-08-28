@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sp
+from sympy.core import SympifyError
 from .config import config
 import os, sys
 
@@ -97,53 +98,40 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
 
     dX = sp.IndexedBase('dX')
     X = sp.IndexedBase('X')
-    subs = []
-
-    iterable = {}
-    if isinstance(control_vars, list) \
-            and len(control_vars) == len(model.control_vars):
-
-        iterable = {k:v for k,v in zip(list(model.control_vars.keys()),
-                                        control_vars)}
-    elif isinstance(control_vars, dict):
-        iterable = {}
-        for u in model.control_vars:
-            if u in control_vars:
-                iterable[u] = control_vars[u]
-            else:
-                iterable[u] = control_vars[str(u)]
+    x_subs = []
+    dx_subs = []
 
     for i, x in enumerate(model.state_vars):
-        subs.append((x, X[i+1]))
-        subs.append((sp.S(f'dx_{i}'), dX[i+1]))
+        x_subs.append((x, X[i+1]))
+        dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
 
-    for i, (cv, val) in enumerate(iterable.items()):
-
-        u_t = sp.sympify(val).subs(subs)
-        try:
-            du_t = u_t.diff('t') + sum([
-                dX[i+1]*(u_t.diff(X[i+1]).subs(subs))
-                for i in range(len(model.state_vars))
-            ])
-        except:
-            raise NotImplementedError
-        subs.append((cv, u_t))
-
-        # check if val is a number, if so, directly substitute.
-
-        # check if val is a differential function of space and time
-
-        # check if val is a graph
-
+    cv_strings, dcv_strings = generate_control_strings(
+        list(model.control_vars.keys()),
+        control_vars,
+        x_subs,
+        dx_subs
+    )
 
     differential_vars = []
+    subs = x_subs + dx_subs
+
+
+    function_header = ""
+    function_body = ""
+    function_footer = ""
+
     if in_place:
-        out_str = "function f(res, dX, X, p, t)\n"
+        function_header = "function f(res, dX, X, p, t)\n"
     else:
         k = len(model.constitutive_relations)
-        out_str = "function f(dX, X, p, t)\n"
+        function_header = "function f(dX, X, p, t)\n"
+        function_header += f"    res = zeros({k})\n"
 
-        out_str += f"    res = zeros({k})\n"
+    for cv, dcv in zip(cv_strings, dcv_strings):
+        function_header += cv
+        if dcv:
+            function_header += dcv
+
     for relation in model.constitutive_relations:
 
         eqn_str = str(relation.subs(subs))
@@ -153,15 +141,52 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         else:
             differential_vars.append(False)
 
-        out_str += f"    res[{len(differential_vars)}] = {eqn_str}\n"
+        function_body += f"    res[{len(differential_vars)}] = {eqn_str}\n"
 
     if in_place:
-        out_str += "end\n"
+        function_footer += "end\n"
     else:
-        out_str+="    return res\n end\n"
+        function_footer+="    return res\n end\n"
 
+    out_str = function_header + function_body +function_footer
+    print(out_str)
     return (out_str,
             differential_vars)
+
+def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
+
+    if isinstance(cv_substitutions, dict):
+        pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
+    elif isinstance(cv_substitutions, list):
+        pairs = list(zip(cv, cv_substitutions))
+    elif len(cv) == 1 and ( isinstance(cv_substitutions, (str, sp.Expr))):
+        pairs =[cv[0], cv_substitutions]
+    else:
+        raise NotImplementedError
+
+    cv_strings = []
+    dcv_strings = []
+    subs = x_subs + dx_subs
+    partial_pairs = [(X_i,DX_i) for (_,X_i), (_,DX_i) in zip(x_subs, dx_subs)]
+    for var, val in pairs:
+        try:
+
+            u_i = sp.sympify(val).subs(subs)
+            du_i = u_i.diff(sp.S('t')) + sum([
+                u_i.diff(X)*DX for X,DX in partial_pairs
+            ])
+            cv_strings.append(f"    {str(var)} = {u_i}\n")
+            dcv_strings.append(f"    d{str(var)} = {du_i}\n")
+        except SympifyError as ex:
+            s = val
+
+            for x, X in reversed(x_subs):
+                s = s.replace(str(x), str(X))
+
+            cv_strings.append(f"    {str(var)} = {s}\n")
+            dcv_strings.append(None)
+
+    return cv_strings, dcv_strings
 
 
 class SolverException(Exception):

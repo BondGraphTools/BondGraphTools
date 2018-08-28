@@ -111,6 +111,6 @@ def test_rlc():
     bg.connect(l, kvl)
 
     t, x = simulate(
-        bg, timespan=[0, 10], x0=[0,0], control_vars=[1]
+        bg, timespan=[0, 10], x0=[1,0], control_vars=[1]
     )
 
