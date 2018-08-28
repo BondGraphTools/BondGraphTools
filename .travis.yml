@@ -12,9 +12,9 @@ python:
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - sudo apt-get install libstdc++6-dev
+  - sudo apt-get install libstdc++6-4.8-dev
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz > julia-0.6.4-linux-x86_64.tar.gz
-  - tar xf julia-0.6.2-linux-x86_64.tar.gz
+  - tar xf julia-0.6.4-linux-x86_64.tar.gz
   - export PATH=$PATH:./julia-9d11f62bcb/bin/
   - chmod +x ./julia-9d11f62bcb/bin/julia
 
