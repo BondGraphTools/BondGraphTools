@@ -1,4 +1,3 @@
-
 dist: trusty
 
 env:
@@ -11,15 +10,16 @@ python:
   - "3.6"
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install libstdc++6-4.7-dev
+  # This workaround is required to avoid libstdc++ errors while running "extended" hugo with SASS support.
+  - wget -q -O libstdc++6 http://security.ubuntu.com/ubuntu/pool/main/g/gcc-5/libstdc++6_5.4.0-6ubuntu1~16.04.10_amd64.deb
+  - sudo dpkg --force-all -i libstdc++6
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
   - tar xf julia-0.6.2-linux-x86_64.tar.gz
   - export PATH=$PATH:./julia-d386e40c17/bin/
   - chmod +x ./julia-d386e40c17/bin/julia
 
+
 install:
-  - julia setup.jl
   - python -m pip install -r requirements.txt
   - python -m pip install pytest coverage mock pytest-cov
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
@@ -30,7 +30,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-script: pytest --cov=BondGraphTools --cov-report=xml test
+script: pytest --runslow --cov=BondGraphTools --cov-report=xml test
 
 after_script:
   ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

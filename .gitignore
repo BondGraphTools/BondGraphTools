@@ -1,2 +1,10 @@
 .idea/
 *.pyc
+BondGraphTools/julia/*
+*.exe
+
+\.pytest_cache/
+
+\.ipynb_checkpoints/
+
+\.cache/v/cache/
