@@ -80,7 +80,7 @@ class Config:
 
     def install_dependencies(self, rebuild=False):
         # we assume julia and python are already in the path
-        logger.info('Installing Julia dependencies')
+        logger.info('Installing Julia dependencies; this may take some time')
         env = os.environ
         env.update({"PYTHON": as_str(self.python_executable),
                     "JULIA": as_str(self.julia_executable)})
@@ -106,6 +106,7 @@ class Config:
             fs.writelines(julia_code)
         run([as_str(self.julia_executable), as_str(temp)], env=env)
         os.remove(temp)
+        logger.info("Complete")
 
     @property
     def julia(self):
