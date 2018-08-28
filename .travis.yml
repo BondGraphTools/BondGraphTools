@@ -11,9 +11,8 @@ python:
   - "3.6"
 
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - sudo apt-get install libstdc++6
+  - sudo apt-get install libstdc++6-4.7-dev
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
   - tar xf julia-0.6.2-linux-x86_64.tar.gz
   - export PATH=$PATH:./julia-d386e40c17/bin/
@@ -31,7 +30,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-script: pytest --runslow --cov=BondGraphTools --cov-report=xml test
+script: pytest --cov=BondGraphTools --cov-report=xml test
 
 after_script:
   ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
