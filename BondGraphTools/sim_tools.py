@@ -1,25 +1,12 @@
 import numpy as np
 import sympy as sp
+from .config import config
+import os, sys
 
 from .exceptions import ModelException
 from .algebra import inverse_coord_maps, create_ds
 import logging
 logger = logging.getLogger(__name__)
-j = None
-de = None
-
-
-def start_julia():
-    global j
-    global de
-
-    logger.info("Starting Julia Interpreter.")
-    from diffeqpy import de as de
-
-    import julia
-
-    j = julia.Julia()
-    logger.info("Julia Interpreter Loaded.")
 
 
 def simulate(system,
@@ -40,6 +27,9 @@ def simulate(system,
     Returns: t, X
 
     """
+
+    de = config.de
+
     if system.ports:
         raise ModelException(
             "Cannot Simulate %s: unconnected ports %s",
@@ -47,9 +37,6 @@ def simulate(system,
 
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
-
-    if not de:
-        start_julia()
 
     tspan = tuple(float(t) for t in timespan)
     X0 = np.array(x0, dtype=np.float64)
@@ -77,6 +64,8 @@ def simulate(system,
 
 
 def _build_ode(system, control_vars=None):
+
+    j = config.julia
     coords, mappings, linear, nonlinear, constraints = system.system_model()
 
     ss_map, js_map, cv_map = mappings
@@ -248,17 +237,12 @@ def _build_dae(system, control_vars=None):
     julia_string += end_string
     logger.warning("Julia Function")
     logger.warning(julia_string)
-    if not j: start_julia()
+
+    j = config.julia
 
     func = j.eval(julia_string)
 
     return func, differential_vars
-
-
-
-def julia():
-    global j
-
 
 class Simulation(object):
     def __init__(self, model,
