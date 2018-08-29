@@ -95,7 +95,7 @@ def test_c_se_sum_switch():
 
     assert (x[0, -1] - 1) < 0.001
 
-
+@pytest.mark.skip
 @pytest.mark.slow
 def test_rlc():
     c = bgt.new("C", value=1)

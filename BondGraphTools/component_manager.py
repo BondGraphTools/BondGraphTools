@@ -82,7 +82,7 @@ def get_library_list():
         list of (library id, description) tuples
     """
 
-    return [(l, __libraries[l]["name"]) for l in __libraries if l != base_id]
+    return [(l, __libraries[l]["name"]) for l in __libraries]
 
 
 def get_components_list(library):

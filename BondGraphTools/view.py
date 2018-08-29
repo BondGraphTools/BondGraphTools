@@ -1,3 +1,8 @@
+"""
+Todo: Remove except statement from matplotlib in Glyph.view
+
+"""
+
 import logging
 from itertools import permutations
 
@@ -318,11 +323,19 @@ class GraphLayout(Glyph):
 
             component.view.pos = (x,y)
             if component.type not in {'0','1'}:
-                component.view.string = "\mathbf{{{t}}}: {n}".format(
-                    t=component.type, n=component.name)
+                try:
+                    component.view.string = "\mathbf{{{t}}}: {n}".format(
+                        t=component.type, n=component.name)
+                except:
+                    component.view.string = "{t}: {n}".format(
+                        t=component.type, n=component.name)
             else:
-                component.view.string = "\mathbf{{{t}}}".format(
-                    t=component.type)
+                try:
+                    component.view.string = "\mathbf{{{t}}}".format(
+                        t=component.type)
+                except:
+                    component.view.string = "{t}".format(
+                        t=component.type, n=component.name)
             component.view.axes = ax
 
         for (c1, port_1), (c2, port_2) in self._node.bonds:

@@ -105,6 +105,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         x_subs.append((x, X[i+1]))
         dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
 
+
     cv_strings, dcv_strings = generate_control_strings(
         list(model.control_vars.keys()),
         control_vars,
@@ -149,7 +150,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         function_footer+="    return res\n end\n"
 
     out_str = function_header + function_body +function_footer
-    print(out_str)
+
     return (out_str,
             differential_vars)
 
@@ -161,6 +162,8 @@ def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
         pairs = list(zip(cv, cv_substitutions))
     elif len(cv) == 1 and ( isinstance(cv_substitutions, (str, sp.Expr))):
         pairs =[cv[0], cv_substitutions]
+    elif not cv and not cv_substitutions:
+        return [], []
     else:
         raise NotImplementedError
 
