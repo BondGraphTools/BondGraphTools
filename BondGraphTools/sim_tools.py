@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sp
+from sympy.core import SympifyError
 from .config import config
 import os, sys
 
@@ -13,6 +14,7 @@ def simulate(system,
              timespan,
              x0,
              dx0=None,
+             dt=0.1,
              control_vars=None):
     """
     Simulate the system dynamics.
@@ -23,12 +25,12 @@ def simulate(system,
         initial list(float):
         control_vars (str,list(str), dict(str)):
 
-    Returns:
+    Returns: t, X
 
     """
 
     de = config.de
-
+    j = config.julia
     if system.ports:
         raise ModelException(
             "Cannot Simulate %s: unconnected ports %s",
@@ -40,18 +42,18 @@ def simulate(system,
     tspan = tuple(float(t) for t in timespan)
     X0 = np.array(x0, dtype=np.float64)
     assert len(X0) == len(system.state_vars)
-    try:
-        func = _build_ode(system, control_vars)
-        problem = de.ODEProblem(func, X0, tspan)
-    except NotImplementedError:
-        func, diffs = _build_dae(system, control_vars)
-        if dx0:
-            DX0 = np.array(dx0, dtype=np.float64)
-        else:
-            DX0 = np.zeros(X0.shape, dtype=np.float64)
-        problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
 
-    sol = de.solve(problem, dense=True)
+    func_str, diffs = to_julia_function_string(system, control_vars)
+
+    if dx0:
+        DX0 = np.array(dx0, dtype=np.float64)
+    else:
+        DX0 = np.zeros(X0.shape, dtype=np.float64)
+
+    func = j.eval(func_str)
+    problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
+
+    sol = de.solve(problem, dense=True, saveat=float(dt))
 
     if sol.retcode not in ("Default", "Success"):
         raise SolverException("Integration error: Solver returned %s "
@@ -62,184 +64,6 @@ def simulate(system,
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
 
-def _build_ode(system, control_vars=None):
-
-    j = config.julia
-    coords, mappings, linear, nonlinear, constraints = system.system_model()
-
-    ss_map, js_map, cv_map = mappings
-    m = len(ss_map)
-    offset = m + 2*len(js_map)
-
-    A = linear[0:m, 0:m]
-    B = linear[0:m, m:offset]
-
-    if not B.is_zero or not (A - sp.eye(m)).is_zero:
-        raise NotImplementedError("DAE's not yet implemented")
-    x, subs, string_subs = _generate_cv_subs(mappings, control_vars)
-
-    L = -linear[0:m, offset:offset+m]
-
-    Lu = linear[0:m, offset+m:].dot(coords[offset + m:])
-
-    if isinstance(Lu, sp.Symbol):
-        Lu = [Lu]
-
-    Nu = nonlinear[0:m, :]
-    N = [-sp.Add(left, right).subs(subs) for left, right in zip(Lu, Nu)]
-
-    # DX = LX + N(X, t)
-    julia_string = """function dxdt(dX, X, p, t)\n"""
-
-    for var, var_string in string_subs.items():
-        julia_string += f"    {var} = {var_string}\n"
-
-    for i in range(m):
-        julia_string += f"    dX[{i+1}] ="
-        lx = sp.simplify(L[i,:].dot(x))
-        nl = sp.sympify(N[i])
-
-        if lx:
-            julia_string += f"{repr(lx)}"
-
-        julia_string += repr(nl) + "\n"
-
-    julia_string += "end"
-    julia_string = julia_string.replace("**","^")
-    func = j.eval(julia_string)
-
-    return func
-
-
-def _generate_cv_subs(mappings, control_vars=None):
-
-    ss_map, js_map, cv_map = mappings
-    m = len(ss_map)
-    k = len(cv_map)
-
-    x = [sp.symbols(f"x_{i}") for i in range(m)]
-    X = [sp.symbols(f"X[{i+1}]") for i in range(m)]
-    subs = list(zip([sp.symbols(f"dx_{i}") for i in range(m)],
-                    [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
-
-    subs += list(zip(x, X))
-    t = sp.S('t')
-    string_subs = {}
-
-    if isinstance(control_vars, (float, int, complex)) and\
-            len(k) == 1:
-        subs += [
-            (sp.Symbol('u_0'), control_vars),
-            (sp.Symbol('du_0'), 0)
-        ]
-
-    elif isinstance(control_vars, list) and len(control_vars) == k:
-        for i, cv_string in enumerate(control_vars):
-            u = sp.Symbol(f'u_{i}')
-            du = sp.Symbol(f'du_{i}')
-            try:
-                fx = sp.sympify(cv_string)
-                dfx = sum(fx.diff(x_i) for x_i in x) + fx.diff(t)
-                subs.append((u, fx))
-                subs.append((du, dfx))
-            except sp.SympifyError:
-                u_str = f"u{i+1}"
-                for i in reversed(range(m)):
-                    cv_string = cv_string.replace(
-                        f"x_{i}", f"X[{i+1}]"
-                    )
-                string_subs[u_str] = cv_string
-                subs.append(sp.symbols(f"u_{i}, {u_str}"))
-
-    elif isinstance(control_vars, dict):
-        for key, cv_string in control_vars:
-            u = sp.Symbol(f'{key}')
-            du = sp.Symbol(f'd{key}')
-            try:
-                fx = sp.sympify(cv_string)
-                dfx = sum(fx.diff(x_i) for x_i in x) + fx.diff(t)
-                pair = [(du, dfx), (u, fx)]
-                for pp in pair:
-                    subs = [
-                        s.subs(pp) for s in subs
-                    ]
-                    subs.append(pp)
-
-            except sp.SympifyError:
-                u_str = f"u{len(string_subs)}"
-                for i in reversed(range(m)):
-                    cv_string = cv_string.replace(
-                        f"x_{i}", f"X[{i+1}]"
-                    )
-
-                string_subs[u_str] = cv_string
-                subs.append(sp.symbols(f"{key}, {u_str}"))
-    else:
-        raise ValueError("Invalid control variables: %s", repr(control_vars))
-
-    return X, subs, string_subs
-
-
-def _build_dae(system, control_vars=None):
-
-    mappings, coords = inverse_coord_maps(*system.basis_vectors)
-    ss_map, js_map, cv_map = mappings
-
-    m = len(ss_map)
-
-    if len(js_map) > 0:
-        raise NotImplementedError("Bond Graph has unconnected Ports")
-
-    derivatives = set(coords[0:m])
-    differential_vars = []
-
-    # construct julia coords
-
-    # x = [sp.symbols(f"x_{i}") for i in range(m)]
-    # subs = list(zip([sp.symbols(f"dx_{i}") for i in range(m)],
-    #             [sp.symbols(f"dX[{i+1}]") for i in range(m)]))
-    #
-    # subs += list(zip(x, [sp.symbols(f"X[{i+1}]") for i in range(m)]))
-
-    # subs, cv_text = _generate_cv_subs(control_vars, subs)
-    x, subs, string_subs = _generate_cv_subs(mappings, control_vars)
-
-    julia_string = "function f(dX, X, p, t)\n"
-    end_string = "    return ["
-    i = 0
-
-    for var, var_string in string_subs.items():
-        julia_string += f"    {var} = {var_string}\n"
-
-    for relation in system.constitutive_relations:
-        r = relation.subs(subs)
-        if not r:
-            continue
-
-        differential_vars.append(
-            derivatives & relation.atoms() != set()
-        )
-
-        temp_string = str(r)
-
-        julia_string += f"    res{i+1} = {temp_string}\n"
-
-        if i > 0:
-            end_string += ', '
-        end_string += f"res{i+1}"
-        i += 1
-    assert len(differential_vars) == i
-    end_string += "]\nend"
-    julia_string += end_string
-    logger.warning("Julia Function")
-    logger.warning(julia_string)
-
-    j = config.julia
-
-    func = j.eval(julia_string)
-
-    return func, differential_vars
-
 class Simulation(object):
     def __init__(self, model,
                  timespan=None,
@@ -247,23 +71,123 @@ class Simulation(object):
                  dx_0=None,
                  control_vars=None):
 
-        coords, mapping, linear, nonlinear, constraints = model.system_model(
-            control_vars=control_vars
-        )
-
-        self._state_map, self._port_map, self._cv_map = mapping
-
-        d_system, port_func, constraints = create_ds(
-            coords, mapping, linear, nonlinear, constraints
-        )
-
-        self._solver = None
-        self._julia_func = None
+        self.sol = None
 
     def run(self, x0, timespan):
         pass
 
 
+def to_julia_function_string(model, control_vars=None, in_place=False):
+    """
+    Produces a Julia function string from the given model.
+
+    We expect that that control_vars is a dict with the same keys,
+    or list of the same size, as the model.control_vars
+
+    Args:
+        model:
+        control_vars:
+
+    Returns:
+        (string, list)
+        A string containing the function definition, and a list of bools
+        identifing which variables contain derivatives.
+    """
+
+    dX = sp.IndexedBase('dX')
+    X = sp.IndexedBase('X')
+    x_subs = []
+    dx_subs = []
+
+    for i, x in enumerate(model.state_vars):
+        x_subs.append((x, X[i+1]))
+        dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
+
+
+    cv_strings, dcv_strings = generate_control_strings(
+        list(model.control_vars.keys()),
+        control_vars,
+        x_subs,
+        dx_subs
+    )
+
+    differential_vars = []
+    subs = x_subs + dx_subs
+
+    function_header = ""
+    function_body = ""
+    function_footer = ""
+
+    if in_place:
+        function_header = "function f(res, dX, X, p, t)\n"
+    else:
+        k = len(model.constitutive_relations)
+        function_header = "function f(dX, X, p, t)\n"
+        function_header += f"    res = zeros({k})\n"
+
+    for cv, dcv in zip(cv_strings, dcv_strings):
+        function_header += cv
+        if dcv:
+            function_header += dcv
+
+    for relation in model.constitutive_relations:
+
+        eqn_str = str(relation.subs(subs))
+        eqn_str = eqn_str.replace('**', '^')
+        if 'dX' in eqn_str:
+            differential_vars.append(True)
+        else:
+            differential_vars.append(False)
+
+        function_body += f"    res[{len(differential_vars)}] = {eqn_str}\n"
+
+    if in_place:
+        function_footer += "end\n"
+    else:
+        function_footer += "    return res\n end\n"
+
+    out_str = function_header + function_body + function_footer
+
+    return (out_str,
+            differential_vars)
+
+
+def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
+
+    if isinstance(cv_substitutions, dict):
+        pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
+    elif isinstance(cv_substitutions, list):
+        pairs = list(zip(cv, cv_substitutions))
+    elif len(cv) == 1 and (isinstance(cv_substitutions, (str, sp.Expr))):
+        pairs = [cv[0], cv_substitutions]
+    elif not cv and not cv_substitutions:
+        return [], []
+    else:
+        raise NotImplementedError
+
+    cv_strings = []
+    dcv_strings = []
+    subs = x_subs + dx_subs
+    partial_pairs = [(X_i,DX_i) for (_,X_i), (_,DX_i) in zip(x_subs, dx_subs)]
+    for var, val in pairs:
+        try:
+
+            u_i = sp.sympify(val).subs(subs)
+            du_i = u_i.diff(sp.S('t')) + sum([
+                u_i.diff(X)*DX for X,DX in partial_pairs
+            ])
+            cv_strings.append(f"    {str(var)} = {u_i}\n")
+            dcv_strings.append(f"    d{str(var)} = {du_i}\n")
+        except SympifyError as ex:
+            s = val
+
+            for x, X in reversed(x_subs):
+                s = s.replace(str(x), str(X))
+
+            cv_strings.append(f"    {str(var)} = {s}\n")
+            dcv_strings.append(None)
+
+    return cv_strings, dcv_strings
 
 
 class SolverException(Exception):
