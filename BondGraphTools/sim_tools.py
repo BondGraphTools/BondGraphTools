@@ -63,6 +63,7 @@ def simulate(system,
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
+
 class Simulation(object):
     def __init__(self, model,
                  timespan=None,
@@ -71,9 +72,6 @@ class Simulation(object):
                  control_vars=None):
 
         self.sol = None
-
-
-
 
     def run(self, x0, timespan):
         pass
@@ -116,7 +114,6 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
     differential_vars = []
     subs = x_subs + dx_subs
 
-
     function_header = ""
     function_body = ""
     function_footer = ""
@@ -147,12 +144,13 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
     if in_place:
         function_footer += "end\n"
     else:
-        function_footer+="    return res\n end\n"
+        function_footer += "    return res\n end\n"
 
-    out_str = function_header + function_body +function_footer
+    out_str = function_header + function_body + function_footer
 
     return (out_str,
             differential_vars)
+
 
 def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
 
@@ -160,8 +158,8 @@ def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
         pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
     elif isinstance(cv_substitutions, list):
         pairs = list(zip(cv, cv_substitutions))
-    elif len(cv) == 1 and ( isinstance(cv_substitutions, (str, sp.Expr))):
-        pairs =[cv[0], cv_substitutions]
+    elif len(cv) == 1 and (isinstance(cv_substitutions, (str, sp.Expr))):
+        pairs = [cv[0], cv_substitutions]
     elif not cv and not cv_substitutions:
         return [], []
     else:
