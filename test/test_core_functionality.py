@@ -331,7 +331,15 @@ def test_remove_component():
     assert c not in bg
     assert bg.bonds == [((r, 0), (zero, 0))]
 
+def test_remove_components_fail_states():
+    zero = bgt.new("0")
+    r = bgt.new("R", value=1)
+    c = bgt.new("C", value=1)
 
+    bg = zero + r
+
+    with pytest.raises(InvalidComponentException):
+        bg.remove(c)
 
 
 def test_swap_component_1():

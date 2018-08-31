@@ -92,6 +92,10 @@ class BondGraph(BondGraphBase):
 
     def remove(self, component):
         self.disconnect(component)
+
+        if component not in self:
+            raise InvalidComponentException("Component not found")
+
         self.components = {
             k:v for k,v  in self.components.items() if v is not component
         }
@@ -488,5 +492,3 @@ class BondGraph(BondGraphBase):
                 self.connect((c1,p1),(new_component,p2))
 
         self.remove(old_component)
-
-
