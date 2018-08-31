@@ -306,6 +306,33 @@ def test_disconnect_component():
     bg.disconnect(c)
     assert len(bg.bonds) == 2
 
+def test_remove_component():
+    zero = bgt.new("0")
+    r = bgt.new("R", value=1)
+    c = bgt.new("C", value=1)
+
+    bg = zero + r + c
+
+    assert c in bg
+    bg.remove(c)
+    assert c not in bg
+
+    bg.add(c)
+    bg.connect(r, zero)
+    bg.connect(c, zero)
+
+    assert c in bg
+    assert bg.bonds == [
+        ((r, 0), (zero, 0)),
+        ((c, 0), (zero, 1))
+    ]
+
+    bg.remove(c)
+    assert c not in bg
+    assert bg.bonds == [((r, 0), (zero, 0))]
+
+
+
 
 def test_swap_component_1():
     ###
@@ -321,7 +348,7 @@ def test_swap_component_1():
 
     bg.connect(r,zero)
     bg.connect(c, zero)
-    assert c in bg.components
+    assert c in bg
 
     assert bg.bonds == [
         ((r, 0), (zero, 0)),
@@ -338,8 +365,8 @@ def test_swap_component_1():
         ((Sf, 0), (zero, 1))
     ]
 
-    assert c not in bg.components
-    assert Sf in bg.components
+    assert c not in bg
+    assert Sf in bg
 
     bg.replace(Sf, c)
 
@@ -348,8 +375,8 @@ def test_swap_component_1():
         ((c, 0), (zero, 1))
     ]
 
-    assert c in bg.components
-    assert Sf not in bg.components
+    assert c in bg
+    assert Sf not in bg
 
 
 def test_swap_components_2():
@@ -378,5 +405,5 @@ def test_swap_components_2():
         ((c, 0), (one, 1))
     ]
 
-    assert one in bg.components
-    assert zero not in bg.components
+    assert one in bg
+    assert zero not in bg

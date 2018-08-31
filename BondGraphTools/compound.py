@@ -51,12 +51,9 @@ class BondGraph(BondGraphBase):
         return self.components[item]
 
     def __contains__(self, item):
-        if isinstance(item, str):
-            return item in self.components
-        elif isinstance(item, BondGraphBase):
-            for comp in self.components.values():
-                if item is comp:
-                    return True
+        for comp in self.components.values():
+            if item is comp:
+                return True
 
         return False
 
@@ -92,6 +89,12 @@ class BondGraph(BondGraphBase):
         self.__add__(component)
         if args:
             self.add(*args)
+
+    def remove(self, component):
+        self.disconnect(component)
+        self.components = {
+            k:v for k,v  in self.components.items() if v is not component
+        }
 
     @property
     def params(self):
@@ -424,7 +427,7 @@ class BondGraph(BondGraphBase):
             del self._ports[port]
             del self._internal_ports[port]
 
-    def find(self, name, c_type=None):
+    def find(self, name, component=None):
         """
         Searches through this model for a component of with the specified name.
         If the type of component is specified by setting c_type, then only
@@ -432,7 +435,7 @@ class BondGraph(BondGraphBase):
 
         Args:
             name (str): The name of the object to search for.
-            c_type (str): (Optional) the class of components in which to
+            component (str): (Optional) the class of components in which to
              search.
 
         Returns:
@@ -442,7 +445,7 @@ class BondGraph(BondGraphBase):
         Raises:
         """
         out = [obj for obj in self.components.values() if
-               (not c_type or obj.type == c_type) and
+               (not component or obj.type == component) and
                obj.name == name]
         if len(out) > 1:
             raise NotImplementedError("Object is not unique")
@@ -465,4 +468,25 @@ class BondGraph(BondGraphBase):
              model
         """
 
-        
+        if new_component in self.components:
+            raise InvalidComponentException(
+                "Component is already in the model"
+            )
+
+        self.add(component=new_component)
+        for bond in [b for b in self.bonds
+                     if b[0][0] is old_component
+                        or b[1][0] is old_component]:
+
+            (c1, p1), (c2, p2) = bond
+
+            if c1 is old_component:
+                self.disconnect(c1,c2,p1,p2)
+                self.connect((new_component,p1),(c2,p2))
+            elif c2 is old_component:
+                self.disconnect(c1,c2,p1,p2)
+                self.connect((c1,p1),(new_component,p2))
+
+        self.remove(old_component)
+
+
