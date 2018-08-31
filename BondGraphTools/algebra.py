@@ -72,11 +72,12 @@ def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_t
 
     ss_size, js_size, cv_size, n = size_tup
     substitutions = []
+    coords_vect = sp.Matrix(coords)
     for i in reversed(range(2*(ss_size  + js_size))):
         co = coords[i]
         if Rx[i,i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
 
-            eqn = Rx[i,:].dot(coords) - nonlinear_op[i]
+            eqn = (Rx[i,:]*coords_vect)[0] - nonlinear_op[i]
             pair = (coords[i], eqn)
             logger.info("Generating substition %s = %s",
                         repr(coords[i]), repr(eqn))
@@ -99,10 +100,12 @@ def _process_constraints(linear_op,
     offset = 2 * js_size + ss_size
 
     coord_atoms = set(coordinates[0:offset+ss_size])
-    cv_constraints = [
-        linear_op[i,:].dot(coordinates) + nonlinear_op[i,0]
-        for i in range(offset+ss_size, n)
-    ]
+
+    coords_vect = sp.Matrix(coordinates)
+    cv_constraints = list(
+        linear_op[offset+ss_size:n,:]*coords_vect +
+        nonlinear_op[offset+ss_size:n,0]
+    )
     constraints += [cons for cons in cv_constraints if cons]
     linear_op = linear_op[:offset+ss_size, :]
     nonlinear_op = nonlinear_op[:offset+ss_size, :]
@@ -354,7 +357,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
     for row in range(offset, linear_op.rows):
         logger.info("Testing row %s: %s + %s", repr(row),
-                    repr(linear_op[row, :].dot(coordinates)),
+                    repr(linear_op[row, :] * sp.Matrix(coordinates)),
                     repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
