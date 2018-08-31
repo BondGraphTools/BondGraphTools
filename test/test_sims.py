@@ -7,6 +7,7 @@ from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, to_julia_function_string
 from BondGraphTools.algebra import inverse_coord_maps
 
+@pytest.mark.slow
 def test_c_sim_fail():
 
     c = bgt.new("C")

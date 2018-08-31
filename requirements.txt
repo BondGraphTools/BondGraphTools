@@ -1,4 +1,4 @@
-sympy==1.1.1
+sympy>=1.1
 numpy==1.14.5
 scipy>=1.0.1
 matplotlib==2.2.2
