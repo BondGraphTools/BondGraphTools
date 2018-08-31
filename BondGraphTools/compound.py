@@ -28,6 +28,7 @@ class BondGraph(BondGraphBase):
 
         self.cv_map = dict()
         self._port_map = dict()
+        self._model_changed = True
 
     def save(self, filename):
         raise NotImplementedError
@@ -423,9 +424,25 @@ class BondGraph(BondGraphBase):
             del self._ports[port]
             del self._internal_ports[port]
 
-    def find(self, name, component=None):
+    def find(self, name, c_type=None):
+        """
+        Searches through this model for a component of with the specified name.
+        If the type of component is specified by setting c_type, then only
+        components of that type are considered.
+
+        Args:
+            name (str): The name of the object to search for.
+            c_type (str): (Optional) the class of components in which to
+             search.
+
+        Returns:
+            None if no such component exists, or the component object if it
+         does.
+
+        Raises:
+        """
         out = [obj for obj in self.components.values() if
-               (not component or obj.type == component) and
+               (not c_type or obj.type == c_type) and
                obj.name == name]
         if len(out) > 1:
             raise NotImplementedError("Object is not unique")
@@ -434,3 +451,18 @@ class BondGraph(BondGraphBase):
         else:
             return None
 
+    def replace(self, old_component, new_component):
+        """
+        Replaces the old component with a new component.
+        Components must be of compatible classes; 1 one port cannot replace an
+        n-port, for example.
+        The old component will be completely removed from the system model.
+
+        Args:
+            old_component: The component to be replaced. Must already be in the
+             model.
+            new_component: The substitute component which must not be in the
+             model
+        """
+
+        

@@ -305,3 +305,78 @@ def test_disconnect_component():
     assert len(bg.bonds) == 3
     bg.disconnect(c)
     assert len(bg.bonds) == 2
+
+
+def test_swap_component_1():
+    ###
+    # We must be able to swap a 1-port for a 1-port
+    #
+    #
+
+    zero = bgt.new("0")
+    r = bgt.new("R", value=1)
+    c = bgt.new("C", value=1)
+
+    bg = zero+r+c
+
+    bg.connect(r,zero)
+    bg.connect(c, zero)
+    assert c in bg.components
+
+    assert bg.bonds == [
+        ((r, 0), (zero, 0)),
+        ((c, 0), (zero, 1))
+    ]
+    assert len(bg.state_vars) == 1
+    Sf = bgt.new('Sf')
+    bg.replace(c, Sf)
+    assert len(bg.state_vars) == 0
+    assert len(bg.control_vars) == 1
+
+    assert bg.bonds == [
+        ((r,0), (zero, 0)),
+        ((Sf, 0), (zero, 1))
+    ]
+
+    assert c not in bg.components
+    assert Sf in bg.components
+
+    bg.replace(Sf, c)
+
+    assert bg.bonds == [
+        ((r, 0), (zero, 0)),
+        ((c, 0), (zero, 1))
+    ]
+
+    assert c in bg.components
+    assert Sf not in bg.components
+
+
+def test_swap_components_2():
+    ###
+    # We should also be able to swap zero and one juncitons.
+    # However, due to the nature of one ports, we assume that simga = 1.
+
+    zero = bgt.new("0")
+    r = bgt.new("R")
+    c = bgt.new("C")
+
+    bg = zero+r+c
+
+    bg.connect(r,zero)
+    bg.connect(c, zero)
+
+    assert bg.bonds == [
+        ((r, 0), (zero, 0)),
+        ((c, 0), (zero, 1))
+    ]
+    one = bgt.new('1')
+    bg.replace(zero, one)
+
+    assert bg.bonds == [
+        ((r, 0), (one, 0)),
+        ((c, 0), (one, 1))
+    ]
+
+    assert one in bg.components
+    assert zero not in bg.components
