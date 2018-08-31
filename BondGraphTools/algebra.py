@@ -357,7 +357,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
     for row in range(offset, linear_op.rows):
         logger.info("Testing row %s: %s + %s", repr(row),
-                    repr(linear_op[row, :]* sp.Matrix(coordinates)),
+                    repr(linear_op[row, :] * sp.Matrix(coordinates)),
                     repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
