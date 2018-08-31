@@ -178,10 +178,10 @@ class BondGraph(BondGraphBase):
         #             (c, c - nlin_op[k])
         #
         #         )
-
+        coord_vect = sp.Matrix(coordinates)
         relations = [
             sp.Add(l,r) for i, (l,r) in enumerate(zip(
-                lin_op.dot(coordinates),nlin_op))
+                lin_op*coord_vect,nlin_op))
             if not ss_size <= i < ss_size + 2*js_size
         ]
         if isinstance(constraints, list):
