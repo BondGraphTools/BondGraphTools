@@ -427,5 +427,5 @@ def test_swap_failstate():
     bg.connect(r, zero)
     bg.connect(c, zero)
 
-    with pytest.raises(InvalidComponentException):
+    with pytest.raises(AttributeError):
         bg.replace(zero, l)
