@@ -415,3 +415,17 @@ def test_swap_components_2():
 
     assert one in bg
     assert zero not in bg
+
+
+def test_swap_failstate():
+    zero = bgt.new("0")
+    r = bgt.new("R", value=1)
+    c = bgt.new("C", value=1)
+    l = bgt.new("I")
+    bg = zero + r + c
+
+    bg.connect(r, zero)
+    bg.connect(c, zero)
+
+    with pytest.raises(InvalidComponentException):
+        bg.replace(zero, l)
