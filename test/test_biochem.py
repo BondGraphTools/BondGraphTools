@@ -185,7 +185,8 @@ def test_nlin_se():
     J_A = bgt.new("0", name="Ce_A")
     Se_A = bgt.new('Se', value=1, name='1')
 
-    system.add(J_A, Se_A)
+    system.add(J_A),
+    system.add(Se_A)
     system.connect(J_A, Y)
     system.connect(Ce_A, J_A)
     system.connect(Se_A, J_A)

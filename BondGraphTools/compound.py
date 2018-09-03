@@ -75,7 +75,6 @@ class BondGraph(BondGraphBase):
                 n_idx = int(n_idx)
                 if t_idx == other.type and n_idx >= n:
                     n = n_idx + 1
-
             self.components[f"{other.type}_{n}"] = other
 
         else:
@@ -87,10 +86,17 @@ class BondGraph(BondGraphBase):
     # def __iadd__(self, other):
     #     return self.__add__(other)
 
-    def add(self, component, *args):
-        self.__add__(component)
-        if args:
-            self.add(*args)
+    def add(self, component, label=None):
+        if not component:
+            raise ValueError("Cannot add nothing")
+        if not label:
+            self.__add__(component)
+        elif label in self.components:
+            raise ValueError(f"Component {label} already exists")
+        elif _is_label_invalid(label):
+            raise ValueError(f"Label: {label} is invalid")
+        else:
+            self.components[label] = component
 
     @property
     def params(self):
@@ -434,3 +440,12 @@ class BondGraph(BondGraphBase):
         else:
             return None
 
+def _is_label_invalid(label):
+    if not isinstance(label, str):
+        return True
+
+    for token in [" ", ".", "/"]:
+        if len(label.split(token)) >1:
+            return True
+
+    return False
