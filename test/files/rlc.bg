@@ -1,6 +1,9 @@
 # Base Model Definition
 root: RLC
 
+# File format version number
+version: 0.1
+
 # Model is made up of a list instances  components
 # Component Name, Component type,  parameter values
 # - Component Name must be a valid string, no spaces
