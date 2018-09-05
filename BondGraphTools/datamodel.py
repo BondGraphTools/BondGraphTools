@@ -46,7 +46,7 @@ def load(file_name):
     with open(file_name, 'r') as f:
         data = yaml.load(f)
 
-    version = data['version']
+    version = str(data['version'])
     if version == "0.1":
         return _builder(data)
     else:
