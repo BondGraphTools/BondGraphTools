@@ -28,6 +28,7 @@ class BondGraph(BondGraphBase):
 
         self.cv_map = dict()
         self._port_map = dict()
+        self._model_changed = True
 
     def save(self, filename):
         raise NotImplementedError
@@ -50,12 +51,9 @@ class BondGraph(BondGraphBase):
         return self.components[item]
 
     def __contains__(self, item):
-        if isinstance(item, str):
-            return item in self.components
-        elif isinstance(item, BondGraphBase):
-            for comp in self.components.values():
-                if item is comp:
-                    return True
+        for comp in self.components.values():
+            if item is comp:
+                return True
 
         return False
 
@@ -91,6 +89,16 @@ class BondGraph(BondGraphBase):
         self.__add__(component)
         if args:
             self.add(*args)
+
+    def remove(self, component):
+        self.disconnect(component)
+
+        if component not in self:
+            raise InvalidComponentException("Component not found")
+
+        self.components = {
+            k:v for k,v  in self.components.items() if v is not component
+        }
 
     @property
     def params(self):
@@ -424,6 +432,22 @@ class BondGraph(BondGraphBase):
             del self._internal_ports[port]
 
     def find(self, name, component=None):
+        """
+        Searches through this model for a component of with the specified name.
+        If the type of component is specified by setting c_type, then only
+        components of that type are considered.
+
+        Args:
+            name (str): The name of the object to search for.
+            component (str): (Optional) the class of components in which to
+             search.
+
+        Returns:
+            None if no such component exists, or the component object if it
+         does.
+
+        Raises:
+        """
         out = [obj for obj in self.components.values() if
                (not component or obj.type == component) and
                obj.name == name]
@@ -434,3 +458,37 @@ class BondGraph(BondGraphBase):
         else:
             return None
 
+    def replace(self, old_component, new_component):
+        """
+        Replaces the old component with a new component.
+        Components must be of compatible classes; 1 one port cannot replace an
+        n-port, for example.
+        The old component will be completely removed from the system model.
+
+        Args:
+            old_component: The component to be replaced. Must already be in the
+             model.
+            new_component: The substitute component which must not be in the
+             model
+        """
+
+        if new_component in self.components:
+            raise InvalidComponentException(
+                "Component is already in the model"
+            )
+
+        self.add(component=new_component)
+        for bond in [b for b in self.bonds
+                     if b[0][0] is old_component
+                        or b[1][0] is old_component]:
+
+            (c1, p1), (c2, p2) = bond
+
+            if c1 is old_component:
+                self.disconnect(c1,c2,p1,p2)
+                self.connect((new_component,p1),(c2,p2))
+            elif c2 is old_component:
+                self.disconnect(c1,c2,p1,p2)
+                self.connect((c1,p1),(new_component,p2))
+
+        self.remove(old_component)
