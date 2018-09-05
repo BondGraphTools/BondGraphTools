@@ -10,8 +10,7 @@ from .algebra import extract_coefficients
 
 logger = logging.getLogger(__name__)
 
-
-def new(component=None, name=None, library=base_id, value=None):
+def new(component=None, name=None, library=base_id, value=None, **kwargs):
     """
     Creates a new Bond Graph from a library component.
 
@@ -37,8 +36,7 @@ def new(component=None, name=None, library=base_id, value=None):
         if name:
             build_args.update({"name": name})
         if value or isinstance(value, (int, float, complex)):
-            _update_build_params(build_args, value)
-
+            _update_build_params(build_args, value, **kwargs)
         cls =_find_subclass(
             build_args["class"], BondGraphBase
         )
@@ -61,7 +59,8 @@ def new(component=None, name=None, library=base_id, value=None):
         )
 
 
-def _update_build_params(build_args, value):
+def _update_build_params(build_args, value, **kwargs):
+
     if isinstance(value, (list, tuple)):
         assignments = zip(build_args["params"].keys(), value)
         for param, v in assignments:
