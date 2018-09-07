@@ -8,14 +8,16 @@ from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
-
 class BaseComponent(BondGraphBase):
     """
     Atomic bond graph components are those defined by constitutive relations.
     """
 
-    def __init__(self, type, constitutive_relations,
+    def __init__(self, metaclass, constitutive_relations,
                  state_vars=None, params=None, **kwargs):
+
+        self._metaclass = metaclass
+
         super().__init__(**kwargs)
 
         self._state_vars = state_vars
@@ -23,11 +25,14 @@ class BaseComponent(BondGraphBase):
         self._params = params
 
         self.view = Glyph(self)
-        self.type = type
         self._constitutive_relations = constitutive_relations
 
     def __eq__(self, other):
         return self.__dict__ == self.__dict__
+
+    @property
+    def metaclass(self):
+        return self._metaclass
 
     @property
     def control_vars(self):
@@ -38,6 +43,9 @@ class BaseComponent(BondGraphBase):
                     not in value)]
         else:
             return []
+    @property
+    def max_ports(self):
+        return len(self._ports)
 
     @property
     def params(self):
@@ -73,7 +81,7 @@ class BaseComponent(BondGraphBase):
                 raise ModelParsingError(
                     "Error parsing model %s: "
                     "state variable %s must be either p or q",
-                    self.type, var
+                    self.metaclass, var
                 )
 
             models.append(sp.sympify(f"d{var} - {ef_var}"))
@@ -165,12 +173,6 @@ class BaseComponent(BondGraphBase):
 
         return [r for r in rels if r != 0]
 
-    def __add__(self, other):
-
-        return BondGraph(
-            name="{}+{}".format(self.name, other.name),
-            components=[self, other])
-
     def __hash__(self):
         return super().__hash__()
 
@@ -185,17 +187,15 @@ class NPort(BaseComponent):
         super().__init__(*args, **kwargs)
         self._fixed_ports = set(int(p) for p in self.ports if isinstance(p, int))
 
+    @property
+    def max_ports(self):
+        return None
+
     def __hash__(self):
         return super().__hash__()
 
     def __eq__(self, other):
         return self.__dict__ == self.__dict__
-
-    def __add__(self, other):
-        return BondGraph(
-            name="{}+{}".format(self.name, other.name),
-            components=[self, other]
-        )
 
     @property
     def ports(self):
@@ -264,3 +264,4 @@ class NPortWeighted(NPort):
 
             subs.append(pair)
         return [rel.subs(subs) for rel in rels]
+

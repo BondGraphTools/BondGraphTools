@@ -15,7 +15,8 @@ import logging
 import pathlib
 import yaml
 
-from .base import new
+from .base import new, Port, Bond
+from .actions import connect
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ def load(file_name):
         raise NotImplementedError
 
 def _builder(data):
-    def _build(model_name, template_name, models):
 
+    def _build(model_name, template_name, models):
         model_data = models[template_name]
         netlist = model_data["netlist"]
         model = new(name=model_name)
@@ -68,33 +69,41 @@ def _builder(data):
             except KeyError:
                 name = None
 
-            comp = new(name=name,
+            comp = new(name=label,
                     library=library,
                     component=component,
                     value=args)
 
             for k,v in kwargs.items():
                 comp.set_param(k,v)
+            model.add(comp)
 
-            model.add(comp, label=label)
+        _wire(model, netlist)
 
-        for bond_string in netlist:
-            c1_str, c2_str = bond_string.split()
-            try:
-                c1, p1 = c1_str.split('.')
-                p1 = int(p1)
-            except ValueError:
-                c1 = c1_str
-                p1 = None
-            try:
-                c2, p2 = c2_str.split('.')
-                p2 = int(p2)
-            except ValueError:
-                c2 = c2_str
-                p2 = None
-            model.connect((c1,p1), (c2, p2))
         return model
 
+
+    def _wire(model, netlist):
+        def get_port(port_string):
+            try:
+                c, p = port_string.split('.')
+
+            except ValueError:
+                c = port_string
+                p = ""
+
+            comp, = (comp for comp in model.components if comp.name == c)
+            if p == "":
+                return comp
+            else:
+                port_no = int(p)
+            return Port(comp, port_no)
+
+        for bond_string in netlist:
+            tail_str, head_str = bond_string.split()
+            tail = get_port(tail_str)
+            head = get_port(head_str)
+            connect(tail, head)
 
     def _parse_build_args(in_args):
 

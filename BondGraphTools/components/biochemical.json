@@ -1,17 +1,18 @@
 {
-  "name": "Biochemical Components",
+  "description": "Biochemical Components",
   "id":"BioChem",
   "components":{
     "Ce":{
-      "name":"Concentration of Chemical Species",
+      "description":"Concentration of Chemical Species",
       "class": "BaseComponent",
+      "metaclass":"C",
       "ports":{
         "0":null
       },
       "params":{
-        "k":{"name": "Biochemical Constant; exp(mu_0/RT)/V"},
-        "R":{"name":"Universal Gas Constant"},
-        "T":{"name": "Temperature"}
+        "k":{"description": "Biochemical Constant; exp(mu_0/RT)/V"},
+        "R":{"description":"Universal Gas Constant"},
+        "T":{"description": "Temperature"}
       },
       "state_vars":{
         "q_0":"Molar Quantity"
@@ -21,16 +22,17 @@
       ]
     },
     "Re":{
-      "name": "Biochemical Reaction",
+      "description": "Biochemical Reaction",
       "class": "BaseComponent",
+      "metaclass":"R",
       "ports":{
-        "0": {"name": "Primary"},
-        "1": {"name": "Secondary"}
+        "0": {"description": "Primary"},
+        "1": {"description": "Secondary"}
       },
       "params":{
-        "r":{"name":"Reaction Rate"},
-        "R":{"name":"Universal Gas Constant"},
-        "T":{"name": "Temperature"}
+        "r":{"description":"Reaction Rate"},
+        "R":{"description":"Universal Gas Constant"},
+        "T":{"description": "Temperature"}
       },
       "constitutive_relations":[
         "f_0 + f_1",
@@ -38,11 +40,12 @@
       ]
     },
   "Y":{
-    "name": "Stoichiometry",
+    "description": "Stoichiometry",
     "class": "NPortWeighted",
+    "metaclass": "TF",
     "ports":{
       "0": {
-        "name":"Complex",
+        "description":"Affinity",
         "value": -1
       },
       "i": null

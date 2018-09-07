@@ -59,7 +59,7 @@ def load_library(filename):
             del lib["id"]
             if lib_id in __libraries:
                 raise KeyError("Invalid Library ID")
-            elif set(lib.keys()) != {"name", "components"}:
+            elif set(lib.keys()) != {"description", "components"}:
                 raise KeyError("Invalid Library")
             __libraries[lib_id] = lib
         except json.JSONDecodeError as ex:
@@ -82,7 +82,7 @@ def get_library_list():
         list of (library id, description) tuples
     """
 
-    return [(l, __libraries[l]["name"]) for l in __libraries]
+    return [(l, __libraries[l]["description"]) for l in __libraries]
 
 
 def get_components_list(library):
@@ -97,7 +97,7 @@ def get_components_list(library):
     """
     components = __libraries[library]["components"]
 
-    return [(comp_id, components[comp_id]["name"]) for comp_id in components]
+    return [(comp_id, components[comp_id]["description"]) for comp_id in components]
 
 
 def get_component(component, library=base_id):

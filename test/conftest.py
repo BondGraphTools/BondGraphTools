@@ -24,10 +24,11 @@ def rlc():
     c = bgt.new("C", value=1)
     kvl = bgt.new("0", name="kvl")
 
-    rlc = r + l + c + kvl
+    rlc = bgt.new()
+    rlc.add([r, l, c, kvl])
 
-    rlc.connect(r, kvl)
-    rlc.connect(l, kvl)
-    rlc.connect(c, kvl)
+    bgt.connect(r, kvl)
+    bgt.connect(l, kvl)
+    bgt.connect(c, kvl)
 
     return rlc
