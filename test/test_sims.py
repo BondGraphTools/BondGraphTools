@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import sympy as sp
-import BondGraphTools as bgt
+from BondGraphTools import *
 from BondGraphTools.config import config
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, to_julia_function_string
@@ -10,22 +10,23 @@ from BondGraphTools.algebra import inverse_coord_maps
 @pytest.mark.slow
 def test_c_sim_fail():
 
-    c = bgt.new("C")
+    c = new("C")
     with pytest.raises(ModelException):
         t, x = simulate(c, timespan=[0, 1], x0=[1],dx0=[1])
 
 @pytest.mark.slow
 def test_c_se_build_ode():
 
-    c = bgt.new("C", value=1)
-    se = bgt.new("Se")
-    r = bgt.new("R", value=1)
-    kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    c = new("C", value=1)
+    se = new("Se")
+    r = new("R", value=1)
+    kcl = new("1")
+    bg = new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c,kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
@@ -45,15 +46,16 @@ def test_c_se_build_ode():
 @pytest.mark.slow
 def test_c_se_sim():
 
-    c = bgt.new("C", value=1)
-    se = bgt.new("Se")
-    r = bgt.new("R", value=1)
-    kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    c = new("C", value=1)
+    se = new("Se")
+    r = new("R", value=1)
+    kcl = new("1")
+    bg = new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c, kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     with pytest.raises(ModelException) as ex:
         t, x = simulate(
@@ -78,15 +80,16 @@ def test_c_se_sim():
 
 @pytest.mark.slow
 def test_c_se_sum_switch():
-    c = bgt.new("C", value=1)
-    se = bgt.new("Se")
-    r = bgt.new("R", value=1)
-    kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    c = new("C", value=1)
+    se = new("Se")
+    r = new("R", value=1)
+    kcl = new("1")
+    bg = new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c, kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c, kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     bang_bang = ["x_0 >= 1 ?  1.5: -2 "]
 
@@ -99,17 +102,20 @@ def test_c_se_sum_switch():
 @pytest.mark.skip
 @pytest.mark.slow
 def test_rlc():
-    c = bgt.new("C", value=1)
-    se = bgt.new("Se")
-    r = bgt.new("R", value=1)
-    l = bgt.new("I", value=1)
-    kvl = bgt.new("0")
-    bg = c + se + kvl + r + l
+    c = new("C", value=1)
+    se = new("Se")
+    r = new("R", value=1)
+    l = new("I", value=1)
+    kvl = new("0")
 
-    bg.connect(c, kvl)
-    bg.connect(r, kvl)
-    bg.connect(se, kvl)
-    bg.connect(l, kvl)
+    bg = new()
+    bg.add([c, se, kvl, r, l])
+
+
+    connect(c, kvl)
+    connect(r, kvl)
+    connect(se, kvl)
+    connect(l, kvl)
 
     t, x = simulate(
         bg, timespan=[0, 10], x0=[1,0], control_vars=[1]

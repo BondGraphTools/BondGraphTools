@@ -1,7 +1,7 @@
 import logging
 import sympy as sp
 
-from .base import BondGraphBase
+from .base import BondGraphBase, Bond, Port
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
@@ -9,29 +9,39 @@ from .algebra import smith_normal_form, adjacency_to_dict, \
 
 logger = logging.getLogger(__name__)
 
-
 class BondGraph(BondGraphBase):
     def __init__(self, name, components=None, **kwargs):
 
         super().__init__(name, **kwargs)
-        self.components = dict()
+        self.components = set()
 
         if components:
             for component in components:
-                self.__add__(component)
+                self.add(component)
 
-        self.bonds = list()
+        self._bonds = BondSet()
+
         self._internal_ports = []
-        self.type = "Composite"
         self.view = GraphLayout(self)
         """Graphical Layout of internal components"""
-
         self.cv_map = dict()
         self._port_map = dict()
         self._model_changed = True
 
-    def save(self, filename):
-        raise NotImplementedError
+    @property
+    def bonds(self):
+        return list(self._bonds)
+
+    @property
+    def metaclass(self):
+        return "BondGraph"
+    @bonds.setter
+    def bonds(self, arg):
+        raise AttributeError("Use add/remove functions.")
+
+    @property
+    def max_ports(self):
+        return 0
 
     def __hash__(self):
         return super().__hash__()
@@ -40,82 +50,64 @@ class BondGraph(BondGraphBase):
         if self.__dict__ != other.__dict__:
             return False
 
-        for c1, c2 in zip(self.components.values(),
-                          other.componets.values()):
+        for c1, c2 in zip(self.components,
+                          other.componets):
             if c1 != c2:
                 return False
 
         return True
 
-    def __getitem__(self, item):
-        return self.components[item]
+    def add(self, *args):
 
-    def __contains__(self, item):
-        for comp in self.components.values():
-            if item is comp:
-                return True
+        def validate(component):
+            if not isinstance(component, BondGraphBase):
+                raise InvalidComponentException("Invalid component class")
+            if component is self:
+                raise InvalidComponentException("Cannot add a model to itself")
+            elif component.root is self.root:
+                raise InvalidComponentException(
+                    "Component already exists in model")
 
-        return False
+        work_list = []
+        for arg in args:
+            if isinstance(arg, BondGraphBase):
+                validate(arg)
+                work_list.append(arg)
+            elif isinstance(arg, list):
+                for item in arg:
+                    validate(item)
+                    work_list.append(item)
+            else:
+                raise InvalidComponentException(f"Invalid Component: {arg}")
 
-    def __radd__(self, other):
-        if other == 0:
-            return self
-        else:
-            return self.__add__(other)
+        for item in work_list:
+            item.parent = self
+            self.components.add(item)
 
-    def __add__(self, other):
-
-        if isinstance(other, BondGraphBase):
-            n = 0
-            for k in self.components.keys():
-                t_idx, n_idx = k.split('_')
-
-                n_idx = int(n_idx)
-                if t_idx == other.type and n_idx >= n:
-                    n = n_idx + 1
-            self.components[f"{other.type}_{n}"] = other
-
-        else:
-            raise TypeError("unsupported operand type(s) for +: '%s' and '%s'",
-                            type(self),
-                            type(other))
-
-        return self
-    # def __iadd__(self, other):
-    #     return self.__add__(other)
-
-    def add(self, component, label=None):
-        if not component:
-            raise ValueError("Cannot add nothing")
-        if not label:
-            self.__add__(component)
-        elif label in self.components:
-            raise ValueError(f"Component {label} already exists")
-        elif _is_label_invalid(label):
-            raise ValueError(f"Label: {label} is invalid")
-        else:
-            self.components[label] = component
 
     def remove(self, component):
-        self.disconnect(component)
-
-        if component not in self:
+        if component in self._bonds:
+            raise InvalidComponentException("Component is still connected")
+        if component not in self.components:
             raise InvalidComponentException("Component not found")
 
-        self.components = {
-            k:v for k,v  in self.components.items() if v is not component
-        }
+        component.parent = None
+        self.components.remove(component)
 
     @property
     def params(self):
-        return {
-            (c,p): v.params[p] for c,v in self.components.items() if v.params
-            for p in v.params if not isinstance(p, (float,complex, int))
-        }
+        j = 0
+        out = dict()
+        for v in self.components:
+            for p in v.params:
+                out.update({j: (v, p)})
+                j+=1
+        return out
 
-    def set_param(self, param, value):
-        c, v = param
-        self.components[c].set_param(v, value)
+
+    # def set_param(self, param, value):
+    #     c, v = param
+    #     self.components[c].set_param(v, value)
 
     @property
     def ports(self):
@@ -123,7 +115,7 @@ class BondGraph(BondGraphBase):
         j = 0
         out = {p:v for p, v in self._ports.items()}
 
-        for v in self.components.values():
+        for v in self.components:
             for p in v.ports:
                 while j in out:
                     j += 1
@@ -136,7 +128,7 @@ class BondGraph(BondGraphBase):
     def state_vars(self):
         j = 0
         out = dict()
-        for v in self.components.values():
+        for v in self.components:
             for i in v.state_vars:
                 out.update({f"x_{j}": (v, i)})
                 j += 1
@@ -146,7 +138,7 @@ class BondGraph(BondGraphBase):
     def control_vars(self):
         j = 0
         out = dict()
-        for v in self.components.values():
+        for v in self.components:
             for i in v.control_vars:
                 out.update({f"u_{j}":(v,i)})
                 j += 1
@@ -228,7 +220,7 @@ class BondGraph(BondGraphBase):
         except ValueError:
             row = 0
 
-        for component in self.components.values():
+        for component in self.components:
             relations = component.get_relations_iterator(mappings, coordinates)
             for linear, nonlinear in relations:
                 lin_dict.update({(row, k): v
@@ -254,7 +246,7 @@ class BondGraph(BondGraphBase):
             sp.symbols((f"e_{i}", f"f_{i}")): (self, i)
             for i in self._internal_ports
         }
-        for component in self.components.values():
+        for component in self.components:
             c_ts, c_ps, c_cs = component.basis_vectors
 
             for var_id in c_ts.values():
@@ -272,232 +264,54 @@ class BondGraph(BondGraphBase):
         port_space.update(input_port_space)
         return tangent_space, port_space, control_space
 
-    def _validate_port(self, target, port=None, **kwargs):
 
-        if isinstance(target, tuple):
-            return self._validate_port(*target)
+    # def make_port(self, port=None):
+    #     if port and not isinstance(port, int):
+    #         raise InvalidPortException("Could not make port %s", port)
+    #
+    #     if port and port not in self.ports:
+    #         n = port
+    #     else:
+    #         n = 0
+    #         while n in self.ports:
+    #             n += 1
+    #
+    #     self._ports[n] = (self, n)
+    #     self._internal_ports.append(n)
+    #     return n
 
-        # target is either str or component
-        if isinstance(target, str):
-            comp = self.components[target]
-            port = port
-        elif isinstance(target, int) and target in self._internal_ports:
-            return self, target
-        elif target is self and port in self.ports:
-            return target, port
-        elif isinstance(target, BondGraphBase) and \
-                target in self.components.values():
-            comp = target
-        else:
-            raise InvalidComponentException(
-                "Could not find component %s", target
-            )
+    # def delete_port(self, port):
+    #     if port in self._ports:
+    #         del self._ports[port]
+    #         del self._internal_ports[port]
+    #
+    # def find(self, name, component=None):
+    #     """
+    #     Searches through this model for a component of with the specified name.
+    #     If the type of component is specified by setting c_type, then only
+    #     components of that type are considered.
+    #
+    #     Args:
+    #         name (str): The name of the object to search for.
+    #         component (str): (Optional) the class of components in which to
+    #          search.
+    #
+    #     Returns:
+    #         None if no such component exists, or the component object if it
+    #      does.
+    #
+    #     Raises:
+    #     """
+    #     out = [obj for obj in self.components if
+    #            (not component or obj.type == component) and
+    #            obj.name == name]
+    #     if len(out) > 1:
+    #         raise NotImplementedError("Object is not unique")
+    #     elif len(out) == 1:
+    #         return out.pop()
+    #     else:
+    #         return None
 
-        if port in comp.ports:
-            return comp, port
-        elif port and port not in comp.ports:
-            return comp, comp.make_port(port=port)
-        else:
-            return self._find_port(comp)
-
-    def connect(self, source, destination):
-        """
-
-        """
-        bonds = {v for bond in self.bonds for v in bond}
-
-        src, src_port = self._validate_port(source)
-
-        dest, dest_port = self._validate_port(destination)
-
-        if ((src, src_port) in bonds) or ((dest, dest_port) in bonds):
-            raise InvalidPortException("Could not join %s:%s to %s:%s "
-                                       "Port already in use",
-                                       src, src_port,dest, dest_port)
-
-        bond = (src, src_port), (dest, dest_port)
-
-        src.connect_port(src_port)
-        dest.connect_port(dest_port)
-        self.bonds.append(bond)
-
-    def _find_port(self, component):
-
-        if isinstance(component, str):
-            try:
-                comp = self.components[component]
-            except AttributeError:
-                raise InvalidComponentException(
-                    "Could not find %s: not contained in %s", component, self)
-        elif component not in self:
-            raise InvalidComponentException(
-                "Could not find %s: not contained in %s", component, self)
-        else:
-            comp = component
-
-        used_ports = {p for bond in self.bonds for (c, p) in bond
-                      if c is comp}
-
-        free_ports = set(comp.ports) - used_ports
-
-        if not free_ports:
-            try:
-                port = comp.make_port()
-            except AttributeError:
-                raise InvalidPortException(
-                    "Could not find a free port on %s",component)
-        elif len(free_ports) > 1:
-            raise InvalidPortException(
-                "Could not find a unique free port on %s: "
-                "specify a port ", component)
-        else:
-            port = free_ports.pop()
-
-        return comp, port
-
-    def disconnect(self, component_1, component_2=None,
-                   port_1=None, port_2=None):
-        """
-
-        Args:
-            component_1:
-            component_2:
-        """
-        if component_1 in self.components.keys():
-            c1 = self.components[component_1]
-        elif component_1 in self.components.values():
-            c1 = component_1
-        else:
-            raise InvalidComponentException(
-                "Could not find %s: not contained in %s", component_1, self
-            )
-        if port_1 and port_1 not in c1.ports:
-            raise InvalidPortException("Could not find port %s on %s",
-                                       port_1, component_1)
-
-        if component_2 and component_2 in self.components.keys():
-            c2 = self.components[component_2]
-        elif component_2 and component_2 in self.components.values():
-            c2 = component_2
-        elif component_2:
-            raise InvalidComponentException(
-                "Could not find %s: not contained in %s", component_2, self
-            )
-        else:
-            c2 = None
-        if component_2 and port_2 and port_2 not in c2.ports:
-            raise InvalidPortException("Could not find port %s on %s",
-                                       port_2, component_2)
-
-        logger.info("Removing %s, %s from %s, %s" % (c1, port_1,c2, port_2))
-        def cmp(target, test):
-            p, q = target
-            r, s = test
-            if p is r and (not q or (q is s)):
-                return True
-            else:
-                return False
-
-        def is_target(src, dest):
-            if not c2:
-                return cmp((c1, port_1), src) or cmp((c1, port_1), dest)
-            else:
-                return (cmp((c1, port_1), src) and cmp((c2, port_2), dest)) \
-                       or (cmp((c1, port_1), dest) and cmp((c2, port_2), src))
-
-        remaining_bonds = []
-        removed_bonds = []
-        for bond in self.bonds:
-            if is_target(*bond):
-                removed_bonds.append(bond)
-            else:
-                remaining_bonds.append(bond)
-        for bond in removed_bonds:
-            for c, p in bond:
-                c.release_port(p)
-        self.bonds = remaining_bonds
-
-    def make_port(self, port=None):
-        if port and not isinstance(port, int):
-            raise InvalidPortException("Could not make port %s", port)
-
-        if port and port not in self.ports:
-            n = port
-        else:
-            n = 0
-            while n in self.ports:
-                n += 1
-
-        self._ports[n] = (self, n)
-        self._internal_ports.append(n)
-        return n
-
-    def delete_port(self, port):
-        if port in self._ports:
-            del self._ports[port]
-            del self._internal_ports[port]
-
-    def find(self, name, component=None):
-        """
-        Searches through this model for a component of with the specified name.
-        If the type of component is specified by setting c_type, then only
-        components of that type are considered.
-
-        Args:
-            name (str): The name of the object to search for.
-            component (str): (Optional) the class of components in which to
-             search.
-
-        Returns:
-            None if no such component exists, or the component object if it
-         does.
-
-        Raises:
-        """
-        out = [obj for obj in self.components.values() if
-               (not component or obj.type == component) and
-               obj.name == name]
-        if len(out) > 1:
-            raise NotImplementedError("Object is not unique")
-        elif len(out) == 1:
-            return out.pop()
-        else:
-            return None
-
-    def replace(self, old_component, new_component):
-        """
-        Replaces the old component with a new component.
-        Components must be of compatible classes; 1 one port cannot replace an
-        n-port, for example.
-        The old component will be completely removed from the system model.
-
-        Args:
-            old_component: The component to be replaced. Must already be in the
-             model.
-            new_component: The substitute component which must not be in the
-             model
-        """
-
-        if new_component in self.components:
-            raise InvalidComponentException(
-                "Component is already in the model"
-            )
-
-        self.add(component=new_component)
-        for bond in [b for b in self.bonds
-                     if b[0][0] is old_component
-                        or b[1][0] is old_component]:
-
-            (c1, p1), (c2, p2) = bond
-
-            if c1 is old_component:
-                self.disconnect(c1,c2,p1,p2)
-                self.connect((new_component,p1),(c2,p2))
-            elif c2 is old_component:
-                self.disconnect(c1,c2,p1,p2)
-                self.connect((c1,p1),(new_component,p2))
-
-        self.remove(old_component)
 
 def _is_label_invalid(label):
     if not isinstance(label, str):
@@ -508,3 +322,45 @@ def _is_label_invalid(label):
             return True
 
     return False
+
+class BondSet(set):
+    """
+    Container class for internal bonds.
+    """
+    def add(self, bond):
+        tail = bond.tail
+        head = bond.head
+        tail.component._pre_connect_hook(tail.port)
+        head.component._pre_connect_hook(head.port)
+        super().add(bond)
+        tail.component._post_connect_hook(tail.port)
+        head.component._post_connect_hook(head.port)
+
+    def remove(self, bond):
+        tail = bond.tail
+        head = bond.head
+        tail.component._pre_disconnect_hook(tail.port)
+        head.component._pre_disconnect_hook(head.port)
+        if bond in self:
+            super().remove(bond)
+        else:
+            super().remove(Bond(head, tail))
+        tail.component._post_disconnect_hook(tail.port)
+        head.component._post_disconnect_hook(head.port)
+
+    def __contains__(self, item):
+        if isinstance(item, BondGraphBase):
+            for tail, head in self:
+                if tail.component is item or head.component is item:
+                    return True
+
+            return False
+        elif isinstance(item, Port):
+            for tail, head in self:
+                if tail is item or head is item:
+                    return True
+            return False
+
+        p1, p2 = item
+        return super().__contains__(item) or super().__contains__((p2,p1))
+

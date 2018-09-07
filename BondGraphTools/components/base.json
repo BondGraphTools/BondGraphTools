@@ -1,10 +1,11 @@
 {
-  "name": "Basic Components",
+  "description": "Basic Components",
   "id":"base",
   "components": {
     "0": {
-      "name": "Equipotential Node",
+      "description": "Equipotential Node",
       "class": "NPort",
+      "metaclass":"0",
       "ports": {
         "i": null
       },
@@ -14,8 +15,9 @@
       ]
     },
     "1": {
-      "name": "Equal Flow Node",
+      "description": "Equal Flow Node",
       "class": "NPort",
+      "metaclass": "1",
       "ports": {
         "i":null
       },
@@ -25,14 +27,15 @@
       ]
     },
     "R": {
-      "name": "Generalised Linear Resistor",
+      "description": "Generalised Linear Resistor",
       "class": "BaseComponent",
+      "metaclass":"R",
       "ports": {
         "0": null
       },
       "params": {
         "r": {
-          "name": "Resistance",
+          "description": "Resistance",
           "value": 1000,
           "range": [
             0,
@@ -45,14 +48,15 @@
       ]
     },
     "C": {
-      "name": "Generalised Linear Capacitor",
+      "description": "Generalised Linear Capacitor",
       "class": "BaseComponent",
+      "metaclass":"C",
       "ports": {
         "0": null
       },
       "params": {
         "C": {
-          "name": "Capacitance",
+          "description": "Capacitance",
           "value": 1000,
           "range": [
             0,
@@ -68,8 +72,9 @@
       ]
     },
     "I": {
-      "name": "Generalised Linear Inductor",
+      "description": "Generalised Linear Inductor",
       "class": "BaseComponent",
+      "metaclass": "I",
       "ports": {
         "0": null
       },
@@ -78,7 +83,7 @@
       },
       "params": {
         "L": {
-          "name": "Inductance",
+          "description": "Inductance",
           "value": 2000,
           "range": [
             0,
@@ -91,8 +96,9 @@
       ]
     },
     "Se": {
-      "name": "Effort Source",
+      "description": "Effort Source",
       "class": "BaseComponent",
+      "metaclass":"Se",
       "ports": {
         "0": null
       },
@@ -104,8 +110,9 @@
       ]
     },
     "Sf": {
-      "name": "Flow Source",
+      "description": "Flow Source",
       "class": "BaseComponent",
+      "metaclass":"Sf",
       "ports": {
         "0": null
       },
@@ -117,19 +124,20 @@
       ]
     },
     "TF": {
-      "name": "Linear Transformer",
+      "description": "Linear Transformer",
       "class": "BaseComponent",
+      "metaclass":"TF",
       "ports": {
         "0": {
-          "name": "Primary"
+          "description": "Primary"
         },
         "1": {
-          "name": "Secondary"
+          "description": "Secondary"
         }
       },
       "params": {
         "r": {
-          "name": "Ratio",
+          "description": "Ratio",
           "value": 1
         }
       },
@@ -139,19 +147,20 @@
       ]
     },
     "GY": {
-      "name": "Linear Gyrator",
+      "description": "Linear Gyrator",
       "class": "BaseComponent",
+      "metaclass":"GY",
       "ports": {
         "0": {
-          "name": "Primary"
+          "description": "Primary"
         },
         "1": {
-          "name": "Secondary"
+          "description": "Secondary"
         }
       },
       "params": {
         "R": {
-          "name": "Ratio",
+          "description": "Ratio",
           "value": 1
         }
       },

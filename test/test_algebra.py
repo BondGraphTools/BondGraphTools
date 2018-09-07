@@ -2,6 +2,7 @@ import pytest
 import sympy
 
 import BondGraphTools as bgt
+from BondGraphTools import connect
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
     adjacency_to_dict, augmented_rref,_generate_substitutions,\
     inverse_coord_maps, _generate_cv_substitutions
@@ -152,11 +153,13 @@ def test_zero_junction_relations():
     c = bgt.new("C", value=sympy.symbols('c'))
     kvl = bgt.new("0", name="kvl")
 
-    rlc = r + l + c + kvl
+    rlc = bgt.new()
+    rlc.add([c, l, kvl, r])
 
-    rlc.connect(r, kvl)
-    rlc.connect(l, kvl)
-    rlc.connect(c, kvl)
+
+    connect(r, kvl)
+    connect(l, kvl)
+    connect(c, kvl)
 
     rels = kvl._build_relations()
 
@@ -170,7 +173,7 @@ def test_basis_vectors(rlc):
 
     model_basis_vects = set()
 
-    for component in rlc.components.values():
+    for component in rlc.components:
         for vects in component.basis_vectors:
             basis_vects = set(vects.values())
 
@@ -182,9 +185,9 @@ def test_basis_vectors(rlc):
 def test_build_junction_dict():
     c = bgt.new("C")
     kvl = bgt.new("0")
-
-    bg = kvl+c
-    bg.connect(kvl, c)
+    bg = bgt.new()
+    bg.add([c, kvl])
+    connect(kvl, c)
     index_map = {(c,0):0, (kvl,0):1}
     M = adjacency_to_dict(index_map, bg.bonds, offset=1)
     assert M[(0, 1)] == 1
@@ -258,11 +261,12 @@ def test_cv_relations():
     se = bgt.new("Se")
     r = bgt.new("R", value=1)
     kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    bg = bgt.new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(se, kcl)
-    bg.connect(r, kcl)
+    connect(c,kcl)
+    connect(se, kcl)
+    connect(r, kcl)
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
@@ -272,11 +276,12 @@ def test_parallel_crv_relations():
     se = bgt.new("Se")
     r = bgt.new("R", value=1)
     kcl = bgt.new("0")
-    bg = c + se + kcl + r
+    bg = bgt.new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c, kcl)
-    bg.connect(se, kcl)
-    bg.connect(r, kcl)
+    connect(c, kcl)
+    connect(se, kcl)
+    connect(r, kcl)
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 - du_0"),
                                          sympy.sympify("x_0 - u_0")]
@@ -312,11 +317,12 @@ def test_cv_subs_func():
     se = bgt.new("Se")
     r = bgt.new("R", value=1)
     kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    bg = bgt.new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c,kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     cv_s = {'u_0': ' -exp(-t)'}
 
@@ -331,11 +337,12 @@ def test_cv_subs_const():
     se = bgt.new("Se")
     r = bgt.new("R", value=1)
     kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    bg = bgt.new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c,kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     cv_s = {'u_0': ' 2'}
 
@@ -350,11 +357,12 @@ def test_cv_subs_state_func():
     se = bgt.new("Se")
     r = bgt.new("R", value=1)
     kcl = bgt.new("1")
-    bg = c + se + kcl + r
+    bg = bgt.new()
+    bg.add([c, se, kcl, r])
 
-    bg.connect(c,kcl)
-    bg.connect(r, kcl)
-    bg.connect(se, kcl)
+    connect(c,kcl)
+    connect(r, kcl)
+    connect(se, kcl)
 
     cv_s = {'u_0': ' -exp(-x_0)'}
 

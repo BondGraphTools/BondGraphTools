@@ -39,7 +39,7 @@ def draw(system):
 def _build_graph(system):
 
     try:
-        comp_map = {comp: i for i, comp in enumerate(system.components.values())}
+        comp_map = {comp: i for i, comp in enumerate(system.components)}
         graph = dok_matrix((len(comp_map), len(comp_map)), dtype=np.int)
         for (c1, _), (c2, _) in system.bonds:
             graph[(comp_map[c1], comp_map[c2])] = 1
@@ -322,20 +322,20 @@ class GraphLayout(Glyph):
             y_max = max(y, y_max)
 
             component.view.pos = (x,y)
-            if component.type not in {'0','1'}:
+            if component.metaclass not in {'0','1'}:
                 try:
                     component.view.string = "\mathbf{{{t}}}: {n}".format(
-                        t=component.type, n=component.name)
+                        t=component.metaclass, n=component.name)
                 except:
                     component.view.string = "{t}: {n}".format(
-                        t=component.type, n=component.name)
+                        t=component.metaclass, n=component.name)
             else:
                 try:
                     component.view.string = "\mathbf{{{t}}}".format(
-                        t=component.type)
+                        t=component.metaclass)
                 except:
                     component.view.string = "{t}".format(
-                        t=component.type, n=component.name)
+                        t=component.metaclass, n=component.name)
             component.view.axes = ax
 
         for (c1, port_1), (c2, port_2) in self._node.bonds:

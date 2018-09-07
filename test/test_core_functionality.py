@@ -1,6 +1,7 @@
 import pytest
 
 import BondGraphTools as bgt
+from BondGraphTools import *
 from BondGraphTools.exceptions import InvalidComponentException, InvalidPortException
 from BondGraphTools.atomic import BaseComponent
 
@@ -33,7 +34,9 @@ def test_add():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
+
 
     assert len(bg.ports) == 2
     assert len(bg.state_vars) == 1
@@ -41,8 +44,8 @@ def test_add():
     assert bg is not c
     assert bg is not se
 
-    assert c in bg
-    assert se in bg
+    assert c in bg.components
+    assert se in bg.components
 
 
 def test_equal():
@@ -54,66 +57,15 @@ def test_equal():
     assert c_1 is c_1
     assert c_1 is not c_2
 
-@pytest.mark.skip
-def test_iadd():
-    c_1 = bgt.new("C", value=1)
-    c_2 = bgt.new("C", value=1)
-    c_3 = bgt.new("C", value=1)
-
-    bg = bgt.new(name="bg")
-    bg += c_1 + c_2 + c_3
-
-    assert c_1 in bg
-    assert c_2 in bg
-    assert c_3 in bg
-
-
-def test_long_sum():
-    c_1 = bgt.new("C", value=1)
-    c_2 = bgt.new("C", value=1)
-    c_3 = bgt.new("C", value=1)
-
-    bg = c_1 + c_2 + c_3
-
-    assert c_1 in bg
-    assert c_2 in bg
-    assert c_3 in bg
-
-
-def test_find_port():
-    c = bgt.new("C")
-    se = bgt.new("Se")
-
-    bg = c + se
-
-    comp, port_id = bg._find_port(c)
-
-    assert comp is c
-    assert port_id in c.ports
-
-
-def test_find_port_by_name():
-    c = bgt.new("C")
-    se = bgt.new("Se")
-
-    bg = c + se
-
-    c_str = list(bg.components.keys())[0]
-
-    comp, port_id = bg._find_port(c_str)
-
-    assert comp is c
-    assert port_id in c.ports
-
-
 def test_port_connection():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
 
     assert len(bg.ports) ==2
-    bg.connect(c, se)
+    connect(c, se)
     assert len(bg.ports) == 0
 
 
@@ -121,27 +73,29 @@ def test_connect_components():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
 
-    bg.connect(c, se)
-    (c1, p1), (c2, p2) = bg.bonds[0]
-    assert isinstance(c1, BaseComponent)
-    assert isinstance(c2, BaseComponent)
-    assert c1 in (c, se)
-    assert c2 in (c, se)
+    connect(c, se)
+    bond = list(bg.bonds)[0]
+    assert isinstance(bond.tail.component, BaseComponent)
+    assert isinstance(bond.head.component, BaseComponent)
+    assert bond.head.component in (c, se)
+    assert bond.tail.component in (c, se)
 
 
 def test_connect():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
 
     k1, k2 = tuple(bg.components)
 
-    bg.connect(k1, k2)
+    connect(k1, k2)
 
-    (c1, p1), (c2, p2) = bg.bonds[0]
+    (c1, p1), (c2, p2) = list(bg.bonds)[0]
     assert isinstance(c1, BaseComponent)
     assert isinstance(c2, BaseComponent)
     assert c1 in (c, se)
@@ -152,14 +106,15 @@ def test_connect_ports():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
 
     k1 = bg.ports[0]
     k2 = bg.ports[1]
 
-    bg.connect(k1, k2)
+    connect(k1, k2)
 
-    (c1, p1), (c2, p2) = bg.bonds[0]
+    (c1, p1), (c2, p2) = list(bg.bonds)[0]
     assert isinstance(c1, BaseComponent)
     assert isinstance(c2, BaseComponent)
     assert c1 in (c, se)
@@ -171,22 +126,19 @@ def test_disconnect_ports():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se
+    bg = bgt.new()
+    bg.add([c, se])
 
-    bg.connect(c, se)
+    connect(c, se)
 
     with pytest.raises(InvalidPortException):
-        bg.connect(c, se)
+        connect(c, se)
 
-    _ = bg.bonds.pop()
-    assert not bg.bonds
-
-    bg.connect(c, se)
-    (c1, p1), (c2, p2) = bg.bonds[0]
+    (c1, p1), (c2, p2) = list(bg.bonds)[0]
     assert c1 in (c, se)
     assert c2 in (c, se)
 
-    bg.disconnect(c, se)
+    disconnect(c, se)
     assert not bg.bonds
 
 def test_many_port():
@@ -195,10 +147,11 @@ def test_many_port():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se + j
+    bg = bgt.new()
+    bg.add([c, se, j])
 
-    bg.connect(c, j)
-    bg.connect(se, j)
+    connect(c, j)
+    connect(se, j)
 
     for (c1, p1), (c2, p2) in bg.bonds:
         assert c1 in (c, se)
@@ -213,24 +166,22 @@ def test_delete_one_from_many_port():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se + j
+    bg = bgt.new()
+    bg.add([c, se, j])
 
-    bg.connect(c, j)
-    bg.connect(se, j)
+    connect(c, j)
+    connect(se, j)
+
     (p,q), (r,s) = bg.bonds[1]
+
     assert p in (se, j)
     assert r in (se, j)
-
-    bg.disconnect(c, j)
+    assert len(bg.bonds) == 2
+    disconnect(c, j)
     assert len(bg.bonds) == 1
     (pp, qq), (rr, ss) = bg.bonds[0]
-
     assert pp in (se, j)
-
-    assert pp is p
-    assert rr is r
-    assert qq is q
-    assert ss is s
+    assert rr in (se, j)
 
 
 def test_set_param():
@@ -247,7 +198,9 @@ def test_set_compound_param():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + se + j
+    bg = bgt.new()
+    bg.add([c, se, j])
+
 
     assert len(bg.params) == 2
 
@@ -260,16 +213,17 @@ def test_connect_unadded():
     c = bgt.new("C")
     se = bgt.new("Se")
 
-    bg = c + j
+    bg = bgt.new()
+    bg.add([c, j])
 
-    bg.connect(c, j)
+    connect(c, j)
 
-    assert j in bg
-    assert c in bg
-
+    assert j in bg.components
+    assert c in bg.components
     assert j is not se
+
     with pytest.raises(InvalidComponentException):
-        bg.connect(se, j)
+        connect(se, j)
 
 
 def test_disconnect_multiport():
@@ -277,17 +231,18 @@ def test_disconnect_multiport():
     r = bgt.new("R")
     c = bgt.new("C")
     one = bgt.new("1")
+    bg = bgt.new()
+    bg.add([zero, r, c, one])
 
-    bg = zero+r+c+one
-
-    bg.connect((zero,0), (one,0))
-    bg.connect(r,zero)
-    bg.connect(c, one)
+    connect((zero,0), (one,0))
+    connect(r,zero)
+    connect(c, one)
 
     assert len(bg.bonds) == 3
-    bg.disconnect(zero, one)
+    disconnect(zero, one)
     assert len(bg.bonds) == 2
     assert ((zero, 0), (one,0)) not in bg.bonds
+
 
 
 def test_disconnect_component():
@@ -296,47 +251,47 @@ def test_disconnect_component():
     c = bgt.new("C")
     one = bgt.new("1")
 
-    bg = zero+r+c+one
+    bg = bgt.new()
+    bg.add([zero, r, c, one])
 
-    bg.connect((zero,0), (one,0))
-    bg.connect(r,zero)
-    bg.connect(c, one)
+    connect(c, one)
 
-    assert len(bg.bonds) == 3
-    bg.disconnect(c)
-    assert len(bg.bonds) == 2
+    with pytest.raises(TypeError):
+        disconnect(c)
+
 
 def test_remove_component():
     zero = bgt.new("0")
     r = bgt.new("R", value=1)
     c = bgt.new("C", value=1)
 
-    bg = zero + r + c
+    bg = bgt.new()
+    bg.add([zero, r, c])
 
-    assert c in bg
+
+    assert c in bg.components
     bg.remove(c)
-    assert c not in bg
+    assert c not in bg.components
+    print(bg.components)
 
     bg.add(c)
-    bg.connect(r, zero)
-    bg.connect(c, zero)
 
-    assert c in bg
-    assert bg.bonds == [
+    connect(r, zero)
+    connect(c, zero)
+
+    assert c in bg.components
+    assert set(bg.bonds) == {
         ((r, 0), (zero, 0)),
         ((c, 0), (zero, 1))
-    ]
-
-    bg.remove(c)
-    assert c not in bg
-    assert bg.bonds == [((r, 0), (zero, 0))]
+    }
 
 def test_remove_components_fail_states():
     zero = bgt.new("0")
     r = bgt.new("R", value=1)
     c = bgt.new("C", value=1)
 
-    bg = zero + r
+    bg = bgt.new()
+    bg.add([zero, r])
 
     with pytest.raises(InvalidComponentException):
         bg.remove(c)
@@ -352,39 +307,40 @@ def test_swap_component_1():
     r = bgt.new("R", value=1)
     c = bgt.new("C", value=1)
 
-    bg = zero+r+c
+    bg = bgt.new()
+    bg.add([zero, r, c ])
 
-    bg.connect(r,zero)
-    bg.connect(c, zero)
-    assert c in bg
+    connect(r,zero)
+    connect(c, zero)
+    assert c in bg.components
 
-    assert bg.bonds == [
+    assert set(bg.bonds) == {
         ((r, 0), (zero, 0)),
         ((c, 0), (zero, 1))
-    ]
+    }
     assert len(bg.state_vars) == 1
     Sf = bgt.new('Sf')
-    bg.replace(c, Sf)
+    swap(c, Sf)
     assert len(bg.state_vars) == 0
     assert len(bg.control_vars) == 1
 
-    assert bg.bonds == [
+    assert set(bg.bonds) == {
         ((r,0), (zero, 0)),
         ((Sf, 0), (zero, 1))
-    ]
+    }
 
-    assert c not in bg
-    assert Sf in bg
+    assert c not in bg.components
+    assert Sf in bg.components
 
-    bg.replace(Sf, c)
+    swap(Sf, c)
 
-    assert bg.bonds == [
+    assert set(bg.bonds) == {
         ((r, 0), (zero, 0)),
         ((c, 0), (zero, 1))
-    ]
+    }
 
-    assert c in bg
-    assert Sf not in bg
+    assert c in bg.components
+    assert Sf not in bg.components
 
 
 def test_swap_components_2():
@@ -396,25 +352,26 @@ def test_swap_components_2():
     r = bgt.new("R")
     c = bgt.new("C")
 
-    bg = zero+r+c
+    bg = bgt.new()
+    bg.add([zero, r, c ])
 
-    bg.connect(r,zero)
-    bg.connect(c, zero)
+    connect(r,zero)
+    connect(c, zero)
 
-    assert bg.bonds == [
+    assert set(bg.bonds) == {
         ((r, 0), (zero, 0)),
         ((c, 0), (zero, 1))
-    ]
+    }
     one = bgt.new('1')
-    bg.replace(zero, one)
+    swap(zero, one)
 
-    assert bg.bonds == [
+    assert set(bg.bonds) == {
         ((r, 0), (one, 0)),
         ((c, 0), (one, 1))
-    ]
+    }
 
-    assert one in bg
-    assert zero not in bg
+    assert one in bg.components
+    assert zero not in bg.components
 
 
 def test_swap_failstate():
@@ -422,10 +379,11 @@ def test_swap_failstate():
     r = bgt.new("R", value=1)
     c = bgt.new("C", value=1)
     l = bgt.new("I")
-    bg = zero + r + c
 
-    bg.connect(r, zero)
-    bg.connect(c, zero)
+    bg = bgt.new()
+    bg.add([zero, r, c ])
+    connect(r, zero)
+    connect(c, zero)
 
-    with pytest.raises(AttributeError):
-        bg.replace(zero, l)
+    with pytest.raises(InvalidComponentException):
+        swap(zero, l)

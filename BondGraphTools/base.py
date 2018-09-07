@@ -4,12 +4,14 @@ Bond Graph Model base files.
 
 import logging
 import copy
+from collections import namedtuple
 
 from .component_manager import get_component, base_id
 from .algebra import extract_coefficients
 
 logger = logging.getLogger(__name__)
 
+#TODO: migrate new into actions
 def new(component=None, name=None, library=base_id, value=None, **kwargs):
     """
     Creates a new Bond Graph from a library component.
@@ -42,7 +44,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
         )
         del build_args["class"]
 
-        return cls(type=component, **build_args)
+        return cls(**build_args)
 
     elif isinstance(component, BondGraphBase):
         obj = copy.copy(component)
@@ -87,8 +89,8 @@ def _find_subclass(name, base_class):
                 return sc
 
 class BondGraphBase:
-    def __init__(self, name, parent=None,
-                 ports=None, params=None):
+    def __init__(self, name=None, parent=None,
+                 ports=None, description=None, params=None):
         """
         Base class definition for all bond graphs.
 
@@ -96,9 +98,18 @@ class BondGraphBase:
             name: Assumed to be unique
             metadata (dict):
         """
-        #super().__init__(name, parent)
-        self.name = name
-        self.type = "base"
+
+        # TODO: This is a dirty hack
+        # Job for meta classes maybe?
+
+        if not name:
+            self.name = f"{self.metaclass}" \
+                        f"{self.__class__.instances}"
+        else:
+            self.name = name
+        self.parent = parent
+
+        self.description = description
         if ports:
             self._ports = {
                 (int(p) if p.isnumeric() else p):v for p,v in ports.items()
@@ -111,6 +122,43 @@ class BondGraphBase:
         the internal parameter, the value may be an exposed control value,
         a function of time, or a constant."""
         self.view = None
+
+    def __new__(cls, *args, **kwargs):
+        if "instances" not in cls.__dict__:
+            cls.instances = 1
+        else:
+            cls.instances += 1
+
+        return object.__new__(cls)
+
+    def __del__(self):
+        self.instances -= 1
+
+    @property
+    def metaclass(self):
+        raise NotImplementedError
+
+    @property
+    def max_ports(self):
+        raise NotImplementedError
+
+    @property
+    def constitutive_relations(self):
+        raise NotImplementedError
+
+    @property
+    def uri(self):
+        if not self.parent:
+            return ""
+        else:
+            return f"{self.parent.uri}/{self.name}"
+
+    @property
+    def root(self):
+        if not self.parent:
+            return self
+        else:
+            return self.parent.root
 
     @property
     def ports(self):
@@ -132,20 +180,23 @@ class BondGraphBase:
     def basis_vectors(self):
         raise NotImplementedError
 
-    def connect_port(self, port):
-        pass
-
-    def release_port(self, port):
-        pass
-
     def __hash__(self):
         return id(self)
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def __repr__(self):
-        return f"{self.type}:{self.name}"
+    def _pre_connect_hook(self, port):
+        pass
+
+    def _post_connect_hook(self, port):
+        pass
+
+    def _pre_disconnect_hook(self, port):
+        pass
+
+    def _post_disconnect_hook(self, port):
+        pass
 
     def get_relations_iterator(self, mappings, coordinates):
         local_tm, local_js, local_cv = self.basis_vectors
@@ -173,3 +224,7 @@ class BondGraphBase:
                 yield {}, 0.0
 
 
+
+
+Port = namedtuple("Port", ["component", "port"])
+Bond = namedtuple("Bond", ["tail", "head"])
