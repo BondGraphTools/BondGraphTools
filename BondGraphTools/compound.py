@@ -5,7 +5,7 @@ from .base import BondGraphBase, Bond, Port
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
-    inverse_coord_maps, reduce_model
+    inverse_coord_maps, reduce_model, get_relations_iterator
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +35,10 @@ class BondGraph(BondGraphBase):
     @property
     def metaclass(self):
         return "BondGraph"
+
     @bonds.setter
     def bonds(self, arg):
         raise AttributeError("Use add/remove functions.")
-
-    @property
-    def max_ports(self):
-        return 0
 
     def __hash__(self):
         return super().__hash__()
@@ -56,6 +53,10 @@ class BondGraph(BondGraphBase):
                 return False
 
         return True
+
+    @property
+    def internal_ports(self):
+        return [p for c in self.components for p in c.ports]
 
     def add(self, *args):
 
@@ -99,7 +100,11 @@ class BondGraph(BondGraphBase):
         j = 0
         out = dict()
         for v in self.components:
-            for p in v.params:
+            try:
+                params = v.params
+            except AttributeError:
+                continue
+            for p in params:
                 out.update({j: (v, p)})
                 j+=1
         return out
@@ -111,27 +116,37 @@ class BondGraph(BondGraphBase):
 
     @property
     def ports(self):
-        bonds = {v for bond in self.bonds for v in bond}
-        j = 0
-        out = {p:v for p, v in self._ports.items()}
 
-        for v in self.components:
-            for p in v.ports:
-                while j in out:
-                    j += 1
-                if (v, p) not in bonds:
-                    out.update({j: (v, p)})
-                    j += 1
-        return out
+
+        # bonds = {v for bond in self.bonds for v in bond}
+        # j = 0
+        # out = {p:v for p, v in self._ports.items()}
+        #
+        # for v in self.components:
+        #     for p in v.ports:
+        #         while j in out:
+        #             j += 1
+        #         if (v, p) not in bonds:
+        #             out.update({j: (v, p)})
+        #             j += 1
+        # print(len(self._bonds))
+
+        return {}
 
     @property
     def state_vars(self):
         j = 0
         out = dict()
         for v in self.components:
-            for i in v.state_vars:
+            try:
+                x_local = v.state_vars
+            except AttributeError:
+                continue
+
+            for i in x_local:
                 out.update({f"x_{j}": (v, i)})
                 j += 1
+
         return out
 
     @property
@@ -139,9 +154,12 @@ class BondGraph(BondGraphBase):
         j = 0
         out = dict()
         for v in self.components:
-            for i in v.control_vars:
-                out.update({f"u_{j}":(v,i)})
-                j += 1
+            try:
+                for i in v.control_vars:
+                    out.update({f"u_{j}":(v,i)})
+                    j += 1
+            except AttributeError:
+                pass
         return out
 
     @property
@@ -221,7 +239,7 @@ class BondGraph(BondGraphBase):
             row = 0
 
         for component in self.components:
-            relations = component.get_relations_iterator(mappings, coordinates)
+            relations = get_relations_iterator(component, mappings, coordinates)
             for linear, nonlinear in relations:
                 lin_dict.update({(row, k): v
                                  for k, v in linear.items()})
@@ -330,23 +348,23 @@ class BondSet(set):
     def add(self, bond):
         tail = bond.tail
         head = bond.head
-        tail.component._pre_connect_hook(tail.port)
-        head.component._pre_connect_hook(head.port)
+        tail.component._pre_connect_hook(tail)
+        head.component._pre_connect_hook(head)
         super().add(bond)
-        tail.component._post_connect_hook(tail.port)
-        head.component._post_connect_hook(head.port)
+        tail.component._post_connect_hook(tail)
+        head.component._post_connect_hook(head)
 
     def remove(self, bond):
         tail = bond.tail
         head = bond.head
-        tail.component._pre_disconnect_hook(tail.port)
-        head.component._pre_disconnect_hook(head.port)
+        tail.component._pre_disconnect_hook(tail)
+        head.component._pre_disconnect_hook(head)
         if bond in self:
             super().remove(bond)
         else:
             super().remove(Bond(head, tail))
-        tail.component._post_disconnect_hook(tail.port)
-        head.component._post_disconnect_hook(head.port)
+        tail.component._post_disconnect_hook(tail)
+        head.component._post_disconnect_hook(head)
 
     def __contains__(self, item):
         if isinstance(item, BondGraphBase):
@@ -360,7 +378,7 @@ class BondSet(set):
                 if tail is item or head is item:
                     return True
             return False
-
-        p1, p2 = item
+        elif isinstance(item, Bond):
+            p1, p2 = item
         return super().__contains__(item) or super().__contains__((p2,p1))
 

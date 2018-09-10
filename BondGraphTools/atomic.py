@@ -1,14 +1,14 @@
 import logging
 import sympy as sp
 
-from .base import BondGraphBase
+from .base import *
 from .exceptions import *
 from .compound import BondGraph
 from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
-class BaseComponent(BondGraphBase):
+class BaseComponent(BondGraphBase, FixedPort):
     """
     Atomic bond graph components are those defined by constitutive relations.
     """
@@ -17,9 +17,9 @@ class BaseComponent(BondGraphBase):
                  state_vars=None, params=None, **kwargs):
 
         self._metaclass = metaclass
-
+        ports = kwargs.pop("ports")
         super().__init__(**kwargs)
-
+        FixedPort.__init__(self, ports)
         self._state_vars = state_vars
 
         self._params = params
@@ -43,9 +43,9 @@ class BaseComponent(BondGraphBase):
                     not in value)]
         else:
             return []
-    @property
-    def max_ports(self):
-        return len(self._ports)
+    # @property
+    # def max_ports(self):
+    #     return len(self._ports)
 
     @property
     def params(self):
@@ -107,18 +107,20 @@ class BaseComponent(BondGraphBase):
     @property
     def basis_vectors(self):
 
+        port_space = self._port_vectors()
+
         tangent_space = dict()
-        port_space = dict()
+
         control_space = dict()
 
         for var in self.state_vars:
             tangent_space[sp.symbols((var, f"d{var}"))] = (self, var)
 
-        for port in self.ports:
-            if not isinstance(port, int):
-                continue
-
-            port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = (self, port)
+        # for port in self.ports:
+        #     if not isinstance(port, int):
+        #         continue
+        #
+        #     port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = (self, port)
 
         for control in self.control_vars:
             control_space[sp.symbols(control)] = (self, control)
@@ -176,92 +178,77 @@ class BaseComponent(BondGraphBase):
     def __hash__(self):
         return super().__hash__()
 
-    def make_port(self, **kwargs):
-        raise AttributeError(
-            "Cannot add a port to %s", self)
+class EqualEffort(BondGraphBase, PortExpander):
 
+    def __init__(self, **kwargs):
 
-class NPort(BaseComponent):
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-        self._fixed_ports = set(int(p) for p in self.ports if isinstance(p, int))
+        PortExpander .__init__(self, {"in":None})
+        BondGraphBase.__init__(self, **kwargs)
 
     @property
-    def max_ports(self):
-        return None
-
-    def __hash__(self):
-        return super().__hash__()
-
-    def __eq__(self, other):
-        return self.__dict__ == self.__dict__
+    def basis_vectors(self):
+        return {}, self._port_vectors(), {}
 
     @property
-    def ports(self):
-        return {p: v for p, v in self._ports.items() if isinstance(p, int)}
+    def constitutive_relations(self):
 
-    def make_port(self, port=None, value=None):
+        vars = list(self._port_vectors())
+        e_0, f_0 = vars.pop()
+        partial_sum = f_0
 
-        if port and not isinstance(port, int):
-            raise InvalidPortException("Could not make port %s", port)
+        relations = []
 
-        if port and port not in self.ports:
-            n = port
-        else:
-            n = 0
-            while n in self.ports:
-                n += 1
+        while vars:
+            e_i, f_i = vars.pop()
+            relations.append(
+                e_i - e_0
+            )
+            partial_sum += f_i
 
-        self._ports[n] = value
+        relations.append(partial_sum)
 
-        return n
+        return relations
 
-    def delete_port(self, port):
-        del self._ports[port]
+class EqualFlow(BondGraphBase, PortExpander):
+    output = "output"
+    input = "input"
 
-    def release_port(self, port):
-        if port not in self._fixed_ports:
-            self.delete_port(port)
+    def __init__(self, **kwargs):
+        PortExpander.__init__(self, {self.input:None, self.output:None})
+        BondGraphBase.__init__(self, **kwargs)
+
+    @property
+    def basis_vectors(self):
+        return {},  self._port_vectors(), {}
 
 
-class NPortWeighted(NPort):
-    def __init__(self, *args, **kwargs):
+    def get_port(self, port=None):
+        try:
+            return super().get_port(port)
+        except InvalidPortException as ex:
+            if not port:
+                raise InvalidPortException("You must specify a port")
 
-        super().__init__(*args, **kwargs)
+    @property
+    def constitutive_relations(self):
 
-    def __hash__(self):
-        return super().__hash__()
+        relations = []
 
-    def __eq__(self, other):
-        return self.__dict__ == self.__dict__
+        vars = list(self._port_vectors().items())
+        (e_0, f_0), port = vars.pop()
 
-    def __add__(self, other):
-        return BondGraph(
-            name="{}+{}".format(self.name, other.name),
-            components=[self, other]
-        )
+        sigma_0 = 1 if port.index in self._port_sets[EqualFlow.input] \
+                    else -1
+        partial_sum = sigma_0*e_0
 
-    def make_port(self, port=None, value=1):
-        return super().make_port(port=port, value=value)
+        while vars:
+            (e_i, f_i), port =vars.pop()
 
-    def release_port(self, port):
-        if port not in self._fixed_ports:
-            self.delete_port(port)
+            sigma_i = 1 if port.index in self._port_sets[EqualFlow.input] \
+                else -1
 
-            #del self._params[f"c_{port}"]
+            partial_sum += sigma_i*e_i
+            relations.append(sigma_i*f_i - sigma_0*f_0)
 
-    def _build_relations(self):
-
-        rels = super()._build_relations()
-        subs = []
-
-        for port in self.ports:
-            if port in self._fixed_ports:
-                pair = (f"c_{port}", self.ports[port]["value"])
-            else:
-                pair = (f"c_{port}", self.ports[port])
-
-            subs.append(pair)
-        return [rel.subs(subs) for rel in rels]
-
+        relations.append(partial_sum)
+        return relations

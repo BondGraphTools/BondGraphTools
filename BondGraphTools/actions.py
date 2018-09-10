@@ -1,5 +1,8 @@
+import copy
+
+from .component_manager import get_component, base_id
 from .exceptions import *
-from .base import BondGraphBase, Bond, Port
+from .base import BondGraphBase, Bond, Port, FixedPort, PortExpander
 
 
 def disconnect(target, other):
@@ -10,7 +13,7 @@ def disconnect(target, other):
     """
     if isinstance(target, BondGraphBase):
         model = target.parent
-    elif isinstance(target,Port):
+    elif isinstance(target, Port):
         model =  target.component.parent
     else:
         model = target[0].parent
@@ -72,60 +75,21 @@ def connect(source, destination):
     if not model or not model_prime or (model is not model_prime):
         raise InvalidComponentException(f"Could not find components")
 
-    def _find_port(component):
-        if component not in model.components:
-            raise InvalidComponentException(
-                "Could not find %s: not contained in %s", component, model)
-        used_ports = {p for bond in model.bonds for (c, p) in bond
-                      if c is component}
-
-        free_ports = set(component.ports) - used_ports
-
-        if not free_ports:
-            try:
-                port = component.make_port()
-            except AttributeError:
-                raise InvalidPortException(
-                    "Could not find a free port on %s", component)
-        elif len(free_ports) > 1:
-            raise InvalidPortException(
-                "Could not find a unique free port on %s: "
-                "specify a port ", component)
+    def find_port(component):
+        if isinstance(component, BondGraphBase):
+            port = component.get_port()
+        elif isinstance(component, Port):
+            port = component.component.get_port(component)
+        elif isinstance(component, (tuple, list)):
+            item, port_idx = component
+            port = item.get_port(port_idx)
         else:
-            port = free_ports.pop()
-        return component, port
+            raise InvalidComponentException()
+        return port
 
-
-    def _validate_port(component, port):
-        if component not in model.components:
-            raise InvalidComponentException(f"Component {component} "
-                                            f"not found ")
-        elif (component, port) in {p for bond in model.bonds for p in bond}:
-            raise InvalidPortException("Could not connect port: already in"
-                                       "use")
-        if port not in component.ports:
-            component.make_port(port)
-
-    if isinstance(source, BondGraphBase):
-        src, src_port = _find_port(source)
-
-    elif isinstance(source, (tuple, list)):
-        src, src_port = source
-        _validate_port(src, src_port)
-    else:
-        raise InvalidComponentException()
-
-    if isinstance(destination, BondGraphBase):
-        dest, dest_port = _find_port(destination)
-
-    elif isinstance(destination, (tuple, list)):
-        dest, dest_port = destination
-        _validate_port(dest, dest_port)
-    else:
-        raise InvalidComponentException()
-
-    bond = Bond(Port(src, src_port),Port(dest, dest_port))
-
+    tail = find_port(source)
+    head = find_port(destination)
+    bond = Bond(tail, head)
     model._bonds.add(bond)
 
 
@@ -143,12 +107,18 @@ def swap(old_component, new_component):
          model
     """
 
-    #TODO: More validation required
+    # TODO: More validation required
+    #
     def is_swap_valid(old_comp, new_comp):
         if not isinstance(new_comp, BondGraphBase):
             return False
-        elif new_comp.max_ports and new_comp.max_ports < len(old_comp.ports):
+
+        # Dirty Hack because 'in' for BondSet double counts
+        num_bonds = len({b for b in old_comp.parent.bonds if old_comp in b})/2
+
+        if isinstance(new_comp, FixedPort) and len(new_comp.ports) < num_bonds:
             return False
+
         return True
 
     model = old_component.parent
@@ -165,20 +135,105 @@ def swap(old_component, new_component):
 
     model.add(new_component)
 
+    swaps = []
     for bond in model.bonds:
-        if bond.tail.component is old_component:
-            tail = Port(component=new_component, port=bond.tail.port)
-            head = bond.head
-        elif bond.head.component is old_component:
-            tail = bond.tail
-            head = Port(component=new_component, port=bond.head.port)
-        else:
-            continue
-        disconnect(*bond)
-        connect(tail, head)
+        try:
+            if bond.tail.component is old_component:
+                tail = new_component.get_port()
+                head = bond.head
+            elif bond.head.component is old_component:
+                tail = bond.tail
+                head = new_component.get_port()
+            else:
+                continue
+        except InvalidPortException:
+            raise InvalidComponentException(
+                "Cannot swap components: Incompatible ports"
+            )
+
+        swaps.append((bond, Bond(tail, head)))
+
+    for old_bond, new_bond in swaps:
+        disconnect(old_bond.tail, old_bond.head)
+        connect(new_bond.tail, new_bond.head)
 
     model.remove(old_component)
 
 
+def new(component=None, name=None, library=base_id, value=None, **kwargs):
+    """
+    Creates a new Bond Graph from a library component.
+
+    Args:
+        component(str or obj): The type of component to create.
+         If a string is specified, the the component will be created from the
+         appropriate libaray. If an existing bond graph is given, the bond
+         graph will be cloned.
+        name (str): The name for the new component
+        library (str): The library from which to find this component (if
+        component is specified by string).
+        value:
+
+    Returns: instance of :obj:`BondGraph`
+
+    """
+    if not component:
+        cls = _find_subclass("BondGraph", BondGraphBase)
+        return cls(name=name)
+    elif isinstance(component, str):
+        build_args = get_component(component, library)
+
+        if name:
+            build_args.update({"name": name})
+        if value or isinstance(value, (int, float, complex)):
+            _update_build_params(build_args, value, **kwargs)
+        cls =_find_subclass(
+            build_args["class"], BondGraphBase
+        )
+        del build_args["class"]
+
+        return cls(**build_args)
+
+    elif isinstance(component, BondGraphBase):
+        obj = copy.copy(component)
+        if name:
+            obj.name = name
+        if value:
+            _update_build_params(obj.__dict__, value)
+
+        return obj
+
+    else:
+        raise NotImplementedError(
+            "New not implemented for object {}", component
+        )
+
+
+def _update_build_params(build_args, value, **kwargs):
+
+    if isinstance(value, (list, tuple)):
+        assignments = zip(build_args["params"].keys(), value)
+        for param, v in assignments:
+            build_args["params"][param]["value"] = v
+    elif isinstance(value, dict):
+        for param, v in value.items():
+            if isinstance(build_args["params"][param], dict):
+                build_args["params"][param]["value"] = v
+            else:
+                build_args["params"][param] = v
+    else:
+        p = next(iter(build_args["params"]))
+        build_args["params"][p] = value
+
+
+def _find_subclass(name, base_class):
+
+    for c in base_class.__subclasses__():
+        if c.__name__ == name:
+            return c
+        else:
+            sc = _find_subclass(name, c)
+            if sc:
+                return sc
 
 

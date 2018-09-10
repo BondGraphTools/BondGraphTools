@@ -10,7 +10,7 @@ Component Libraries are expected to be in json format.
 The structure must be::
     {
         "id": The unique library id (str),
-        "name": The description of this library
+        "description": The description of this library
         "components": {
             "component_id": component dictionary,
             ...
@@ -19,13 +19,7 @@ The structure must be::
 
 Each Component dictionary must be of the form::
     {
-        "name": Human friendly description (str)
-        "cls": ("OnePort", "TwoPort", "IOPort", "ManyPort")
-        "string": (optional) Overrides display string
-        "ports": See Note,
-        "params": (optional) See Note
-        "global_params": (optional) See Note
-        "constitutive_relations": See Note
+
     }
 """
 import copy

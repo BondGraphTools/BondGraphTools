@@ -51,3 +51,10 @@ def test_load_rlc():
 
     assert (set(model.constitutive_relations) == eqns) or \
                 (set(model.constitutive_relations) == eqns_2)
+
+
+def test_load_rlc_parallel():
+    path = str(file_path / 'rlc_parallel.bg')
+
+    model = load(path)
+

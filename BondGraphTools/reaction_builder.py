@@ -2,8 +2,7 @@ from sympy import SparseMatrix, symbols, Pow, Matrix
 from collections import defaultdict
 import logging
 from math import log
-from .base import new
-from .actions import connect, disconnect
+from .actions import connect, disconnect, new
 logger = logging.getLogger(__name__)
 
 # Gas constant, J/Mo/K
