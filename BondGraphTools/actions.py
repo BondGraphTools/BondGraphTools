@@ -2,13 +2,13 @@ import copy
 
 from .component_manager import get_component, base_id
 from .exceptions import *
-from .base import BondGraphBase, Bond, Port, FixedPort, PortExpander
+from .base import BondGraphBase, Bond, Port, FixedPort
 
 
 def disconnect(target, other):
     """
     Args:
-        target: BondGraphComponent or (Port or tuple)
+        target: Port or BondGraphBase
         other: BondGraphComponent or (Port or tuple)
     """
     if isinstance(target, BondGraphBase):
@@ -32,21 +32,19 @@ def disconnect(target, other):
     # assume item is a port:
         if isinstance(item, Port):
             return {bond for bond in model.bonds if item in bond}
-
         try:
-            c, p = item
+            _, _ = item
             return {bond for bond in model.bonds
                     if item in (bond.head, bond.tail)}
         except TypeError as ex:
-            items= {bond for bond in model.bonds if item is bond.head.component
-                                or item is bond.tail.component}
-            return items
+            return {bond for bond in model.bonds
+                     if item is bond.head.component
+                     or item is bond.tail.component}
 
     targets = _filter(target) & _filter(other)
 
-    for bond in targets:
-        model._bonds.remove(bond)
-
+    for target_bond in targets:
+        model._bonds.remove(target_bond)
 
 def connect(source, destination):
     """
@@ -54,7 +52,11 @@ def connect(source, destination):
     We assume that either the source and/or destination is or has a free
     port.
 
-    raises:
+    Args:
+        source (Port or BondGraphBase):
+        destination (Port or BondGraphBase):
+
+    Raises:
         InvalidPortException, InvalidComponentException
     """
 
@@ -85,29 +87,6 @@ def _find_port_from_port_class(arg):
         except AttributeError:
             c,p = arg
             return c.get_port(p)
-
-
-
-
-
-
-#def _find_free_port(component):
-
-
-    #
-    #
-    #
-    # if isinstance(component, BondGraphBase):
-    #     port = component.get_port()
-    # elif isinstance(component, Port):
-    #     port = component.component.get_port(component)
-    # elif isinstance(component, (tuple, list)):
-    #     item, port_idx = component
-    #     port = item.get_port(port_idx)
-    # else:
-    #     raise InvalidComponentException()
-    # return port
-
 
 def swap(old_component, new_component):
     """
@@ -176,7 +155,6 @@ def swap(old_component, new_component):
 
     model.remove(old_component)
 
-
 def new(component=None, name=None, library=base_id, value=None, **kwargs):
     """
     Creates a new Bond Graph from a library component.
@@ -226,7 +204,6 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
             "New not implemented for object {}", component
         )
 
-
 def _update_build_params(build_args, value, **kwargs):
 
     if isinstance(value, (list, tuple)):
@@ -243,7 +220,6 @@ def _update_build_params(build_args, value, **kwargs):
         p = next(iter(build_args["params"]))
         build_args["params"][p] = value
 
-
 def _find_subclass(name, base_class):
 
     for c in base_class.__subclasses__():
@@ -253,5 +229,3 @@ def _find_subclass(name, base_class):
             sc = _find_subclass(name, c)
             if sc:
                 return sc
-
-

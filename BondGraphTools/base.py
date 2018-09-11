@@ -102,10 +102,19 @@ class BondGraphBase:
 Bond = namedtuple("Bond", ["tail", "head"])
 
 class Port(object):
+    """
+    Basic object for representing ports;
+    Looks and behaves like a namedtuple:
+    component, index =  Port
+    """
+
     def __init__(self, component, index):
         self.component = component
+        """(`FixedPort`) The component that this port is attached to"""
         self.index = index
+        """(int) The numberical index of this port"""
         self.is_connected = False
+        """(bool) True if this port is plugged in."""
 
     def __iter__(self):
         return iter((self.component, self.index))
@@ -118,6 +127,7 @@ class Port(object):
             return self.index
         else:
             raise KeyError
+
     def __hash__(self):
         return id(self)
 
@@ -138,8 +148,11 @@ class Port(object):
 
 class FixedPort:
     """
+    This class provides methods for interfacing with static ports on components.
+
     Args:
-        ports
+        ports (dict): The enumerated list of ports associated with
+         this component.
     """
 
     def __init__(self, ports):
@@ -150,6 +163,16 @@ class FixedPort:
             self._ports.update({Port(self, int(port)): port_data})
 
     def get_port(self, port=None):
+        """
+        Makes available a (or the) port for use.
+
+        Args:
+            port: (optional) The index or referece to the requested port.
+
+        Returns: An instance of `Port`
+
+        Raises: InvalidPortException
+        """
 
         # If no port is specified, and there is only one port, grab it.
         if not port and not isinstance(port, int) and len(self._ports) == 1:
@@ -175,11 +198,25 @@ class FixedPort:
 
     @property
     def ports(self):
+        """A dictionary of the active ports"""
         return self._ports
 
 class PortExpander(FixedPort):
+    """
+    Class for handling templated virtual ports; for example summing junctions.
+    Additionally, attributes can be attached to the generated ports by via a
+    dictionary of attributes.
 
-    def __init__(self,ports, static_ports=None):
+    Args:
+        ports (dict): The different port classes (keys) and corresponding
+         dictionary of attributes and values (maybe be None)
+
+    Keyword Args:
+        static_ports: Ports to be created as per `FixedPort`
+
+    See Also: `PortTemplate`
+    """
+    def __init__(self, ports, static_ports=None):
         if static_ports:
             super().__init__(static_ports)
         else:
@@ -194,7 +231,16 @@ class PortExpander(FixedPort):
         self.max_index =len(static_ports) if static_ports else 0
 
     def get_port(self, port=None):
+        """
+        Tries to fetch the specified port, or tries to generate the port from
+        a template.
 
+        Args:
+            port: The Port, port index, template, or template string for
+             requested port
+
+        Returns: An instance of `Port`.
+        """
         if not port and not isinstance(port, int):
             # port is None, so lets try and make a new one
             try:
@@ -230,7 +276,16 @@ class PortExpander(FixedPort):
         }
 
 class PortTemplate(object):
-    def __new__(cls, parent,index, data=None):
+    """
+    Template class for generating new ports of a specific type.
+
+    Args:
+          parent (`PortExpander`): The associated object which is to hold
+           the port instances.
+          index (srt): The label or identifier
+
+    """
+    def __new__(cls, parent, index, data=None):
         self = object.__new__(cls)
         self.parent = parent
         self.index = index
@@ -252,6 +307,17 @@ class PortTemplate(object):
         return False
 
     def spawn(self, index=None):
+        """
+        Generates a new port from this template.
+
+        Args:
+            index: The desired index of this port.
+
+        Returns:
+            `Port`
+
+        Raises: InvalidPortException
+        """
         if not index:
             index = self.parent.max_index
         elif index in [p.index for p in self.parent.ports]:
