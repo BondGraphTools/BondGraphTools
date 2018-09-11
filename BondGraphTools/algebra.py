@@ -256,7 +256,6 @@ def _generate_cv_substitutions(subs_pairs, mappins, coords):
     cv_offset = 2*(ss_size + len(port_map))
 
     control_vars = {str(c) for c in coords[cv_offset:]}
-    print(control_vars)
     subs = []
     for var, fx_str in subs_pairs.items():
 

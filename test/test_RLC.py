@@ -9,6 +9,19 @@ def test_build(rlc):
     assert len(rlc.state_vars) == 2
     assert len(rlc.ports) == 0
 
+def test_build_rlc():
+    r = bgt.new("R", value=1)
+    l = bgt.new("I", value=1)
+    c = bgt.new("C", value=1)
+    kvl = bgt.new("0", name="kvl")
+    rlc = bgt.new()
+    rlc.add([r, l, c, kvl])
+
+    bgt.connect(r, kvl)
+    bgt.connect(l, kvl)
+    bgt.connect(c, kvl)
+    assert len(kvl.ports) == 3
+
 
 @pytest.mark.use_fixture("rlc")
 def test_build_and_drive(rlc):
@@ -94,6 +107,8 @@ def test_tf():
     tf = bgt.new("TF", value=0.5)
     tflc = bgt.new()
     tflc.add([tf,l, c])
+
+
 
     bgt.connect(l, (tf, 1))
     bgt.connect(c, (tf, 0))

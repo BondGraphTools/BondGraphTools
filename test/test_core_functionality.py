@@ -89,6 +89,22 @@ def test_connect():
     assert c1 in (c, se)
     assert c2 in (c, se)
 
+def test_one_port():
+    c = new('C')
+    se = new('Se')
+    r = new('R')
+    one = new('1')
+    bg = new()
+    bg.add(c,se,r,one)
+    connect(c, one.input)
+    connect(se, (one, "input"))
+
+    with pytest.raises(InvalidPortException):
+        connect(r, one)
+
+    connect(r, one.output)
+
+
 
 def test_connect_ports():
     c = bgt.new("C")
@@ -223,9 +239,9 @@ def test_disconnect_multiport():
     bg = bgt.new()
     bg.add([zero, r, c, one])
 
-    connect(zero, (one, one.input))
+    connect(zero, one.input)
     connect(r,zero)
-    connect(c, (one, one.output))
+    connect(c, one.output)
 
     assert len(bg.bonds) == 3
     disconnect(zero, one)
@@ -266,11 +282,13 @@ def test_remove_component():
 
     connect(r, zero)
     connect(c, zero)
-
+    r_p, = r.ports
+    c_p, = c.ports
+    z0,z1, = zero.ports
     assert c in bg.components
     assert set(bg.bonds) == {
-        ((r, 0), (zero, 0)),
-        ((c, 0), (zero, 1))
+        (r_p, z0),
+        (c_p, z1)
     }
 
 def test_remove_components_fail_states():
@@ -301,20 +319,25 @@ def test_swap_component_1():
     connect(r,zero)
     connect(c, zero)
     assert c in bg.components
+    r_p, = r.ports
+    c_p, = c.ports
+    z0,z1, = zero.ports
 
     assert set(bg.bonds) == {
-        ((r, 0), (zero, 0)),
-        ((c, 0), (zero, 1))
+        (r_p, z0),
+        (c_p, z1)
     }
+
     assert len(bg.state_vars) == 1
     Sf = bgt.new('Sf')
     swap(c, Sf)
+    sf_port, = Sf.ports
     assert len(bg.state_vars) == 0
     assert len(bg.control_vars) == 1
 
     assert set(bg.bonds) == {
-        ((r,0), (zero, 0)),
-        ((Sf, 0), (zero, 1))
+        (r_p, z0),
+        (sf_port, z1)
     }
 
     assert c not in bg.components
@@ -323,8 +346,8 @@ def test_swap_component_1():
     swap(Sf, c)
 
     assert set(bg.bonds) == {
-        ((r, 0), (zero, 0)),
-        ((c, 0), (zero, 1))
+        (r_p, z0),
+        (c_p, z1)
     }
 
     assert c in bg.components
@@ -343,9 +366,12 @@ def test_swap_components_2():
     connect(r,zero)
     connect(c, zero)
 
+    p1, = r.ports
+    p2, = c.ports
+    p3, p4, = zero.ports
     assert set(bg.bonds) == {
-        ((r, 0), (zero, 0)),
-        ((c, 0), (zero, 1))
+        (p1, p3),
+        (p2, p4)
     }
     one = bgt.new('1')
     with pytest.raises(InvalidComponentException):
@@ -364,5 +390,5 @@ def test_swap_failstate():
     connect(r, zero)
     connect(c, zero)
 
-    with pytest.raises(InvalidPortException):
+    with pytest.raises(InvalidComponentException):
         swap(zero, l)

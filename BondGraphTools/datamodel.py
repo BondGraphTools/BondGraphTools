@@ -103,9 +103,7 @@ def _builder(data):
             try:
                 t3 = next(tokens)
             except StopIteration:
-                print(t2)
                 port = comp.get_port(t2)
-                assert port
                 return port
 
             else:

@@ -49,7 +49,8 @@ class BondGraphBase:
         the internal parameter, the value may be an exposed control value,
         a function of time, or a constant."""
         self.view = None
-
+    def __repr__(self):
+        return f"{self.metaclass}: {self.name}"
     def __new__(cls, *args, **kwargs):
         if "instances" not in cls.__dict__:
             cls.instances = 1
@@ -98,9 +99,42 @@ class BondGraphBase:
     #     return self.__dict__ == other.__dict__
 
 
-Port = namedtuple("Port", ["component", "index"])
 Bond = namedtuple("Bond", ["tail", "head"])
 
+class Port(object):
+    def __init__(self, component, index):
+        self.component = component
+        self.index = index
+        self.is_connected = False
+
+    def __iter__(self):
+        return iter((self.component, self.index))
+    def __len__(self):
+        return 2
+    def __getitem__(self, item):
+        if item == 0:
+            return self.component
+        elif item == 1:
+            return self.index
+        else:
+            raise KeyError
+    def __hash__(self):
+        return id(self)
+
+    def __repr__(self):
+        return f"Port({self.component}, {self.index})"
+
+    def __eq__(self, other):
+        try:
+            return ((self.component is other.component) and
+                (self.index == other.index))
+        except AttributeError:
+            try:
+                c,p = other
+                return  c is self.component and p == self.index
+            except AttributeError:
+                pass
+        return False
 
 class FixedPort:
     """
@@ -113,39 +147,25 @@ class FixedPort:
 
         for port, data in ports.items():
             port_data = data if data else {}
-            port_data.update({"is_connected":False})
             self._ports.update({Port(self, int(port)): port_data})
 
     def get_port(self, port=None):
+
+        # If no port is specified, and there is only one port, grab it.
         if not port and not isinstance(port, int) and len(self._ports) == 1:
             for p in self._ports:
-                if not self._ports[p]["is_connected"]:
+                if not p.is_connected:
                     return p
-
-        elif port in self._ports and not self._ports[port]["is_connected"]:
+        # If it's a port object, then grab it
+        elif port in self._ports and not port.is_connected:
             return port
 
         elif isinstance(port, int):
-            p, = (pp for pp, data in self._ports.items() if pp.index == port and
-                    not data["is_connected"])
+            p, = (pp for pp in self._ports if pp.index == port and
+                    not pp.is_connected)
             if p:
                return p
-
         raise InvalidPortException
-
-    def _pre_connect_hook(self, port):
-        pass
-
-    def _post_connect_hook(self, port):
-        self._ports[port]["is_connected"] = True
-        pass
-
-    def _pre_disconnect_hook(self, port):
-        pass
-
-    def _post_disconnect_hook(self, port):
-        self._ports[port]["is_connected"] = False
-
 
     def _port_vectors(self):
         return {
@@ -165,36 +185,82 @@ class PortExpander(FixedPort):
         else:
             super().__init__({})
 
-        self._port_sets = {p: [] for p in ports}
-        self.__max_idx = len(static_ports) if static_ports else 0
+        self._templates = {PortTemplate(self, p, v) for p,v in ports.items()}
+
+        if len(self._templates) == 1:
+            self._default_template, = self._templates
+        else:
+            self._default_template = False
+        self.max_index =len(static_ports) if static_ports else 0
 
     def get_port(self, port=None):
 
-        try:
+        if not port and not isinstance(port, int):
+            # port is None, so lets try and make a new one
+            try:
+                return self._default_template.spawn()
+            except AttributeError:
+                raise InvalidPortException("You must specify a port")
+        elif port in self._templates:
+            # this is a template, so lets
+            template, = {t for t in self._templates if t == port}
+            return template.spawn()
+
+        elif isinstance(port, str):
+            template, = {t for t in self._templates if t.index==port}
+            return template.spawn()
+
+        elif isinstance(port, int) and port\
+                not in [p.index for p in self._ports]:
+            try:
+                return self._default_template.spawn(port)
+            except AttributeError:
+                raise InvalidPortException("You must specify a port")
+        try: # suppose we've got port or a port tuple that exists
             return super().get_port(port)
-        except InvalidPortException:
+        except InvalidPortException as ex:
             pass
 
-        if not port and len(self._port_sets) == 1:
-            return self.get_port(port=next(iter(self._port_sets)))
-        elif port in self._port_sets:
-            return self._new_port(port)
-        else:
-            raise InvalidPortException("Could not get a port")
-
-
-    def _new_port(self, port):
-        idx = self.__max_idx
-        self.__max_idx += 1
-        new_port = Port(self, idx)
-        port_data = {"is_connected": False}
-        self._port_sets[port].append(idx)
-        self._ports.update({new_port:port_data})
-        return new_port
-
+        raise InvalidPortException(f"Could not create new port:{port}")
 
     def _port_vectors(self):
         return {
             sp.symbols((f"e_{port.index}", f"f_{port.index}")): port
-            for port in self._ports if self._ports[port]["is_connected"]
+            for port in self._ports if port.is_connected
         }
+
+class PortTemplate(object):
+    def __new__(cls, parent,index, data=None):
+        self = object.__new__(cls)
+        self.parent = parent
+        self.index = index
+        self.ports = []
+        self.data = data if data else {}
+        return self
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        try:
+            p, s = other
+            if p == self.parent and s == self.index:
+                return True
+        except TypeError:
+            if other is self:
+                return True
+        return False
+
+    def spawn(self, index=None):
+        if not index:
+            index = self.parent.max_index
+        elif index in [p.index for p in self.parent.ports]:
+            raise InvalidPortException("Could not create port: index "
+                                       "already exists")
+        port = Port(self.parent, index)
+        port.__dict__.update({k:v for k,v in self.data.items()})
+        self.parent._ports[port] = {}
+        self.ports.append(port)
+        self.parent.max_index = max(index, self.parent.max_index) + 1
+        return port
+

@@ -162,7 +162,7 @@ def test_zero_junction_relations():
     connect(c, kvl)
 
     rels = kvl.constitutive_relations
-    print(rels)
+
     assert sympy.sympify("e_1 - e_2") in rels
     assert sympy.sympify("e_0 - e_2") in rels
     assert sympy.sympify("f_0 + f_1 + f_2") in rels
@@ -188,7 +188,8 @@ def test_build_junction_dict():
     bg = bgt.new()
     bg.add([c, kvl])
     connect(kvl, c)
-    index_map = {(c,0):0, (kvl,0):1}
+    cp,kp = list(c.ports) + list(kvl.ports)
+    index_map = {cp:0, kp:1}
     M = adjacency_to_dict(index_map, bg.bonds, offset=1)
     assert M[(0, 1)] == 1
     assert M[(0, 3)] == -1
@@ -221,8 +222,8 @@ def test_rlc_basis_vectors(rlc):
 
 def test_relations_iter():
     c = bgt.new("C", value=1)
-
-    mappings = ({(c, 'q_0'): 0}, {(c,0): 0}, {})
+    cp, = list(c.ports)
+    mappings = ({(c, 'q_0'): 0}, {cp: 0}, {})
     coords = list(sympy.sympify("dx_0,e_0,f_0,x_0, 1"))
     relations = get_relations_iterator(c, mappings, coords)
 
@@ -238,7 +239,8 @@ def test_relations_iter():
 
 def test_relation_iter_twoport():
     tf = bgt.new("TF", value=1)
-    mappings = ({},{(tf,0):0, (tf,1):1},{})
+    tf_port_0, tf_port_1 = list(tf.ports)
+    mappings = ({},{tf_port_0:0, tf_port_1:1},{})
     coords = list(sympy.sympify("e_0,f_0,e_1,f_1"))
     # d1 = {0: 1, 2: -1}
     # d2 = {1: 1, 2: 1}

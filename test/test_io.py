@@ -21,9 +21,6 @@ def test_load_rlc():
     c, r, l, kcl, sf =  (comp for uri in uris for comp in model.components if
                       comp.uri == uri)
 
-
-
-
     assert len(model.control_vars) == 1
     assert 'u_0' in model.control_vars
 
@@ -31,11 +28,17 @@ def test_load_rlc():
     assert r.params['r']['value']  == 100
     assert l.params['L']['value']  == 10
 
+    r_0, = r.ports
+    c_0, = c.ports
+    l_0, = l.ports
+    sf_0,  = sf.ports
+    kcl_0, kcl_1,kcl_2,kcl_3 = kcl.ports
+
     assert set(model.bonds) == {
-        ((r,0), (kcl, 0)),
-        ((c, 0), (kcl, 1)),
-        ((l, 0), (kcl, 2)),
-        ((sf, 0), (kcl, 3))
+        (r_0, kcl_0),
+        (c_0, kcl_1),
+        (l_0, kcl_2),
+        (sf_0, kcl_3)
     }
 
     eqns = {
@@ -48,7 +51,6 @@ def test_load_rlc():
         sp.sympify("dx_0 - x_1 / 10")
     }
 
-
     assert (set(model.constitutive_relations) == eqns) or \
                 (set(model.constitutive_relations) == eqns_2)
 
@@ -57,4 +59,22 @@ def test_load_rlc_parallel():
     path = str(file_path / 'rlc_parallel.bg')
 
     model = load(path)
+
+    one, = (comp for comp in model.components if comp.metaclass == "1")
+
+    assert one
+
+    rel = model.constitutive_relations
+
+    _, v = model.state_vars['x_0']
+
+    if str(v) != 'p_0':
+        eq1 = sp.sympify("dx_0 - x_1")
+        eq2 = sp.sympify("dx_1 - u_0 + x_0 + x_1")
+    else:
+        eq1 = sp.sympify("dx_1 - x_0")
+        eq2 = sp.sympify("dx_0 - u_0 + x_0 + x_1")
+
+    for r in rel:
+        assert r in (eq1, eq2)
 

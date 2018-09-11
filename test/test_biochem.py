@@ -52,48 +52,23 @@ def test_re_con_rel():
             ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
         ]
 
-@pytest.mark.skip
-def test_stiochiometry():
-    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
-    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
-
-    Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
-    Yin = bgt.new('Y', library="BioChem")
-    bg = bgt.new()
-    bg.add(A ,B , Re , Yin)
-
-    assert 0 in Yin._fixed_ports
-    assert Yin.ports[0]["description"] == "Affinity"
-    assert len(Yin.ports) == 1
-
-    connect((Re, 0), (Yin, 0))
-    assert len(Yin.ports) == 1
-
-    connect(A, (Yin, 1))
-    assert Yin.ports[1] == 1
-
-    connect(B, (Yin, 2))
-    assert Yin.ports[2] == 1
-
-    assert Yin.ports == {0:{"description":"Affinity","value":-1}, 1:1, 2:1}
-
-@pytest.mark.skip
 def test_a_to_b_model():
     A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
     B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
 
     Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
 
-    Y_A = bgt.new('Y', library="BioChem")
-    Y_B = bgt.new('Y', library="BioChem")
+    Y_A = bgt.new('1')
+    Y_B = bgt.new('1')
 
     a_to_b = bgt.new()
     a_to_b.add(A , Re, B,Y_A, Y_B)
 
-    connect(A, (Y_A, 1))
-    connect(B, (Y_B, 1))
-    connect((Re, 0), (Y_A, 0))
-    connect((Re, 1), (Y_B, 0))
+    connect(A, Y_A.input)
+    connect(B, Y_B.input)
+    connect((Re,0), Y_A.output)
+    connect((Re,1), Y_B.output)
+
     eqns ={
         sympy.sympify("dx_0 + x_0 -x_1"), sympy.sympify("dx_1 + x_1 -x_0")
     }

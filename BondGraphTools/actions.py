@@ -29,18 +29,18 @@ def disconnect(target, other):
         raise InvalidComponentException(f"Could not find components")
 
     def _filter(item):
-        if isinstance(item, BondGraphBase):
-            filtered = {bond for bond in model._bonds if
-                        bond.tail.component is item
-                        or bond.head.component is item}
-        elif isinstance(target, (Bond, tuple)):
-            filtered = {bond for bond in model._bonds if bond.tail is item
-                        or bond.head is item}
-        else:
-            raise InvalidComponentException(
-                f"{item} is not a valid target for disconnection"
-            )
-        return filtered
+    # assume item is a port:
+        if isinstance(item, Port):
+            return {bond for bond in model.bonds if item in bond}
+
+        try:
+            c, p = item
+            return {bond for bond in model.bonds
+                    if item in (bond.head, bond.tail)}
+        except TypeError as ex:
+            items= {bond for bond in model.bonds if item is bond.head.component
+                                or item is bond.tail.component}
+            return items
 
     targets = _filter(target) & _filter(other)
 
@@ -58,39 +58,55 @@ def connect(source, destination):
         InvalidPortException, InvalidComponentException
     """
 
-    if isinstance(source, BondGraphBase):
-        model = source.parent
-    elif isinstance(source, Port):
-        model =  source.component.parent
-    else:
-        model = source[0].parent
+    tail = _find_port(source)
+    head = _find_port(destination)
 
-    if isinstance(destination, BondGraphBase):
-        model_prime = destination.parent
-    elif isinstance(destination, Port):
-        model_prime = destination.component.parent
-    else:
-        model_prime = destination[0].parent
-
-    if not model or not model_prime or (model is not model_prime):
-        raise InvalidComponentException(f"Could not find components")
-
-    def find_port(component):
-        if isinstance(component, BondGraphBase):
-            port = component.get_port()
-        elif isinstance(component, Port):
-            port = component.component.get_port(component)
-        elif isinstance(component, (tuple, list)):
-            item, port_idx = component
-            port = item.get_port(port_idx)
-        else:
-            raise InvalidComponentException()
-        return port
-
-    tail = find_port(source)
-    head = find_port(destination)
+    model = tail.component.parent
+    if not model or head.component.parent is not model:
+        raise InvalidComponentException
     bond = Bond(tail, head)
     model._bonds.add(bond)
+
+def _find_port(arg):
+    #assume we're given a compoent:
+    try:
+        return arg.get_port()
+    except AttributeError as ex:
+        return _find_port_from_port_class(arg)
+
+def _find_port_from_port_class(arg):
+    try:
+        c = arg.component
+        return c.get_port(arg)
+    except AttributeError:
+        try:
+            c = arg.parent
+            return c.get_port(arg)
+        except AttributeError:
+            c,p = arg
+            return c.get_port(p)
+
+
+
+
+
+
+#def _find_free_port(component):
+
+
+    #
+    #
+    #
+    # if isinstance(component, BondGraphBase):
+    #     port = component.get_port()
+    # elif isinstance(component, Port):
+    #     port = component.component.get_port(component)
+    # elif isinstance(component, (tuple, list)):
+    #     item, port_idx = component
+    #     port = item.get_port(port_idx)
+    # else:
+    #     raise InvalidComponentException()
+    # return port
 
 
 def swap(old_component, new_component):
@@ -114,7 +130,8 @@ def swap(old_component, new_component):
             return False
 
         # Dirty Hack because 'in' for BondSet double counts
-        num_bonds = len({b for b in old_comp.parent.bonds if old_comp in b})/2
+        num_bonds = len({b for b in old_comp.parent.bonds if old_comp is
+                         b.head.component or old_comp is b.tail.component})
 
         if isinstance(new_comp, FixedPort) and len(new_comp.ports) < num_bonds:
             return False
@@ -177,6 +194,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
     Returns: instance of :obj:`BondGraph`
 
     """
+
     if not component:
         cls = _find_subclass("BondGraph", BondGraphBase)
         return cls(name=name)

@@ -87,7 +87,8 @@ class BondGraph(BondGraphBase):
 
 
     def remove(self, component):
-        if component in self._bonds:
+        if [b for b in self._bonds if b.head.component is component or
+                b.tail.component is component]:
             raise InvalidComponentException("Component is still connected")
         if component not in self.components:
             raise InvalidComponentException("Component not found")
@@ -229,7 +230,6 @@ class BondGraph(BondGraphBase):
         n = len(coordinates)
 
         size_tuple = (ss_size, js_size, cv_size, n)
-
         lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
         nlin_dict = {}
 
@@ -348,37 +348,21 @@ class BondSet(set):
     def add(self, bond):
         tail = bond.tail
         head = bond.head
-        tail.component._pre_connect_hook(tail)
-        head.component._pre_connect_hook(head)
         super().add(bond)
-        tail.component._post_connect_hook(tail)
-        head.component._post_connect_hook(head)
+        head.is_connected = True
+        tail.is_connected = True
 
     def remove(self, bond):
         tail = bond.tail
         head = bond.head
-        tail.component._pre_disconnect_hook(tail)
-        head.component._pre_disconnect_hook(head)
         if bond in self:
             super().remove(bond)
         else:
             super().remove(Bond(head, tail))
-        tail.component._post_disconnect_hook(tail)
-        head.component._post_disconnect_hook(head)
+        head.is_connected = False
+        tail.is_connected = False
 
     def __contains__(self, item):
-        if isinstance(item, BondGraphBase):
-            for tail, head in self:
-                if tail.component is item or head.component is item:
-                    return True
-
-            return False
-        elif isinstance(item, Port):
-            for tail, head in self:
-                if tail is item or head is item:
-                    return True
-            return False
-        elif isinstance(item, Bond):
-            p1, p2 = item
+        p1, p2 = item
         return super().__contains__(item) or super().__contains__((p2,p1))
 
