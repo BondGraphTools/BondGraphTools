@@ -231,7 +231,6 @@ class EqualFlow(BondGraphBase, PortExpander):
     def basis_vectors(self):
         return {}, self._port_vectors(), {}
 
-
     def get_port(self, port=None):
         try:
             return super().get_port(port)

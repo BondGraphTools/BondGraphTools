@@ -132,13 +132,13 @@ class Port(object):
 
     def __eq__(self, other):
         try:
-            return ((self.component is other.component)
-                    and (self.index == other.index))
+            return (self.component is other.component and
+                    self.index == other.index)
 
         except AttributeError:
             try:
                 c, p = other
-                return  c is self.component and p == self.index
+                return c is self.component and p == self.index
             except AttributeError:
                 pass
         return False
@@ -146,7 +146,8 @@ class Port(object):
 
 class FixedPort:
     """
-    This class provides methods for interfacing with static ports on components.
+    This class provides methods for interfacing with static ports on
+     components.
 
     Args:
         ports (dict): The enumerated list of ports associated with
@@ -330,4 +331,3 @@ class PortTemplate(object):
         self.ports.append(port)
         self.parent.max_index = max(index, self.parent.max_index) + 1
         return port
-
