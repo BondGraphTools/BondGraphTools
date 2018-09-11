@@ -49,8 +49,10 @@ class BondGraphBase:
         the internal parameter, the value may be an exposed control value,
         a function of time, or a constant."""
         self.view = None
+
     def __repr__(self):
         return f"{self.metaclass}: {self.name}"
+
     def __new__(cls, *args, **kwargs):
         if "instances" not in cls.__dict__:
             cls.instances = 1
@@ -65,10 +67,6 @@ class BondGraphBase:
     @property
     def metaclass(self):
         return self.__metaclass
-
-    # @property
-    # def max_ports(self):
-    #     raise NotImplementedError
 
     @property
     def constitutive_relations(self):
@@ -95,10 +93,6 @@ class BondGraphBase:
     def __hash__(self):
         return id(self)
 
-    # def __eq__(self, other):
-    #     return self.__dict__ == other.__dict__
-
-
 Bond = namedtuple("Bond", ["tail", "head"])
 
 class Port(object):
@@ -118,8 +112,10 @@ class Port(object):
 
     def __iter__(self):
         return iter((self.component, self.index))
+
     def __len__(self):
         return 2
+
     def __getitem__(self, item):
         if item == 0:
             return self.component
@@ -136,15 +132,17 @@ class Port(object):
 
     def __eq__(self, other):
         try:
-            return ((self.component is other.component) and
-                (self.index == other.index))
+            return ((self.component is other.component)
+                    and (self.index == other.index))
+
         except AttributeError:
             try:
-                c,p = other
+                c, p = other
                 return  c is self.component and p == self.index
             except AttributeError:
                 pass
         return False
+
 
 class FixedPort:
     """
@@ -185,9 +183,11 @@ class FixedPort:
 
         elif isinstance(port, int):
             p, = (pp for pp in self._ports if pp.index == port and
-                    not pp.is_connected)
+                  not pp.is_connected
+                  )
             if p:
-               return p
+                return p
+
         raise InvalidPortException
 
     def _port_vectors(self):
@@ -228,7 +228,7 @@ class PortExpander(FixedPort):
             self._default_template, = self._templates
         else:
             self._default_template = False
-        self.max_index =len(static_ports) if static_ports else 0
+        self.max_index = len(static_ports) if static_ports else 0
 
     def get_port(self, port=None):
         """
@@ -253,7 +253,7 @@ class PortExpander(FixedPort):
             return template.spawn()
 
         elif isinstance(port, str):
-            template, = {t for t in self._templates if t.index==port}
+            template, = {t for t in self._templates if t.index == port}
             return template.spawn()
 
         elif isinstance(port, int) and port\
@@ -262,7 +262,8 @@ class PortExpander(FixedPort):
                 return self._default_template.spawn(port)
             except AttributeError:
                 raise InvalidPortException("You must specify a port")
-        try: # suppose we've got port or a port tuple that exists
+        try:
+            # suppose we've got port or a port tuple that exists
             return super().get_port(port)
         except InvalidPortException as ex:
             pass

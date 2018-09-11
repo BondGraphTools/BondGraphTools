@@ -239,7 +239,10 @@ class BondGraph(BondGraphBase):
             row = 0
 
         for component in self.components:
-            relations = get_relations_iterator(component, mappings, coordinates)
+            relations = get_relations_iterator(
+                component, mappings, coordinates
+            )
+
             for linear, nonlinear in relations:
                 lin_dict.update({(row, k): v
                                  for k, v in linear.items()})
