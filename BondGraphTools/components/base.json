@@ -3,28 +3,14 @@
   "id":"base",
   "components": {
     "0": {
-      "description": "Equipotential Node",
-      "class": "NPort",
-      "metaclass":"0",
-      "ports": {
-        "i": null
-      },
-      "constitutive_relations": [
-        "sum(f_i)",
-        "e_i - e_0"
-      ]
+      "description": "Equal Effort Node",
+      "metaclass": "0",
+      "class": "EqualEffort"
     },
     "1": {
       "description": "Equal Flow Node",
-      "class": "NPort",
-      "metaclass": "1",
-      "ports": {
-        "i":null
-      },
-      "constitutive_relations": [
-        "sum(e_i)",
-        "f_i - f_0"
-      ]
+      "class": "EqualFlow",
+      "metaclass":"1"
     },
     "R": {
       "description": "Generalised Linear Resistor",

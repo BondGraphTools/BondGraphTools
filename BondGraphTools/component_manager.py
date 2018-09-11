@@ -10,7 +10,7 @@ Component Libraries are expected to be in json format.
 The structure must be::
     {
         "id": The unique library id (str),
-        "name": The description of this library
+        "description": The description of this library
         "components": {
             "component_id": component dictionary,
             ...
@@ -19,13 +19,7 @@ The structure must be::
 
 Each Component dictionary must be of the form::
     {
-        "name": Human friendly description (str)
-        "cls": ("OnePort", "TwoPort", "IOPort", "ManyPort")
-        "string": (optional) Overrides display string
-        "ports": See Note,
-        "params": (optional) See Note
-        "global_params": (optional) See Note
-        "constitutive_relations": See Note
+
     }
 """
 import copy
@@ -142,28 +136,21 @@ def find(component, restrict_to=None, find_all=False, ensure_unique=False):
         keys = {k for k in __libraries if k in restrict_to}
     else:
         keys = __libraries
+
     unique_id = None
-    for lib_id in keys:
-        for comp_id in __libraries[lib_id]["components"]:
-            if comp_id == component:
-                if find_all:
-                    results.append(lib_id)
-                elif not ensure_unique:
-                    return lib_id
-                elif ensure_unique and not unique_id:
-                    unique_id = lib_id
-                elif ensure_unique and unique_id:
-                    raise ValueError(
-                        "Could not find component: Component not unique",
-                        component)
+
+    results = {l for l in keys if component in __libraries[l]["components"]}
+
     if find_all:
         return results
-    elif unique_id:
-        return unique_id
+    elif (ensure_unique and len(results) == 1) or not ensure_unique:
+        return results[0]
+    elif ensure_unique:
+        raise KeyError("Component is not unique")
     else:
         raise NotImplementedError("Component not found", component)
 
 
-## On Import actions
+# On Import actions
 for lib_file in pathlib.Path(__LIB_DIR).glob("**/*.json"):
     load_library(lib_file)

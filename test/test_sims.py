@@ -24,21 +24,18 @@ def test_c_se_build_ode():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c,kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c,(kcl, kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
-
 
     j = config.julia
     func_str, diff_vars = to_julia_function_string(bg,
                                                    control_vars=['-exp(-t)'],
                                                    in_place=False)
-
     func = j.eval(func_str)
-
     assert func(0, 0, 0, 0) == -1
     assert func(2, 0, 0, 0) == 1
     assert func(0, 2, 0, 0) == 1
@@ -53,9 +50,9 @@ def test_c_se_sim():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c, kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c, (kcl, kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     with pytest.raises(ModelException) as ex:
         t, x = simulate(
@@ -87,9 +84,9 @@ def test_c_se_sum_switch():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c, kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c, (kcl, kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     bang_bang = ["x_0 >= 1 ?  1.5: -2 "]
 

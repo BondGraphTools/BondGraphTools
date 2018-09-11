@@ -15,9 +15,9 @@ import logging
 import pathlib
 import yaml
 
-from .base import new, Port, Bond
-from .actions import connect
-
+from .base import Port, Bond
+from .actions import connect, new
+from .exceptions import *
 logger = logging.getLogger(__name__)
 
 def save(model, filename):
@@ -85,19 +85,29 @@ def _builder(data):
 
     def _wire(model, netlist):
         def get_port(port_string):
+
+            tokens = iter(port_string.split('.'))
+
+            c = next(tokens)
             try:
-                c, p = port_string.split('.')
-
+                comp, = (comp for comp in model.components if comp.name == c)
             except ValueError:
-                c = port_string
-                p = ""
+                raise InvalidComponentException(
+                    f"Could not find component {c} in model {model.name}")
 
-            comp, = (comp for comp in model.components if comp.name == c)
-            if p == "":
+            try:
+                t2 = next(tokens)
+            except StopIteration:
                 return comp
+
+            try:
+                t3 = next(tokens)
+            except StopIteration:
+                port = comp.get_port(t2)
+                return port
+
             else:
-                port_no = int(p)
-            return Port(comp, port_no)
+                raise NotImplementedError
 
         for bond_string in netlist:
             tail_str, head_str = bond_string.split()

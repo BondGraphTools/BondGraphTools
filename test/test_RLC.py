@@ -9,6 +9,19 @@ def test_build(rlc):
     assert len(rlc.state_vars) == 2
     assert len(rlc.ports) == 0
 
+def test_build_rlc():
+    r = bgt.new("R", value=1)
+    l = bgt.new("I", value=1)
+    c = bgt.new("C", value=1)
+    kvl = bgt.new("0", name="kvl")
+    rlc = bgt.new()
+    rlc.add([r, l, c, kvl])
+
+    bgt.connect(r, kvl)
+    bgt.connect(l, kvl)
+    bgt.connect(c, kvl)
+    assert len(kvl.ports) == 3
+
 
 @pytest.mark.use_fixture("rlc")
 def test_build_and_drive(rlc):
@@ -52,6 +65,7 @@ def test_rlc_con_rel(rlc):
     rel = rlc.constitutive_relations
 
     _, v = rlc.state_vars['x_0']
+
     if str(v) != 'q_0':
         eq1 = sympy.sympify("dx_0 - x_1")
         eq2 = sympy.sympify("dx_1 + x_0 + x_1")
@@ -94,6 +108,8 @@ def test_tf():
     tflc = bgt.new()
     tflc.add([tf,l, c])
 
+
+
     bgt.connect(l, (tf, 1))
     bgt.connect(c, (tf, 0))
 
@@ -114,3 +130,22 @@ def test_se():
 
     assert vc.constitutive_relations == [sympy.sympify("dx_0"),
                                          sympy.sympify("x_0 - 1")]
+
+
+def test_one():
+    loop_law = bgt.new('1')
+    Se = bgt.new('Se', value=1)
+    c = bgt.new('C', value=1)
+    r = bgt.new('R', value=1)
+    vc = bgt.new()
+    vc.add([Se, c, loop_law, r])
+
+    bgt.connect(Se, (loop_law, loop_law.input))
+    bgt.connect(c, (loop_law, loop_law.output))
+    bgt.connect(r, (loop_law, loop_law.output))
+
+    assert vc.constitutive_relations == [
+        sympy.sympify("dx_0 + x_0 - 1")
+    ]
+
+

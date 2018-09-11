@@ -14,14 +14,14 @@ version: 0.1
 models:
     RLC:
       components:
-        - R1  base/R   r=100
-        - C1  base/C   10
-        - L1  base/I   10
-        - kcl base/0
-        - Sf  base/Sf
+        - R1  base/R   1
+        - C1  base/C   1
+        - L1  base/I   1
+        - kvl base/1
+        - Se  base/Se
 
       netlist:
-        - R1 kcl
-        - C1 kcl
-        - L1 kcl
-        - Sf kcl
+        - R1 kvl.output
+        - C1 kvl.output
+        - L1 kvl.output
+        - Se kvl.input

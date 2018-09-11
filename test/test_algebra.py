@@ -5,7 +5,7 @@ import BondGraphTools as bgt
 from BondGraphTools import connect
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
     adjacency_to_dict, augmented_rref,_generate_substitutions,\
-    inverse_coord_maps, _generate_cv_substitutions
+    inverse_coord_maps, _generate_cv_substitutions, get_relations_iterator
 
 
 def test_extract_coeffs_lin():
@@ -161,10 +161,10 @@ def test_zero_junction_relations():
     connect(l, kvl)
     connect(c, kvl)
 
-    rels = kvl._build_relations()
+    rels = kvl.constitutive_relations
 
-    assert sympy.sympify("e_1 - e_0") in rels
-    assert sympy.sympify("e_2 - e_0") in rels
+    assert sympy.sympify("e_1 - e_2") in rels
+    assert sympy.sympify("e_0 - e_2") in rels
     assert sympy.sympify("f_0 + f_1 + f_2") in rels
 
 
@@ -188,7 +188,8 @@ def test_build_junction_dict():
     bg = bgt.new()
     bg.add([c, kvl])
     connect(kvl, c)
-    index_map = {(c,0):0, (kvl,0):1}
+    cp,kp = list(c.ports) + list(kvl.ports)
+    index_map = {cp:0, kp:1}
     M = adjacency_to_dict(index_map, bg.bonds, offset=1)
     assert M[(0, 1)] == 1
     assert M[(0, 3)] == -1
@@ -221,10 +222,10 @@ def test_rlc_basis_vectors(rlc):
 
 def test_relations_iter():
     c = bgt.new("C", value=1)
-
-    mappings = ({(c, 'q_0'): 0}, {(c,0): 0}, {})
+    cp, = list(c.ports)
+    mappings = ({(c, 'q_0'): 0}, {cp: 0}, {})
     coords = list(sympy.sympify("dx_0,e_0,f_0,x_0, 1"))
-    relations = c.get_relations_iterator(mappings, coords)
+    relations = get_relations_iterator(c, mappings, coords)
 
     d1 = {0:1, 2:-1} #dx/dt - f = 0
     d2 = {1:1, 3:-1} #e - x = 0$
@@ -238,11 +239,12 @@ def test_relations_iter():
 
 def test_relation_iter_twoport():
     tf = bgt.new("TF", value=1)
-    mappings = ({},{(tf,0):0, (tf,1):1},{})
+    tf_port_0, tf_port_1 = list(tf.ports)
+    mappings = ({},{tf_port_0:0, tf_port_1:1},{})
     coords = list(sympy.sympify("e_0,f_0,e_1,f_1"))
     # d1 = {0: 1, 2: -1}
     # d2 = {1: 1, 2: 1}
-    relations = tf.get_relations_iterator(mappings, coords)
+    relations = get_relations_iterator(tf, mappings, coords)
     for lin, nlin in relations:
         assert not nlin
 
@@ -264,9 +266,9 @@ def test_cv_relations():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,kcl)
-    connect(se, kcl)
-    connect(r, kcl)
+    connect(c,(kcl,kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
@@ -320,9 +322,9 @@ def test_cv_subs_func():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c,(kcl,kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     cv_s = {'u_0': ' -exp(-t)'}
 
@@ -340,9 +342,9 @@ def test_cv_subs_const():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c,(kcl,kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     cv_s = {'u_0': ' 2'}
 
@@ -360,9 +362,9 @@ def test_cv_subs_state_func():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,kcl)
-    connect(r, kcl)
-    connect(se, kcl)
+    connect(c,(kcl,kcl.input))
+    connect(r, (kcl, kcl.input))
+    connect(se, (kcl, kcl.input))
 
     cv_s = {'u_0': ' -exp(-x_0)'}
 

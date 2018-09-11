@@ -41,18 +41,21 @@
     },
   "Y":{
     "description": "Stoichiometry",
-    "class": "NPortWeighted",
+    "class": "MixedPort",
     "metaclass": "TF",
     "ports":{
       "0": {
         "description":"Affinity",
-        "value": -1
+        "r": -1
       },
-      "i": null
+      "i": {
+        "description":"Chemical Power",
+        "r": 1
+      }
     },
     "constitutive_relations":[
-      "sum(c_i*e_i)",
-      "c_0*f_0 - f_i/c_i"
+      "sum(r_i*e_i)",
+      "f_0/r_0 - f_i/r_i"
     ]
   }
   }
