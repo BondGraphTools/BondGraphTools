@@ -57,14 +57,17 @@ def load_library(filename):
                 raise KeyError("Invalid Library")
             __libraries[lib_id] = lib
         except json.JSONDecodeError as ex:
-            logger.warning("Error loading library %s; %s",
+            logger.critical("Error loading library %s; %s",
                            filename,
                            ex.args)
             return False
         except KeyError as ex:
-            logger.warning("Error loading library %s: %s",
+            logger.critical("Error loading library %s: %s",
                            filename, ex.args[0])
+
+
             return False
+
     return True
 
 

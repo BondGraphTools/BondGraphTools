@@ -37,12 +37,12 @@ class BondGraphBase:
         self.parent = parent
 
         self.description = description
-        if ports:
-            self._ports = {
-                (int(p) if p.isnumeric() else p):v for p,v in ports.items()
-            }
-        else:
-            self._ports = {}
+        # if ports:
+        #     self._ports = {
+        #         (int(p) if p.isnumeric() else p):v for p,v in ports.items()
+        #     }
+        # else:
+        #     self._ports = {}
         """ List of exposed Power ports"""
 
         """ Dictionary of internal parameter and their values. The key is 
@@ -77,9 +77,13 @@ class BondGraphBase:
     @property
     def uri(self):
         if not self.parent:
-            return ""
+            return "/"
         else:
-            return f"{self.parent.uri}/{self.name}"
+            parent_uri = self.parent.uri
+            if parent_uri == "/":
+                return f"{self.parent.uri}{self.name}"
+            else:
+                return f"{self.parent.uri}/{self.name}"
 
     @property
     def root(self):
@@ -228,7 +232,7 @@ class PortExpander(FixedPort):
             self._default_template, = self._templates
         else:
             self._default_template = False
-        self.max_index =len(static_ports) if static_ports else 0
+        self.max_index = len(static_ports) if static_ports else 0
 
     def get_port(self, port=None):
         """
@@ -330,3 +334,45 @@ class PortTemplate(object):
         self.parent.max_index = max(index, self.parent.max_index) + 1
         return port
 
+class LabeledPort(Port):
+    def __init__(self,*args,name=None, **kwargs):
+        self.name = name
+        Port.__init__(self, *args, **kwargs)
+
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        if isinstance(other, str) and other == self.name:
+            return True
+        else:
+            return super().__eq__(self, other)
+
+class LabeledPortManager(FixedPort):
+
+    def __init__(self, ports=None):
+        if ports:
+            super().__init__(ports)
+        else:
+            super().__init__({})
+        self.max_index = len(self._ports)
+
+    def get_port(self, port=None):
+        if isinstance(port, str):
+            try:
+                p, = {pp for pp in self.ports if pp.name == port}
+                return p
+            except ValueError:
+                idx = self.max_index
+                self.max_index = + 1
+                new_port = LabeledPort(self, idx, name=port)
+                self._ports[new_port] = None
+                return new_port
+        elif not port and len(self._ports) == 0:
+            idx = self.max_index
+            self.max_index += 1
+            new_port = LabeledPort(self, idx, name=str(idx))
+            self._ports[new_port] = None
+            return new_port
+        else:
+            return super().get_port(port)

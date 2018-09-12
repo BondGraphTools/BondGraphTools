@@ -1,7 +1,7 @@
 import logging
 import sympy as sp
 
-from .base import BondGraphBase, Bond, Port
+from .base import *
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import smith_normal_form, adjacency_to_dict, \
@@ -9,10 +9,11 @@ from .algebra import smith_normal_form, adjacency_to_dict, \
 
 logger = logging.getLogger(__name__)
 
-class BondGraph(BondGraphBase):
+class BondGraph(BondGraphBase, LabeledPortManager):
     def __init__(self, name, components=None, **kwargs):
 
-        super().__init__(name, **kwargs)
+        BondGraphBase.__init__(self, name, **kwargs)
+        LabeledPortManager.__init__(self)
         self.components = set()
 
         if components:
@@ -21,16 +22,28 @@ class BondGraph(BondGraphBase):
 
         self._bonds = BondSet()
 
-        self._internal_ports = []
         self.view = GraphLayout(self)
         """Graphical Layout of internal components"""
-        self.cv_map = dict()
+
         self._port_map = dict()
         self._model_changed = True
 
     @property
     def bonds(self):
         return list(self._bonds)
+
+    def __truediv__(self, other):
+
+        try:
+            if not self.parent:
+                test_uri = f"/{other}"
+            else:
+                test_uri = f"{self.uri}/{other}"
+            c, = (c for c in self.components if c.uri == test_uri)
+            return c
+        except (ValueError, TypeError):
+
+            raise ValueError(f"Cannot find {other}")
 
     @property
     def metaclass(self):
@@ -57,6 +70,21 @@ class BondGraph(BondGraphBase):
     @property
     def internal_ports(self):
         return [p for c in self.components for p in c.ports]
+
+    def map_port(self, label, e, f):
+        """
+
+        Args:
+            label:
+            e:
+            f:
+
+        Returns:
+
+        """
+
+        port = self.get_port(label)
+        self._port_map[port] = (e,f)
 
     def add(self, *args):
 
@@ -115,24 +143,6 @@ class BondGraph(BondGraphBase):
     #     c, v = param
     #     self.components[c].set_param(v, value)
 
-    @property
-    def ports(self):
-
-
-        # bonds = {v for bond in self.bonds for v in bond}
-        # j = 0
-        # out = {p:v for p, v in self._ports.items()}
-        #
-        # for v in self.components:
-        #     for p in v.ports:
-        #         while j in out:
-        #             j += 1
-        #         if (v, p) not in bonds:
-        #             out.update({j: (v, p)})
-        #             j += 1
-        # print(len(self._bonds))
-
-        return {}
 
     @property
     def state_vars(self):
@@ -154,11 +164,17 @@ class BondGraph(BondGraphBase):
     def control_vars(self):
         j = 0
         out = dict()
+        excluded = [ v
+            for pair in self._port_map.values() for v in pair
+        ]
+
         for v in self.components:
             try:
                 for i in v.control_vars:
-                    out.update({f"u_{j}":(v,i)})
-                    j += 1
+                    cv = (v,i)
+                    if cv not in excluded:
+                        out.update({f"u_{j}": cv})
+                        j += 1
             except AttributeError:
                 pass
         return out
@@ -172,8 +188,9 @@ class BondGraph(BondGraphBase):
         for var, var_id in self.state_vars.items():
             tangent_space[sp.symbols((f"{var}", f"d{var}"))] = var_id
 
-        for port, port_id in self.ports.items():
-            port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = port_id
+        # for port, port_id in self.ports.items():
+        #     port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = port_id
+        port_space = self._port_vectors()
 
         for var, var_id in self.control_vars.items():
             control_space[sp.symbols(f"{var}")] = var_id
@@ -260,10 +277,6 @@ class BondGraph(BondGraphBase):
         tangent_space = dict()
         control_space = dict()
         port_space = dict()
-        input_port_space = {
-            sp.symbols((f"e_{i}", f"f_{i}")): (self, i)
-            for i in self._internal_ports
-        }
         for component in self.components:
             c_ts, c_ps, c_cs = component.basis_vectors
 
@@ -272,64 +285,14 @@ class BondGraph(BondGraphBase):
                 tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
 
             for port in c_ps.values():
-                i = len(port_space) + len(input_port_space)
+                i = len(port_space)
                 port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
 
             for cv in c_cs.values():
                 i = len(control_space)
                 control_space[sp.symbols(f"u_{i}")] = cv
 
-        port_space.update(input_port_space)
         return tangent_space, port_space, control_space
-
-
-    # def make_port(self, port=None):
-    #     if port and not isinstance(port, int):
-    #         raise InvalidPortException("Could not make port %s", port)
-    #
-    #     if port and port not in self.ports:
-    #         n = port
-    #     else:
-    #         n = 0
-    #         while n in self.ports:
-    #             n += 1
-    #
-    #     self._ports[n] = (self, n)
-    #     self._internal_ports.append(n)
-    #     return n
-
-    # def delete_port(self, port):
-    #     if port in self._ports:
-    #         del self._ports[port]
-    #         del self._internal_ports[port]
-    #
-    # def find(self, name, component=None):
-    #     """
-    #     Searches through this model for a component of with the specified name.
-    #     If the type of component is specified by setting c_type, then only
-    #     components of that type are considered.
-    #
-    #     Args:
-    #         name (str): The name of the object to search for.
-    #         component (str): (Optional) the class of components in which to
-    #          search.
-    #
-    #     Returns:
-    #         None if no such component exists, or the component object if it
-    #      does.
-    #
-    #     Raises:
-    #     """
-    #     out = [obj for obj in self.components if
-    #            (not component or obj.type == component) and
-    #            obj.name == name]
-    #     if len(out) > 1:
-    #         raise NotImplementedError("Object is not unique")
-    #     elif len(out) == 1:
-    #         return out.pop()
-    #     else:
-    #         return None
-
 
 def _is_label_invalid(label):
     if not isinstance(label, str):
@@ -365,4 +328,3 @@ class BondSet(set):
     def __contains__(self, item):
         p1, p2 = item
         return super().__contains__(item) or super().__contains__((p2,p1))
-

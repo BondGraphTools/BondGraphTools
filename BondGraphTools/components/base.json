@@ -84,7 +84,7 @@
     "Se": {
       "description": "Effort Source",
       "class": "BaseComponent",
-      "metaclass":"Se",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -98,7 +98,7 @@
     "Sf": {
       "description": "Flow Source",
       "class": "BaseComponent",
-      "metaclass":"Sf",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -154,6 +154,19 @@
         "e_1 - R*f_0",
         "e_0 + R*f_1"
       ]
+    },
+    "SS":{
+      "description": "Source Sensor",
+      "class": "BaseComponent",
+      "metaclass":"SS",
+      "ports": {
+        "0": null
+      },
+      "params":{
+          "u_f":null,
+          "u_e":null
+      },
+      "constitutive_relations": ["e_0 - u_e", "f_0+u_f"]
     }
   }
 }

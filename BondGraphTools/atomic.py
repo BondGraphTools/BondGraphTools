@@ -257,3 +257,4 @@ class EqualFlow(BondGraphBase, PortExpander):
 
         relations.append(partial_sum)
         return relations
+

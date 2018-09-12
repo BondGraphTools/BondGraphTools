@@ -78,3 +78,41 @@ def test_load_rlc_parallel():
     for r in rel:
         assert r in (eq1, eq2)
 
+def test_load_modular():
+
+    model_1 = load(file_path / "modular.bg")
+
+    assert model_1.uri == "/"
+    assert model_1.name == "system"
+
+    tree = set()
+    def uri_tree(bg):
+        tree.add(bg.uri)
+        try:
+            for c in bg.components:
+                uri_tree(c)
+
+        except AttributeError:
+            pass
+        return
+
+    uri_tree(model_1)
+
+    assert tree == {
+        "/",
+        "/Vs",
+        "/Z",
+        "/kvl",
+        "/Vs/Sf",
+        "/Vs/pout",
+        "/Vs/kvl",
+        "/Z/R1",
+        "/Z/pin",
+        "/Z/kvl",
+        "/Z/L1",
+        "/Z/C1"
+    }
+
+
+
+
