@@ -163,10 +163,10 @@
         "0": null
       },
       "params":{
-          "u_f":null,
-          "u_e":null
+          "f":null,
+          "e":null
       },
-      "constitutive_relations": ["e_0 - u_e", "f_0+u_f"]
+      "constitutive_relations": ["e_0 - e", "f_0+f"]
     }
   }
 }

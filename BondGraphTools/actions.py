@@ -270,7 +270,7 @@ def expose(component, label):
     else:
         ss = component
 
-    effort_port = (ss, 'u_e')
-    flow_port = (ss, 'u_f')
+    effort_port = (ss, 'e')
+    flow_port = (ss, 'f')
 
     model.map_port(label, effort_port, flow_port)

@@ -164,9 +164,9 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def control_vars(self):
         j = 0
         out = dict()
-        excluded = [ v
-            for pair in self._port_map.values() for v in pair
-        ]
+        excluded = {
+            v for pair in self._port_map.values() for v in pair
+         }
 
         for v in self.components:
             try:
@@ -181,15 +181,43 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def basis_vectors(self):
+        """
+        Basis vectors for the state space (X), port space (J),
+        and control space (U) from an external point of view.
+
+        For the state space dictionaries are of the form
+        ```
+            X = {
+                sympy.Symbol('x_i'): (object, var)
+            }
+        ```
+        We assume the object is a subclass of BondGraphBase
+        and the var refers to the variable name in the objects local
+        co-ordinate system and may be a string or a sympy.Symbol
+
+        For the port space, dictionaries are of the form
+        ```
+            J = {
+                (sympy.Symbol(e_i), sympy.Symbol(f_i)): Port(obj, idx)
+            }
+        ```
+        where Port is an instance of `Port`.
+
+        Finally for the cotrol variables we have
+        ```
+            U = {
+            sympy.Symbol(u_i):(object, var)
+            }
+        ```
+        Where object and var are specified as per the state space.
+        """
+
         tangent_space = dict()
-        port_space = dict()
         control_space = dict()
 
         for var, var_id in self.state_vars.items():
             tangent_space[sp.symbols((f"{var}", f"d{var}"))] = var_id
 
-        # for port, port_id in self.ports.items():
-        #     port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = port_id
         port_space = self._port_vectors()
 
         for var, var_id in self.control_vars.items():
@@ -241,13 +269,17 @@ class BondGraph(BondGraphBase, LabeledPortManager):
             *self._build_internal_basis_vectors()
         )
         inv_tm, inv_js, inv_cv = mappings
+
         js_size = len(inv_js) # number of ports
         ss_size = len(inv_tm) # number of state space coords
         cv_size = len(inv_cv)
         n = len(coordinates)
 
         size_tuple = (ss_size, js_size, cv_size, n)
-        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+
+        #lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+        lin_dict = {}
+
         nlin_dict = {}
 
         try:
@@ -276,7 +308,12 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
         control_space = dict()
-        port_space = dict()
+        # port_space = dict()
+        bond_space = dict()
+
+        for i, bond in enumerate(self.bonds):
+            bond_space[sp.symbols((f"e_{i}", f"f_{i}"))] = bond
+
         for component in self.components:
             c_ts, c_ps, c_cs = component.basis_vectors
 
@@ -284,15 +321,18 @@ class BondGraph(BondGraphBase, LabeledPortManager):
                 i = len(tangent_space)
                 tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
 
-            for port in c_ps.values():
-                i = len(port_space)
-                port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
-
             for cv in c_cs.values():
                 i = len(control_space)
                 control_space[sp.symbols(f"u_{i}")] = cv
 
-        return tangent_space, port_space, control_space
+            # for port in c_ps.values():
+            #     i = len(port_space)
+            #     port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
+
+
+        return tangent_space, bond_space, control_space
+
+
 
 def _is_label_invalid(label):
     if not isinstance(label, str):

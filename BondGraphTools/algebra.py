@@ -11,6 +11,9 @@ class NotInvertible(Exception):
     pass
 
 
+
+
+
 def extract_coefficients(equation, local_map, global_coords):
 
     coeff_dict = {}
@@ -161,9 +164,6 @@ def _process_constraints(linear_op,
                         lin_dict.update({(0, idx): new_coeff})
                     else:
                         nlin += new_coeff * coordinates[idx]
-            if factor == 0:
-                raise SymbolicException("Invalid Constraint %s",
-                                        repr(constraint))
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
                     cv = coordinates[offset+ss_size+idx]

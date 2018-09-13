@@ -9,6 +9,7 @@ from BondGraphTools.exceptions import *
 
 file_path = pathlib.Path(__file__).parent / 'files'
 
+
 def test_source_sensor():
 
     ss = new("SS", name="Plug 1")
@@ -23,8 +24,30 @@ def test_source_sensor():
     expose(ss, "A")
     assert len(model.ports) == 1
 
+def test_ss_exposure():
+    model = new()
+    ss = new("SS")
+    sf = new("Sf", name="Sf")
+    zero = new("0")
 
-def test_build():
+    model.add(ss,sf,zero)
+
+    connect(sf, zero)
+    connect(ss, zero)
+    assert not model.ports
+    assert set(model.control_vars.values()) == {
+        (sf, 'f'), (ss, 'e'), (ss, 'f')
+    }
+    expose(ss, 'pin')
+    assert model.ports
+    p, = list(model.ports)
+    assert p.name is "pin"
+    assert set(model.control_vars.values()) == {(sf, 'f')}
+    assert model.constitutive_relations == [
+
+    ]
+
+def test_load_modular():
     model_1 = load(file_path / "modular.bg")
 
     assert model_1.name == "system"
@@ -45,6 +68,7 @@ def test_build():
     assert list(Vs.ports)[0].name == 'A'
     assert Vs.state_vars == {}
     assert len(Vs.control_vars) == 1
+
 
 
 def test_modularity():

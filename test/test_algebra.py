@@ -147,6 +147,43 @@ def test_build_relations():
     assert eqn == test_eqn
 
 
+def test_nullity_cr():
+
+    model = bgt.new()
+    Sf = bgt.new('Sf', name="Sf")
+    R = bgt.new("R", 1)
+    zero = bgt.new("0")
+
+    model.add(Sf,R,zero)
+    connect(Sf, zero)
+    connect(R, zero)
+
+    # State_Space = {}
+    assert model.state_vars == {}
+
+    assert len(model.internal_ports) == 4
+
+    GX, GP, GC = model.basis_vectors
+    assert not GX
+    assert not GP
+    assert GC
+
+    #    LX, LP, LC = model.local_basis_vectors
+
+
+    local_basis = model._build_internal_basis_vectors()
+    X, P, C = local_basis
+
+    assert X == {}
+    assert len(C) == 1
+    assert len(P) == 4
+    mappings, coordinates = inverse_coord_maps(*local_basis)
+    print(coordinates)
+    print(mappings)
+    assert False
+
+
+
 def test_zero_junction_relations():
     r = bgt.new("R", value=sympy.symbols('r'))
     l = bgt.new("I", value=sympy.symbols('l'))
