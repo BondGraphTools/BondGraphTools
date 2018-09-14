@@ -237,7 +237,7 @@ def _find_subclass(name, base_class):
                 return sc
 
 
-def expose(component, label):
+def expose(component, label=None):
     """
     Exposes the component as port on the parent.
 
@@ -272,5 +272,8 @@ def expose(component, label):
 
     effort_port = (ss, 'e')
     flow_port = (ss, 'f')
+
+    if not label:
+        label = str(len(model.ports))
 
     model.map_port(label, effort_port, flow_port)

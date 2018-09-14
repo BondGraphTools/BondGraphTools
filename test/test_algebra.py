@@ -3,7 +3,7 @@ import sympy
 import logging
 
 import BondGraphTools as bgt
-from BondGraphTools import connect
+from BondGraphTools import connect, new, expose
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
     adjacency_to_dict, augmented_rref,_generate_substitutions,\
     inverse_coord_maps, _generate_cv_substitutions, get_relations_iterator
@@ -134,82 +134,12 @@ def test_augmented_rref_2():
 
 def test_build_relations():
     c = bgt.new("C")
-
     eqns = c._build_relations()
-    assert len(eqns) == 1
 
-    eqn = eqns.pop()
+    test_eqn = {sympy.sympify("q_0 - C*e_0"),
+                sympy.sympify("dq_0 - f_0")}
 
-    test_eqn = sympy.sympify("q_0 - C*e_0")
-
-    assert eqn == test_eqn
-
-
-def test_nullity_cr():
-
-    model = bgt.new()
-    Sf = bgt.new('Sf', name="Sf")
-    R = bgt.new("R", value=1)
-    zero = bgt.new("0")
-
-    model.add(Sf,R,zero)
-    connect(Sf, zero)
-    connect(R, zero)
-
-    # State_Space = {}
-    assert model.state_vars == {}
-
-    assert len(model.internal_ports) == 4
-
-    GX, GP, GC = model.basis_vectors
-    assert not GX
-    assert not GP
-    assert GC
-
-    #    LX, LP, LC = model.local_basis_vectors
-
-
-    local_basis = model._build_internal_basis_vectors()
-    X, P, C = local_basis
-
-    assert X == {}
-    assert len(C) == 1
-    assert len(P) == 4
-
-    assert model.constitutive_relations == []
-
-def test_ported_cr():
-    model = bgt.new()
-    Sf = bgt.new('Sf', name="Sf")
-    R = bgt.new("R", value=2)
-    zero = bgt.new("0")
-    ss = bgt.new("SS")
-
-    model.add(Sf, R, zero, ss)
-    connect(Sf, zero)
-    connect(R, zero)
-    connect(ss, zero)
-
-    bgt.expose(ss, 'A')
-    assert len(model.control_vars) == 1
-
-    ts, ps, cs = model._build_internal_basis_vectors()
-    assert len(cs) == 1
-    assert len(ps) == 7
-    assert len(ts) == 0
-
-    mapping, coords = inverse_coord_maps(ts, ps, cs)
-    assert len(coords) == 15
-
-    coords, mappings, lin_op, nl_op, conttr = model.system_model()
-    assert nl_op.is_zero
-    assert not conttr
-
-    assert model.constitutive_relations == [
-        sympy.sympify('e_A - 2*f_A - 2*u_0')
-    ]
-
-
+    assert set(eqns) == test_eqn
 
 def test_zero_junction_relations():
     r = bgt.new("R", value=sympy.symbols('r'))
@@ -436,3 +366,101 @@ def test_cv_subs_state_func():
 
     mappings, coords = inverse_coord_maps(*bg.basis_vectors)
     assert _generate_cv_substitutions(cv_s, mappings,coords) == subs
+
+
+
+def test_ported_cr():
+    model = bgt.new()
+    Sf = bgt.new('Sf', name="Sf")
+    R = bgt.new("R", value=2)
+    zero = bgt.new("0")
+    ss = bgt.new("SS")
+
+    model.add(Sf, R, zero, ss)
+    connect(Sf, zero)
+    connect(R, zero)
+    connect(ss, zero)
+
+    bgt.expose(ss, 'A')
+    assert len(model.control_vars) == 1
+
+    ts, ps, cs = model._build_internal_basis_vectors()
+    assert len(cs) == 1
+    assert len(ps) == 7
+    assert len(ts) == 0
+
+    mapping, coords = inverse_coord_maps(ts, ps, cs)
+    assert len(coords) == 15
+
+    coords, mappings, lin_op, nl_op, conttr = model.system_model()
+    assert nl_op.is_zero
+    assert not conttr
+
+    assert model.constitutive_relations == [
+        sympy.sympify('e_0 - 2*f_0 - 2*u_0')
+    ]
+
+def test_ported_series_resistor():
+
+    Se = new("Se")
+    r1 = new("R", value=1)
+    r2 = new("R", value=2)
+    kvl = new('1')
+    ss = new("SS")
+    model = new()
+    model.add(
+        Se,r1,r2,kvl, ss
+    )
+    expose(ss)
+    connect(Se, kvl.input)
+    connect(kvl.output, r1)
+    connect(kvl.output, r2)
+    connect(kvl.output, ss)
+
+    assert len(model.ports) == 1
+
+    assert model.constitutive_relations == [
+        sympy.sympify("e_0 - 3*f_0 - u_0")
+    ]
+
+def test_ported_cap():
+    model = new()
+    c = new("C", value=3)
+    zero = new("0")
+    ss = new("SS")
+    model.add(
+        c, zero, ss
+    )
+
+    connect(c, zero)
+    connect(ss, zero)
+
+    expose(ss)
+    assert len(model.ports) == 1
+
+
+    assert model.constitutive_relations == [
+        sympy.sympify("dx_0 - f_0"),sympy.sympify("e_0 - x_0/3")
+    ]
+def test_ported_parallel_rc():
+
+    model = new()
+    r = new("R", value=2)
+    c = new("C", value=3)
+    zero = new("0")
+    ss = new("SS")
+    model.add(
+        r,c,zero, ss
+    )
+
+    connect(r,zero)
+    connect(c,zero)
+    connect(ss, zero)
+
+    expose(ss)
+    assert len(model.ports) == 1
+
+    assert model.constitutive_relations == [
+        sympy.sympify("dx_0 + x_0/6 - f_0"),
+        sympy.sympify("e_0 - x_0/3")
+    ]

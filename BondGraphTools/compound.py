@@ -266,7 +266,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         for local_idx, c_idx in enumerate(out_ports):
             p, = {pp for pp in self.ports if pp.index == local_idx}
-            label = p.name
+            label = p.index
             subs.append(sp.symbols((f"e_{c_idx}", f"e_{label}")))
             subs.append(sp.symbols((f"f_{c_idx}", f"f_{label}")))
 
@@ -296,9 +296,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         inverse_port_map = {
         }
+
         for port, (cv_e, cv_f) in self._port_map.items():
-            inverse_port_map[cv_e] = 2*inv_js[port]
-            inverse_port_map[cv_f] = 2*inv_js[port] + 1
+            inverse_port_map[cv_e] = ss_size + 2*inv_js[port]
+            inverse_port_map[cv_f] = ss_size +  2*inv_js[port] + 1
 
         for component in self.components:
             relations = get_relations_iterator(
@@ -313,7 +314,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         linear_op = sp.SparseMatrix(row, n, lin_dict)
         nonlinear_op = sp.SparseMatrix(row, 1, nlin_dict)
-
         coordinates, linear_op, nonlinear_op, constraints = reduce_model(
                 linear_op, nonlinear_op, coordinates, size_tuple,
             control_vars=control_vars

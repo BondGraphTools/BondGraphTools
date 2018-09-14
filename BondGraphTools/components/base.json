@@ -54,7 +54,8 @@
         "q_0":"Generalised Position"
       },
       "constitutive_relations": [
-        "q_0 - C * e_0"
+        "q_0 - C * e_0",
+        "dq_0 - f_0"
       ]
     },
     "I": {
@@ -78,7 +79,8 @@
         }
       },
       "constitutive_relations": [
-        "p_0 - L*f_0"
+        "p_0 - L*f_0",
+        "dp_0 - e_0"
       ]
     },
     "Se": {

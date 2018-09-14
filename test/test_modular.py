@@ -71,25 +71,15 @@ def test_load_modular():
 def test_modularity():
     model_1 = load(file_path / "modular.bg")
 
-    model_2 = new()
-
-    Se = new("Sf", value=1)
-    kvl = new("0")
-    r = new('R', value=1)
-    l = new('I', value=1)
-    c = new("C", value=1)
-
-    model_2.add(Se, r,l, c, kvl)
-    for comp in model_2.components:
-        if comp is not kvl:
-            connect(comp, kvl)
-
     Vs = model_1 / "Vs"
     Z = model_1 / "Z"
 
     Vs_cr = Vs.constitutive_relations
-    assert Vs_cr ==[sp.sympify('f_A + u_0')]
+    assert Vs_cr ==[sp.sympify('f_0 + u_0')]
+    
+    assert set(model_1.constitutive_relations) =={
+        sp.sympify("dx_0 - x_1"), sp.sympify("dx_1 - u_0 +x_0 + x_1")
+    }
 
-    print(Z.constitutive_relations)
 
-    assert rel_1 == rel_2
+

@@ -70,21 +70,21 @@ class BaseComponent(BondGraphBase, FixedPort):
         """
         models = self._build_relations()
 
-        for var in self.state_vars:
-            var_type, port = var.split("_")
-
-            if var_type == "q":
-                ef_var = f'f_{port}'
-            elif var_type == "p":
-                ef_var = f'e_{port}'
-            else:
-                raise ModelParsingError(
-                    "Error parsing model %s: "
-                    "state variable %s must be either p or q",
-                    self.metaclass, var
-                )
-
-            models.append(sp.sympify(f"d{var} - {ef_var}"))
+        # for var in self.state_vars:
+        #     var_type, port = var.split("_")
+        #
+        #     if var_type == "q":
+        #         ef_var = f'f_{port}'
+        #     elif var_type == "p":
+        #         ef_var = f'e_{port}'
+        #     else:
+        #         raise ModelParsingError(
+        #             "Error parsing model %s: "
+        #             "state variable %s must be either p or q",
+        #             self.metaclass, var
+        #         )
+        #
+        #     models.append(sp.sympify(f"d{var} - {ef_var}"))
 
         subs = []
         for param, value in self.params.items():
