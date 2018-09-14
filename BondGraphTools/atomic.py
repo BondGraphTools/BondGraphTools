@@ -182,7 +182,7 @@ class EqualEffort(BondGraphBase, PortExpander):
 
     def __init__(self, **kwargs):
 
-        PortExpander .__init__(self, {"in":None})
+        PortExpander .__init__(self, {"in": None})
         BondGraphBase.__init__(self, **kwargs)
 
     @property
@@ -249,7 +249,7 @@ class EqualFlow(BondGraphBase, PortExpander):
         partial_sum = sigma_0*e_0
 
         while var:
-            (e_i, f_i), port =var.pop()
+            (e_i, f_i), port = var.pop()
             sigma_i = port.weight
 
             partial_sum += sigma_i*e_i

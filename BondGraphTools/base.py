@@ -124,8 +124,10 @@ class Port(object):
 
     def __iter__(self):
         return iter((self.component, self.index))
+
     def __len__(self):
         return 2
+
     def __getitem__(self, item):
         if item == 0:
             return self.component
@@ -190,8 +192,8 @@ class FixedPort:
         elif port in self._ports and not port.is_connected:
             return port
         elif isinstance(port, int):
-            p, = (pp for pp in self._ports if pp.index == port
-                  and not pp.is_connected)
+            p, = (pp for pp in self._ports if pp.index == port and
+                  not pp.is_connected)
             if p:
                 return p
 

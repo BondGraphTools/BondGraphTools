@@ -38,8 +38,8 @@ def disconnect(target, other):
                     if item in (bond.head, bond.tail)}
         except TypeError as ex:
             return {bond for bond in model.bonds
-                    if item is bond.head.component
-                    or item is bond.tail.component}
+                    if item is bond.head.component or
+                    item is bond.tail.component}
 
     targets = _filter(target) & _filter(other)
 
