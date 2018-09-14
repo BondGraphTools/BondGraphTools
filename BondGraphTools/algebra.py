@@ -612,17 +612,24 @@ def inverse_coord_maps(tangent_space, port_space, control_space):
     return (inverse_tm, inverse_js, inverse_cm), coordinates
 
 
-def get_relations_iterator(component, mappings, coordinates):
+def get_relations_iterator(component, mappings, coordinates, io_map=None):
     local_tm, local_js, local_cv = component.basis_vectors
     inv_tm, inv_js, inv_cv = mappings
 
     num_ports = len(inv_js)
     num_state_vars = len(inv_tm)
+    local_map = {}
 
-    local_map = {
-        cv: 2*(num_ports+num_state_vars) + inv_cv[value]
-        for cv, value in local_cv.items()
-    }
+    # todo: Fix this dirty hack; there has to be a better way to hand io ports
+    for cv, value in local_cv.items():
+        try:
+            local_map[cv] = 2*(num_ports+num_state_vars) + inv_cv[value]
+        except KeyError:
+            logger.info("Could not find %s, trying the io_map", value)
+            key = io_map[value]
+            local_map[cv] = key
+            logger.info("Mapping %s to co-ord %s",cv, coordinates[key])
+
     for (x, dx), coord in local_tm.items():
         local_map[dx] = inv_tm[coord]
         local_map[x] = inv_tm[coord] + num_state_vars + 2 * num_ports
@@ -636,3 +643,7 @@ def get_relations_iterator(component, mappings, coordinates):
             yield extract_coefficients(relation, local_map, coordinates)
         else:
             yield {}, 0.0
+
+
+
+

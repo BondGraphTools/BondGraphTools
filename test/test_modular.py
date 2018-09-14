@@ -43,9 +43,6 @@ def test_ss_exposure():
     p, = list(model.ports)
     assert p.name is "pin"
     assert set(model.control_vars.values()) == {(sf, 'f')}
-    assert model.constitutive_relations == [
-
-    ]
 
 def test_load_modular():
     model_1 = load(file_path / "modular.bg")
@@ -91,10 +88,8 @@ def test_modularity():
     Z = model_1 / "Z"
 
     Vs_cr = Vs.constitutive_relations
-    assert Vs_cr ==[sp.sympify('e_0 - u_0')]
+    assert Vs_cr ==[sp.sympify('f_A + u_0')]
 
-
-    rel_1 = set(model_1.constitutive_relations)
-    rel_2 = set(model_2.constitutive_relations)
+    print(Z.constitutive_relations)
 
     assert rel_1 == rel_2

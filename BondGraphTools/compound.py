@@ -227,10 +227,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def constitutive_relations(self):
-
         coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
-
         inv_tm, inv_js, _ = mappings
+        out_ports =[idx for p, idx in inv_js.items() if p in self.ports]
+        logging.info("Getting IO ports: %s",out_ports)
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
@@ -251,7 +251,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         relations = [
             sp.Add(l,r) for i, (l,r) in enumerate(zip(
                 lin_op*coord_vect,nlin_op))
-            if not ss_size <= i < ss_size + 2*js_size
+            if not ss_size <= i < ss_size + 2*js_size - 2*len(out_ports)
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
@@ -261,8 +261,16 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         else:
             logger.warning("Constraints %s is not a list. Discarding",
                            repr(constraints))
+        subs = []
 
-        return [r.nsimplify() for r in relations if r]
+
+        for local_idx, c_idx in enumerate(out_ports):
+            p, = {pp for pp in self.ports if pp.index == local_idx}
+            label = p.name
+            subs.append(sp.symbols((f"e_{c_idx}", f"e_{label}")))
+            subs.append(sp.symbols((f"f_{c_idx}", f"f_{label}")))
+
+        return [r.subs(subs).nsimplify() for r in relations if r]
 
     def system_model(self, control_vars=None):
         mappings, coordinates = inverse_coord_maps(
@@ -277,8 +285,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         size_tuple = (ss_size, js_size, cv_size, n)
 
-        #lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
-        lin_dict = {}
+        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
 
         nlin_dict = {}
 
@@ -287,8 +294,17 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         except ValueError:
             row = 0
 
+        inverse_port_map = {
+        }
+        for port, (cv_e, cv_f) in self._port_map.items():
+            inverse_port_map[cv_e] = 2*inv_js[port]
+            inverse_port_map[cv_f] = 2*inv_js[port] + 1
+
         for component in self.components:
-            relations = get_relations_iterator(component, mappings, coordinates)
+            relations = get_relations_iterator(
+                component, mappings, coordinates, inverse_port_map
+            )
+
             for linear, nonlinear in relations:
                 lin_dict.update({(row, k): v
                                  for k, v in linear.items()})
@@ -308,11 +324,15 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def _build_internal_basis_vectors(self):
         tangent_space = dict()
         control_space = dict()
-        # port_space = dict()
-        bond_space = dict()
+        port_space = {}
+        # bond_space = dict()
+        #
+        # for i, bond in enumerate(self.bonds):
+        #     bond_space[sp.symbols((f"e_{i}", f"f_{i}"))] = bond
 
-        for i, bond in enumerate(self.bonds):
-            bond_space[sp.symbols((f"e_{i}", f"f_{i}"))] = bond
+        mapped_cvs = {
+            var for pair in self._port_map.values() for var in pair
+        }
 
         for component in self.components:
             c_ts, c_ps, c_cs = component.basis_vectors
@@ -322,15 +342,22 @@ class BondGraph(BondGraphBase, LabeledPortManager):
                 tangent_space[sp.symbols((f"x_{i}", f"dx_{i}"))] = var_id
 
             for cv in c_cs.values():
-                i = len(control_space)
-                control_space[sp.symbols(f"u_{i}")] = cv
+                if cv not in mapped_cvs:
+                    i = len(control_space)
+                    control_space[sp.symbols(f"u_{i}")] = cv
 
-            # for port in c_ps.values():
-            #     i = len(port_space)
-            #     port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
+            for port in c_ps.values():
+                i = len(port_space)
+                port_space[sp.symbols((f"e_{i}", f"f_{i}"))] = port
 
+        n = len(port_space)
+        external_ports = {
+            sp.symbols((f"e_{n + i}", f"f_{n + i}")): port
+            for i, port in enumerate(self._port_map)
+        }
+        port_space.update(external_ports)
 
-        return tangent_space, bond_space, control_space
+        return tangent_space, port_space, control_space
 
 
 

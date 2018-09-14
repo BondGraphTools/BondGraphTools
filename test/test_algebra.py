@@ -1,12 +1,12 @@
 import pytest
 import sympy
+import logging
 
 import BondGraphTools as bgt
 from BondGraphTools import connect
 from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
     adjacency_to_dict, augmented_rref,_generate_substitutions,\
     inverse_coord_maps, _generate_cv_substitutions, get_relations_iterator
-
 
 def test_extract_coeffs_lin():
     eqn = sympy.sympify("y -2*x -3")
@@ -42,8 +42,6 @@ def test_smith_normal_form():
     mp,_,_ = smith_normal_form(m)
     assert mp.shape == (3, 3)
     assert mp[2, 2] != 0
-
-
 
 
 def test_smith_normal_form_2():
@@ -151,7 +149,7 @@ def test_nullity_cr():
 
     model = bgt.new()
     Sf = bgt.new('Sf', name="Sf")
-    R = bgt.new("R", 1)
+    R = bgt.new("R", value=1)
     zero = bgt.new("0")
 
     model.add(Sf,R,zero)
@@ -177,10 +175,39 @@ def test_nullity_cr():
     assert X == {}
     assert len(C) == 1
     assert len(P) == 4
-    mappings, coordinates = inverse_coord_maps(*local_basis)
-    print(coordinates)
-    print(mappings)
-    assert False
+
+    assert model.constitutive_relations == []
+
+def test_ported_cr():
+    model = bgt.new()
+    Sf = bgt.new('Sf', name="Sf")
+    R = bgt.new("R", value=2)
+    zero = bgt.new("0")
+    ss = bgt.new("SS")
+
+    model.add(Sf, R, zero, ss)
+    connect(Sf, zero)
+    connect(R, zero)
+    connect(ss, zero)
+
+    bgt.expose(ss, 'A')
+    assert len(model.control_vars) == 1
+
+    ts, ps, cs = model._build_internal_basis_vectors()
+    assert len(cs) == 1
+    assert len(ps) == 7
+    assert len(ts) == 0
+
+    mapping, coords = inverse_coord_maps(ts, ps, cs)
+    assert len(coords) == 15
+
+    coords, mappings, lin_op, nl_op, conttr = model.system_model()
+    assert nl_op.is_zero
+    assert not conttr
+
+    assert model.constitutive_relations == [
+        sympy.sympify('e_A - 2*f_A - 2*u_0')
+    ]
 
 
 
