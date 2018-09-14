@@ -5,6 +5,7 @@ from .exceptions import *
 from .base import BondGraphBase, Bond, Port, FixedPort
 from .atomic import EqualFlow
 
+
 def disconnect(target, other):
     """
     Args:
