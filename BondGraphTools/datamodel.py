@@ -9,14 +9,12 @@ todo:
 
 """
 
-
-
 import logging
 import pathlib
 import yaml
 
 from .base import Port, Bond
-from .actions import connect, new
+from .actions import connect, new, expose
 from .exceptions import *
 logger = logging.getLogger(__name__)
 
@@ -54,36 +52,41 @@ def load(file_name):
         raise NotImplementedError
 
 def _builder(data):
+    root = data["root"]
+    models = data['models']
 
-    def _build(model_name, template_name, models):
+    def _build(model_name, template_name):
         model_data = models[template_name]
         netlist = model_data["netlist"]
+
+        logger.info("%s: Trying to build", model_name)
+
         model = new(name=model_name)
 
         for comp_string in model_data["components"]:
-            label, tempate, *build_args = comp_string.split()
-            args, kwargs = _parse_build_args(build_args)
-            library, component = tempate.split("/")
+            logger.info("%s: building", comp_string)
+
             try:
-                name = kwargs.pop("name")
-            except KeyError:
-                name = None
+                comp = _base_component_from_str(comp_string)
+            except ValueError:
+                name, sub_model = comp_string.split(" ")
+                comp = _build(name, sub_model)
 
-            comp = new(name=label,
-                    library=library,
-                    component=component,
-                    value=args)
-
-            for k,v in kwargs.items():
-                comp.set_param(k,v)
             model.add(comp)
+            logger.info("%s components complete", model_name)
 
         _wire(model, netlist)
 
+        try:
+            IO_ports = model_data["ports"]
+            _expose(model, IO_ports)
+        except KeyError:
+            logger.info("No ports on model ")
         return model
 
-
     def _wire(model, netlist):
+        logger.info("%s: trying to wire", model.name)
+
         def get_port(port_string):
 
             tokens = iter(port_string.split('.'))
@@ -94,26 +97,35 @@ def _builder(data):
             except ValueError:
                 raise InvalidComponentException(
                     f"Could not find component {c} in model {model.name}")
-
             try:
                 t2 = next(tokens)
             except StopIteration:
                 return comp
-
             try:
                 t3 = next(tokens)
             except StopIteration:
+                logger.info("Tyring to get port %s, %s", comp, t2)
                 port = comp.get_port(t2)
+                logger.info("Got %s", str(port))
                 return port
 
             else:
                 raise NotImplementedError
 
         for bond_string in netlist:
+            logger.info("%s: bond %s", model.name, bond_string)
             tail_str, head_str = bond_string.split()
             tail = get_port(tail_str)
             head = get_port(head_str)
             connect(tail, head)
+
+    def _expose(model, IO_ports):
+        for port_string in IO_ports:
+            component_name, port_label = port_string.split(" ")
+            comp, = {
+                c for c in model.components if c.name == component_name
+            }
+            expose(comp, port_label)
 
     def _parse_build_args(in_args):
 
@@ -141,20 +153,32 @@ def _builder(data):
 
         return args, kwargs
 
-    def _build_component(name, template, *args, **kwargs):
-        pass
+    def _base_component_from_str(string):
+        label, tempate, *build_args = string.split()
+        args, kwargs = _parse_build_args(build_args)
+        library, component = tempate.split("/")
+        try:
+            name = kwargs.pop("name")
+        except KeyError:
+            name = None
 
+        comp = new(name=label,
+                   library=library,
+                   component=component,
+                   value=args)
+
+        for k, v in kwargs.items():
+            comp.set_param(k, v)
+        return comp
 
     def _validate(model_dict):
         # We should use this function to make sure we don't have an infinite loop
         # in the build cycle.
         pass
 
-    root = data["root"]
-    models = data['models']
     _validate(models)
 
-    return _build(root,root, models)
+    return _build(root, root)
 
 
 

@@ -54,7 +54,8 @@
         "q_0":"Generalised Position"
       },
       "constitutive_relations": [
-        "q_0 - C * e_0"
+        "q_0 - C * e_0",
+        "dq_0 - f_0"
       ]
     },
     "I": {
@@ -78,13 +79,14 @@
         }
       },
       "constitutive_relations": [
-        "p_0 - L*f_0"
+        "p_0 - L*f_0",
+        "dp_0 - e_0"
       ]
     },
     "Se": {
       "description": "Effort Source",
       "class": "BaseComponent",
-      "metaclass":"Se",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -98,7 +100,7 @@
     "Sf": {
       "description": "Flow Source",
       "class": "BaseComponent",
-      "metaclass":"Sf",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -154,6 +156,19 @@
         "e_1 - R*f_0",
         "e_0 + R*f_1"
       ]
+    },
+    "SS":{
+      "description": "Source Sensor",
+      "class": "BaseComponent",
+      "metaclass":"SS",
+      "ports": {
+        "0": null
+      },
+      "params":{
+          "f":null,
+          "e":null
+      },
+      "constitutive_relations": ["e_0 - e", "f_0+f"]
     }
   }
 }

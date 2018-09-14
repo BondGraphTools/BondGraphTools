@@ -34,15 +34,12 @@ def disconnect(target, other):
             return {bond for bond in model.bonds if item in bond}
         try:
             _, _ = item
-            return {
-                bond for bond in model.bonds if item in (bond.head, bond.tail)
-            }
-
+            return {bond for bond in model.bonds
+                    if item in (bond.head, bond.tail)}
         except TypeError as ex:
-            return {
-                bond for bond in model.bonds
-                if item is bond.head.component or item is bond.tail.component
-            }
+            return {bond for bond in model.bonds
+                    if item is bond.head.component or
+                    item is bond.tail.component}
 
     targets = _filter(target) & _filter(other)
 
@@ -195,8 +192,9 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
             build_args["class"], BondGraphBase
         )
         del build_args["class"]
-
-        return cls(**build_args)
+        comp = cls(**build_args)
+        comp.__component__ = component
+        return comp
 
     elif isinstance(component, BondGraphBase):
         obj = copy.copy(component)
@@ -217,8 +215,13 @@ def _update_build_params(build_args, value, **kwargs):
 
     if isinstance(value, (list, tuple)):
         assignments = zip(build_args["params"].keys(), value)
+
         for param, v in assignments:
-            build_args["params"][param]["value"] = v
+            try:
+                build_args["params"][param]["value"] = v
+            except TypeError:
+                build_args["params"][param] = v
+
     elif isinstance(value, dict):
         for param, v in value.items():
             if isinstance(build_args["params"][param], dict):
@@ -239,3 +242,41 @@ def _find_subclass(name, base_class):
             sc = _find_subclass(name, c)
             if sc:
                 return sc
+
+
+def expose(component, label=None):
+    """
+    Exposes the component as port on the parent.
+
+    If the target component is not a SS component, it is replaced with a new
+    ss component.
+    A new external port is added to the parent model, and
+
+    Args:
+        component:
+        label:
+
+    Raises: `InvalidComponent Exception`
+    """
+    model = component.parent
+    if not model:
+        raise InvalidComponentException(
+            f"Component {component} is not inside anything"
+        )
+    # fix me with metaclasses or something trickier
+    if component.__component__ is not "SS":
+        ss = new("SS",  name=component.name)
+        try:
+            swap(component, ss)
+        except InvalidComponentException as ex:
+            raise InvalidComponentException(f"Cannot expose {component}", ex)
+    else:
+        ss = component
+
+    effort_port = (ss, 'e')
+    flow_port = (ss, 'f')
+
+    if not label:
+        label = str(len(model.ports))
+
+    model.map_port(label, effort_port, flow_port)
