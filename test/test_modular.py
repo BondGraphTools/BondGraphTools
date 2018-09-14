@@ -77,9 +77,12 @@ def test_modularity():
     Vs_cr = Vs.constitutive_relations
     assert Vs_cr ==[sp.sympify('f_0 + u_0')]
     
-    assert set(model_1.constitutive_relations) =={
+    assert (set(model_1.constitutive_relations) == {
         sp.sympify("dx_0 - x_1"), sp.sympify("dx_1 - u_0 +x_0 + x_1")
-    }
+    }) or ( set(model_1.constitutive_relations) == {
+        sp.sympify("dx_1 - x_0"), sp.sympify("dx_0 - u_0 +x_0 + x_1")}
+           )
+
 
 
 
