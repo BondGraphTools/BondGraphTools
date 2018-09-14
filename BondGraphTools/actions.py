@@ -3,7 +3,7 @@ import copy
 from .component_manager import get_component, base_id
 from .exceptions import *
 from .base import BondGraphBase, Bond, Port, FixedPort
-
+from .atomic import EqualFlow
 
 def disconnect(target, other):
     """
@@ -61,7 +61,7 @@ def connect(source, destination):
         InvalidPortException, InvalidComponentException
     """
 
-    tail = _find_port(source)
+    tail = _find_port(source, is_tail=True)
     head = _find_port(destination)
 
     model = tail.component.parent
@@ -71,25 +71,33 @@ def connect(source, destination):
     model._bonds.add(bond)
 
 
-def _find_port(arg):
-    #assume we're given a compoent:
+def _find_port(arg, is_tail=False):
+    # assume we're given a component:
     try:
-        return arg.get_port()
+        # Dirty hack to make the 1 port behave like PG wants.
+        if isinstance(arg, EqualFlow):
+            if is_tail:
+                return arg.get_port("output")
+            else:
+                return arg.get_port("input")
+        else:
+            return arg.get_port()
     except AttributeError as ex:
-        return _find_port_from_port_class(arg)
+        return _find_port_from_port_class(arg, is_tail=is_tail)
 
 
-def _find_port_from_port_class(arg):
+def _find_port_from_port_class(arg, is_tail=False):
     try:
         c = arg.component
-        return c.get_port(arg)
+        p = arg
     except AttributeError:
         try:
             c = arg.parent
-            return c.get_port(arg)
+            p = arg
         except AttributeError:
             c,p = arg
-            return c.get_port(p)
+
+    return c.get_port(p)
 
 
 def swap(old_component, new_component):
