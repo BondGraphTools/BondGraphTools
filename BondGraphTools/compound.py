@@ -138,12 +138,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
                 j+=1
         return out
 
-
-    # def set_param(self, param, value):
-    #     c, v = param
-    #     self.components[c].set_param(v, value)
-
-
     @property
     def state_vars(self):
         j = 0
@@ -229,24 +223,11 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def constitutive_relations(self):
         coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
-        out_ports =[idx for p, idx in inv_js.items() if p in self.ports]
+        out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
         logging.info("Getting IO ports: %s",out_ports)
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
-        # Rx = (sp.eye(lin_op.rows) - lin_op)
-        # Rxs = [r - nlin_op[i] for i, r in enumerate(Rx.dot(coordinates))]
-        # subs = [pair for i, pair in enumerate(zip(coordinates, Rxs)) if
-        #         Rx[i,i] == 0]
-        # logger.info("Substituting with subs: %s", subs)
-        # nlin_op = nlin_op.subs(subs)
-        #
-        # for k,c in enumerate(coordinates):
-        #     if Rx[k,k] == 0:
-        #         subs.append(
-        #             (c, c - nlin_op[k])
-        #
-        #         )
         coord_vect = sp.Matrix(coordinates)
         relations = [
             sp.Add(l,r) for i, (l,r) in enumerate(zip(
@@ -255,14 +236,13 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
-                logger.info("Adding constrain %s", repr(constraint))
+                logger.info("Adding constraint %s", repr(constraint))
                 if constraint:
                     relations.append(constraint)
         else:
             logger.warning("Constraints %s is not a list. Discarding",
                            repr(constraints))
         subs = []
-
 
         for local_idx, c_idx in enumerate(out_ports):
             p, = {pp for pp in self.ports if pp.index == local_idx}
@@ -294,12 +274,11 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         except ValueError:
             row = 0
 
-        inverse_port_map = {
-        }
+        inverse_port_map = {}
 
         for port, (cv_e, cv_f) in self._port_map.items():
             inverse_port_map[cv_e] = ss_size + 2*inv_js[port]
-            inverse_port_map[cv_f] = ss_size +  2*inv_js[port] + 1
+            inverse_port_map[cv_f] = ss_size + 2*inv_js[port] + 1
 
         for component in self.components:
             relations = get_relations_iterator(

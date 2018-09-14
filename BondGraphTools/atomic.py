@@ -212,23 +212,23 @@ class EqualEffort(BondGraphBase, PortExpander):
 class EqualFlow(BondGraphBase, PortExpander):
 
     def __init__(self, **kwargs):
-        PortExpander.__init__(self, {"input":{"weight":1},
-                                     "output":{"weight":-1}})
+        PortExpander.__init__(self, {"input": {"weight": 1},
+                                     "output": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
 
     @property
     def input(self):
-        t,= (tp for tp in self._templates if tp.index == "input")
+        t, = (tp for tp in self._templates if tp.index == "input")
         return t
 
     @property
     def output(self):
         t, = (tp for tp in self._templates if tp.index == "output")
         return t
+
     @property
     def basis_vectors(self):
         return {},  self._port_vectors(), {}
-
 
     def get_port(self, port=None):
         try:
@@ -242,14 +242,14 @@ class EqualFlow(BondGraphBase, PortExpander):
 
         relations = []
 
-        vars = list(self._port_vectors().items())
-        (e_0, f_0), port = vars.pop()
+        var = list(self._port_vectors().items())
+        (e_0, f_0), port = var.pop()
 
         sigma_0 = port.weight
         partial_sum = sigma_0*e_0
 
-        while vars:
-            (e_i, f_i), port =vars.pop()
+        while var:
+            (e_i, f_i), port =var.pop()
             sigma_i = port.weight
 
             partial_sum += sigma_i*e_i
@@ -257,4 +257,3 @@ class EqualFlow(BondGraphBase, PortExpander):
 
         relations.append(partial_sum)
         return relations
-

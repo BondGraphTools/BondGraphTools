@@ -86,6 +86,7 @@ def _builder(data):
 
     def _wire(model, netlist):
         logger.info("%s: trying to wire", model.name)
+
         def get_port(port_string):
 
             tokens = iter(port_string.split('.'))

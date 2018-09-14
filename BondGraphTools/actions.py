@@ -29,7 +29,7 @@ def disconnect(target, other):
         raise InvalidComponentException(f"Could not find components")
 
     def _filter(item):
-    # assume item is a port:
+        # assume item is a port:
         if isinstance(item, Port):
             return {bond for bond in model.bonds if item in bond}
         try:
@@ -38,13 +38,14 @@ def disconnect(target, other):
                     if item in (bond.head, bond.tail)}
         except TypeError as ex:
             return {bond for bond in model.bonds
-                     if item is bond.head.component
-                     or item is bond.tail.component}
+                    if item is bond.head.component
+                    or item is bond.tail.component}
 
     targets = _filter(target) & _filter(other)
 
     for target_bond in targets:
         model._bonds.remove(target_bond)
+
 
 def connect(source, destination):
     """
@@ -69,12 +70,14 @@ def connect(source, destination):
     bond = Bond(tail, head)
     model._bonds.add(bond)
 
+
 def _find_port(arg):
     #assume we're given a compoent:
     try:
         return arg.get_port()
     except AttributeError as ex:
         return _find_port_from_port_class(arg)
+
 
 def _find_port_from_port_class(arg):
     try:
@@ -87,6 +90,7 @@ def _find_port_from_port_class(arg):
         except AttributeError:
             c,p = arg
             return c.get_port(p)
+
 
 def swap(old_component, new_component):
     """
@@ -155,6 +159,7 @@ def swap(old_component, new_component):
 
     model.remove(old_component)
 
+
 def new(component=None, name=None, library=base_id, value=None, **kwargs):
     """
     Creates a new Bond Graph from a library component.
@@ -183,7 +188,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
             build_args.update({"name": name})
         if value or isinstance(value, (int, float, complex)):
             _update_build_params(build_args, value, **kwargs)
-        cls =_find_subclass(
+        cls = _find_subclass(
             build_args["class"], BondGraphBase
         )
         del build_args["class"]
@@ -205,6 +210,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
             "New not implemented for object {}", component
         )
 
+
 def _update_build_params(build_args, value, **kwargs):
 
     if isinstance(value, (list, tuple)):
@@ -225,6 +231,7 @@ def _update_build_params(build_args, value, **kwargs):
     else:
         p = next(iter(build_args["params"]))
         build_args["params"][p] = value
+
 
 def _find_subclass(name, base_class):
 
@@ -251,16 +258,12 @@ def expose(component, label=None):
 
     Raises: `InvalidComponent Exception`
     """
-
-
     model = component.parent
     if not model:
         raise InvalidComponentException(
             f"Component {component} is not inside anything"
         )
-
     # fix me with metaclasses or something trickier
-
     if component.__component__ is not "SS":
         ss = new("SS",  name=component.name)
         try:

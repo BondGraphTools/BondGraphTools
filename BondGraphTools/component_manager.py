@@ -58,14 +58,12 @@ def load_library(filename):
             __libraries[lib_id] = lib
         except json.JSONDecodeError as ex:
             logger.critical("Error loading library %s; %s",
-                           filename,
-                           ex.args)
+                            filename,
+                            ex.args)
             return False
         except KeyError as ex:
             logger.critical("Error loading library %s: %s",
-                           filename, ex.args[0])
-
-
+                            filename, ex.args[0])
             return False
 
     return True

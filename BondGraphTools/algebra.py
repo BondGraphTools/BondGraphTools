@@ -11,9 +11,6 @@ class NotInvertible(Exception):
     pass
 
 
-
-
-
 def extract_coefficients(equation, local_map, global_coords):
 
     coeff_dict = {}
@@ -643,7 +640,3 @@ def get_relations_iterator(component, mappings, coordinates, io_map=None):
             yield extract_coefficients(relation, local_map, coordinates)
         else:
             yield {}, 0.0
-
-
-
-
