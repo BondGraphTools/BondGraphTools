@@ -68,9 +68,9 @@ class BondGraphBase:
     def metaclass(self):
         return self.__metaclass
 
-    # @property
-    # def max_ports(self):
-    #     raise NotImplementedError
+    @property
+    def template(self):
+        raise NotImplementedError
 
     @property
     def constitutive_relations(self):
@@ -138,6 +138,12 @@ class Port(object):
 
     def __hash__(self):
         return id(self)
+
+    def __str__(self):
+        if len(self.component.ports) > 1:
+            return f"{self.component.name}.{self.index}"
+        else:
+            return f"{self.component.name}"
 
     def __repr__(self):
         return f"Port({self.component}, {self.index})"
@@ -284,6 +290,18 @@ class PortExpander(FixedPort):
             for port in self._ports if port.is_connected
         }
 
+class ExpandedPort(Port):
+    def __init__(self, *args, port_class):
+        super().__init__(*args)
+        self.port_class = port_class
+
+    def __str__(self):
+        if self.port_class:
+            return f"{self.component.name}.{self.port_class}"
+        else:
+            return f"{self.component.name}"
+
+
 class PortTemplate(object):
     """
     Template class for generating new ports of a specific type.
@@ -332,9 +350,9 @@ class PortTemplate(object):
         elif index in [p.index for p in self.parent.ports]:
             raise InvalidPortException("Could not create port: index "
                                        "already exists")
-        port = Port(self.parent, index)
+        port = ExpandedPort(self.parent, index, port_class=self.index)
         port.__dict__.update({k:v for k,v in self.data.items()})
-        self.parent._ports[port] = {}
+        self.parent._ports[port] = self.index
         self.ports.append(port)
         self.parent.max_index = max(index, self.parent.max_index) + 1
         return port
