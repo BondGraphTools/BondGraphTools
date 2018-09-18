@@ -1,0 +1,27 @@
+# Base Model Definition
+root: RLC
+
+# File format version number
+version: 0.1
+
+# Model is made up of a list instances  components
+# Component Name, Component type,  parameter values
+# - Component Name must be a valid string, no spaces
+# - Component Type must appear in the component list above
+# - parameter values may be a single number (for one parameter components)
+#    or parameter=value for named parameters
+
+models:
+    /:
+      components:
+        - R1  base/R   1
+        - C1  base/C   1
+        - L1  base/I   1
+        - kvl base/1
+        - Se  base/Se
+
+      netlist:
+        - R1 kvl.output
+        - C1 kvl.output
+        - L1 kvl.output
+        - Se kvl.input

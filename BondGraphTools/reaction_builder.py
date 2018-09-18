@@ -2,8 +2,7 @@ from sympy import SparseMatrix, symbols, Pow, Matrix
 from collections import defaultdict
 import logging
 from math import log
-from .base import new
-
+from .actions import connect, disconnect, new
 logger = logging.getLogger(__name__)
 
 # Gas constant, J/Mo/K
@@ -112,34 +111,37 @@ class Reaction_Network(object):
             )
             if len(bck_sto) == 1 and list(bck_sto.values())[0] == 1:
                 species = list(bck_sto.keys()).pop()
-                system.connect((reaction, 0), species_anchors[species])
+                connect(reaction, species_anchors[species])
             else:
-                reverse_complex = new("Y", library=LIBRARY, name=bck_name)
+                reverse_complex = new("1", name=bck_name)
                 system.add(reverse_complex)
-                system.connect((reaction, 0), (reverse_complex, 0))
+                connect(reaction, reverse_complex.output)
                 self._connect_complex(
                     system, species_anchors, reverse_complex, bck_sto
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
-                system.connect((reaction, 1), species_anchors[species])
+                connect(reaction, species_anchors[species])
             else:
-                forward_complex = new("Y", library=LIBRARY, name=fwd_name)
+                forward_complex = new("1", name=fwd_name)
                 system.add(forward_complex)
 
-                system.connect((reaction, 1), (forward_complex, 0))
+                connect(reaction, forward_complex.output)
 
                 self._connect_complex(
                     system, species_anchors, forward_complex, fwd_sto
                 )
 
-
-    @staticmethod
-    def _connect_complex(system, species_anchors, complex, stoichiometry):
+    def _connect_complex(self, system, species_anchors, junct, stoichiometry):
         for i, (species, qty) in enumerate(stoichiometry.items()):
-            port = i + 1
-            complex.make_port(port=port, value=qty)
-            system.connect((complex, port), species_anchors[species])
+
+            if qty == 1:
+                connect(junct.input, species_anchors[species])
+            else:
+                tf = new("TR", value=qty)
+                system.add(tf)
+                connect((tf, 1), junct.input)
+                connect(species_anchors, (tf,0))
 
     def _build_species(self, system, normalised):
         if normalised:
@@ -166,7 +168,7 @@ class Reaction_Network(object):
             else:
                 anchor = new("0", name=species)
                 system.add(anchor)
-                system.connect(this_species, anchor)
+                connect(this_species, anchor)
                 species_anchors[species] = anchor
 
             if species in self._flowstats:
@@ -174,12 +176,12 @@ class Reaction_Network(object):
                     "Sf", value=self._flowstats[species], name=species
                 )
                 system.add(flowstat)
-                system.connect(flowstat, species_anchors[species])
+                connect(flowstat, species_anchors[species])
 
 
 #            if species in self._chemostats:
 #                chemostat = new("Se", value=0, name=species)
-#                system.connect(chemostat, species_anchors[species])
+#                connect(chemostat, species_anchors[species])
 #                this_species.initial_values['p_0'] = self._chemostats[species]
 
         return species_anchors

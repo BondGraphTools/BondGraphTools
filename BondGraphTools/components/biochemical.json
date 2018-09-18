@@ -1,36 +1,39 @@
 {
-  "name": "Biochemical Components",
+  "description": "Biochemical Components",
   "id":"BioChem",
   "components":{
     "Ce":{
-      "name":"Concentration of Chemical Species",
+      "description":"Concentration of Chemical Species",
       "class": "BaseComponent",
+      "metaclass":"C",
       "ports":{
         "0":null
       },
       "params":{
-        "k":{"name": "Biochemical Constant; exp(mu_0/RT)/V"},
-        "R":{"name":"Universal Gas Constant"},
-        "T":{"name": "Temperature"}
+        "k":{"description": "Biochemical Constant; exp(mu_0/RT)/V"},
+        "R":{"description":"Universal Gas Constant"},
+        "T":{"description": "Temperature"}
       },
       "state_vars":{
         "q_0":"Molar Quantity"
       },
       "constitutive_relations":[
-        "e_0 - R*T*log(k*q_0)"
+        "e_0 - R*T*log(k*q_0)",
+        "f_0 - dq_0"
       ]
     },
     "Re":{
-      "name": "Biochemical Reaction",
-      "class": "BaseComponent",
+      "description": "Biochemical Reaction",
+      "class": "BaseComponentSymmetric",
+      "metaclass":"R",
       "ports":{
-        "0": {"name": "Primary"},
-        "1": {"name": "Secondary"}
+        "0":null,
+        "1":null
       },
       "params":{
-        "r":{"name":"Reaction Rate"},
-        "R":{"name":"Universal Gas Constant"},
-        "T":{"name": "Temperature"}
+        "r":{"description":"Reaction Rate"},
+        "R":{"description":"Universal Gas Constant"},
+        "T":{"description": "Temperature"}
       },
       "constitutive_relations":[
         "f_0 + f_1",
@@ -38,18 +41,22 @@
       ]
     },
   "Y":{
-    "name": "Stoichiometry",
-    "class": "NPortWeighted",
+    "description": "Stoichiometry",
+    "class": "MixedPort",
+    "metaclass": "TF",
     "ports":{
       "0": {
-        "name":"Complex",
-        "value": -1
+        "description":"Affinity",
+        "r": -1
       },
-      "i": null
+      "i": {
+        "description":"Chemical Power",
+        "r": 1
+      }
     },
     "constitutive_relations":[
-      "sum(c_i*e_i)",
-      "c_0*f_0 - f_i/c_i"
+      "sum(r_i*e_i)",
+      "f_0/r_0 - f_i/r_i"
     ]
   }
   }

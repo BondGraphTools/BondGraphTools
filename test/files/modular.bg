@@ -1,0 +1,47 @@
+
+### HEADER
+root: system
+version: 0.1
+####
+
+
+models:
+  /:
+    components:
+      - Vs source
+      - Z load
+      - kvl base/0
+
+    netlist:
+      - Vs.A kvl
+      - Z kvl
+
+  source:
+    components:
+      - Sf base/Sf
+      - pout base/SS
+      - kvl base/0
+
+    netlist:
+      - Sf kvl
+      - kvl pout
+
+    ports:
+      - pout A
+
+  load:
+    components:
+      - pin base/SS
+      - kvl base/0
+      - R1 base/R 1
+      - L1 base/I 1
+      - C1 base/C 1
+
+    netlist:
+      - R1 kvl
+      - pin kvl
+      - L1 kvl
+      - C1 kvl
+
+    ports:
+      - pin A

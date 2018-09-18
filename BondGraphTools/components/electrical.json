@@ -1,23 +1,24 @@
 {
-  "name": "Electrical Components",
+  "description": "Electrical Components",
   "id":"elec",
   "components": {
     "Di": {
-      "name":"Diode",
+      "description":"Diode",
+      "metaclass":"R",
       "class": "BaseComponent",
       "ports":{
         "0":null
       },
       "params":{
         "Is":{
-          "name":"Forward Current"
+          "description":"Forward Current"
         },
         "n": {
-          "name":"Material Number",
+          "description":"Material Number",
           "value": 1
         },
         "Vt":{
-          "name":"Thermal Voltage",
+          "description":"Thermal Voltage",
           "value": 0.0258563
         }
       },
@@ -26,30 +27,31 @@
      ]
     },
     "BJT":{
-      "name": "Bipolar Junction Transistor",
+      "description": "Bipolar Junction Transistor",
       "class": "BaseComponent",
+      "metaclass":"R",
       "ports":{
-        "0": {"name": "Collector"},
-        "1": {"name": "Base"},
-        "2": {"name": "Emitter"}
+        "0": {"description": "Collector"},
+        "1": {"description": "Base"},
+        "2": {"description": "Emitter"}
       },
       "params": {
         "Is":{
-          "name":"Reverse Saturation Current",
+          "description":"Reverse Saturation Current",
           "value": "10**-12"
         },
         "beta_f":{
-          "name":"Forward common current emitter gain",
+          "description":"Forward common current emitter gain",
           "value": 100,
           "range":[20,500]
         },
         "beta_r":{
-          "name":"Reverse common current emitter gain",
+          "description":"Reverse common current emitter gain",
           "value":5,
           "range":[0,20]
         },
         "Vt":{
-          "name":"Thermal Voltage kT/q",
+          "description":"Thermal Voltage kT/q",
           "value": 0.026
         }
       },

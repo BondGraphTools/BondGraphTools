@@ -1,0 +1,49 @@
+
+################################################################################
+#                              Header                                          #
+################################################################################
+
+# File format version number
+version: 0.1
+
+# Base Model Definition
+#     Refers to the root of the model hierarchy.
+#     Must be key in the `models` list
+#     Think of this particular model like main() in c/c++ or __main__.py
+root: rootmodel
+
+
+################################################################################
+#                       Custom Component Library                               #
+################################################################################
+# custom components go here (ie, ones that can't be built from basic parts)
+# Not yet implemented: Scheduled for v0.4
+
+
+################################################################################
+#                            Model Hierarchy                                   #
+################################################################################
+
+
+# Models are organised in the following tree structure
+#
+# models:
+  # model_name:
+    # components:
+      # - component_name    component_template    parameters
+
+
+models:
+    rootmodel:
+      components:
+        - R1                base/R                R=100
+        - C1                base/C                c=10
+        - L1                base/I                10
+        - kcl               base/0
+        - Sf                base/Sf
+
+      netlist:
+        - R1 kcl.0
+        - C1 kcl.1
+        - L1 kcl.2
+        - Sf kcl.3
