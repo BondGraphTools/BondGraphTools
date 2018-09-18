@@ -132,17 +132,16 @@ class Reaction_Network(object):
                     system, species_anchors, forward_complex, fwd_sto
                 )
 
-    def _connect_complex(self, system, species_anchors, complex, stoichiometry):
+    def _connect_complex(self, system, species_anchors, junct, stoichiometry):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
             if qty == 1:
-                connect(complex.input, species_anchors[species])
+                connect(junct.input, species_anchors[species])
             else:
                 tf = new("TR", value=qty)
                 system.add(tf)
-                connect((tf, 1), complex.input)
+                connect((tf, 1), junct.input)
                 connect(species_anchors, (tf,0))
-
 
     def _build_species(self, system, normalised):
         if normalised:

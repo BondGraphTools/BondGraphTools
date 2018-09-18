@@ -182,18 +182,20 @@ class BaseComponent(BondGraphBase, FixedPort):
     def __hash__(self):
         return super().__hash__()
 
+
 class BaseComponentSymmetric(BaseComponent):
 
     def get_port(self, port=None):
         if not port and not isinstance(port, int):
             p = [port for port in self.ports if not port.is_connected]
 
-            if not p :
+            if not p:
                 raise InvalidPortException("No free ports")
             return super().get_port(p[0])
 
         else:
             return super().get_port(port)
+
 
 class EqualEffort(BondGraphBase, PortExpander):
 
