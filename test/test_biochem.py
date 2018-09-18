@@ -8,7 +8,9 @@ from BondGraphTools.exceptions import InvalidPortException
 from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps,get_relations_iterator
 from BondGraphTools.reaction_builder import Reaction_Network
 
-@pytest.mark.skip
+import logging
+
+
 def test_make_a_to_b():
 
     A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
@@ -17,19 +19,37 @@ def test_make_a_to_b():
     Re = bgt.new("Re", library="BioChem", value={"R": 1, "T": 1})
     a_to_b = bgt.new()
     a_to_b.add(A, Re, B)
-    with pytest.raises(InvalidPortException):
-        connect(A, Re)
 
-    assert (Re,0) in Re.ports
     connect(A, (Re, 0))
     connect(B, (Re, 1))
+
+    with pytest.raises(InvalidPortException):
+        connect(A, Re)
 
     assert Re.control_vars == ['r']
     assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
     assert list(a_to_b.control_vars.keys()) == ['u_0']
     assert not a_to_b.ports
 
-@pytest.mark.skip
+
+def test_make_a_to_b_inplicit():
+
+    A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+    B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
+
+    Re = bgt.new("Re", library="BioChem", value={"R": 1, "T": 1})
+    a_to_b = bgt.new()
+    a_to_b.add(A, Re, B)
+
+    connect(A, Re)
+    connect(B, Re)
+
+    assert Re.control_vars == ['r']
+    assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
+    assert list(a_to_b.control_vars.keys()) == ['u_0']
+    assert not a_to_b.ports
+
+
 def test_re_con_rel():
     Re = bgt.new("Re", library="BioChem", value={"R": 1, "T": 1})
 
@@ -75,42 +95,36 @@ def test_a_to_b_model():
     for relation in a_to_b.constitutive_relations:
         assert relation in eqns
 
-# TODO: we need to find a better way to compare equations...
-@pytest.mark.skip
 def test_ab_to_c_model():
 
     A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
     B = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
     C = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
     Re = bgt.new("Re", library="BioChem", value={'r': 1, "R": 1, "T": 1})
-    Y_AB = bgt.new('Y', library="BioChem")
-    Y_C = bgt.new('Y', library="BioChem")
+    Y_AB = bgt.new('1')
+    Y_C = bgt.new('1')
 
-    assert Y_AB.ports[0]
-    assert Y_AB._fixed_ports == {0}
     bg = bgt.new()
     bg.add(A, B, Re, Y_AB, C, Y_C)
-    connect(A, (Y_AB, 1))
+    connect(A, Y_AB)
+    connect(B, Y_AB)
+    connect(Y_AB, Re)
+    connect(Re, Y_C)
+    connect(Y_C, C)
 
-    assert Y_AB.ports[1] == 1
-    connect(B, (Y_AB, 2))
-    connect((Re, 0), (Y_AB, 0))
-    connect((Re, 1), (Y_C, 0))
-    connect((Y_C, 1), C)
+    state_basis ,_,_ = bg.basis_vectors
+    (x_0, dx_0), = (k for k, (v, _) in state_basis.items() if v is A)
+    (x_1, dx_1), = (k for k, (v, _) in state_basis.items() if v is B)
+    (x_2, dx_2), = (k for k, (v, _) in state_basis.items() if v is C)
 
-    assert 0 in Y_AB._fixed_ports
-    assert 0 in Y_AB.ports
+    eqns = {dx_0 + x_0*x_1 - x_2,
+            dx_1 + x_0*x_1 - x_2,
+            dx_2 - x_0*x_1 + x_2}
 
-    eqns = {
-        sympy.sympify("dx_0 + x_0*x_1 - x_2"),
-        sympy.sympify("dx_1 + x_0*x_1 - x_2"),
-        sympy.sympify("dx_2 - x_0*x_1 + x_2")
-    }
+    relations = set(bg.constitutive_relations)
+    assert not relations ^ eqns
 
-    for relation in bg.constitutive_relations:
-        assert relation in eqns
 
-@pytest.mark.skip
 def test_new_reaction_network():
 
     rn = Reaction_Network(name="A+B to C")
@@ -122,21 +136,15 @@ def test_new_reaction_network():
     assert rn.reverse_stoichiometry == sympy.Matrix([[0], [0], [1]])
     assert rn.stoichiometry == sympy.Matrix([[-1],[-1],[1]])
 
-@pytest.mark.skip
+
 def test_rn_to_bond_graph():
     rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
 
     system = rn.as_network_model(normalised=True)
-    for comp in system.components:
-        if comp.metaclass == 'Y':
-            for port in comp.ports:
-                if port != 0:
-                    assert comp.ports[port] == 1
-
     assert len(system.state_vars) == 3
     assert len(system.control_vars) == 4
 
-@pytest.mark.skip
+
 def test_cat_rn():
     reactions = [
         "E + S = ES", "ES = E+P"
@@ -145,8 +153,8 @@ def test_cat_rn():
     assert rn._species["ES"] == 2
     assert len(rn._reactions) == 2
 
+
 #TODO: fix when we rework parameters
-@pytest.mark.skip
 def test_nlin_se():
     rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
     system = rn.as_network_model(normalised=True)
@@ -154,17 +162,18 @@ def test_nlin_se():
     for param in system.params:
         system.set_param(param, 1)
 
-    Ce_A = system.find(name="A", component="Ce")
-    Ce_B = system.find(name="B", component="Ce")
+    Ce_A = system/ "A"
+    Ce_B = system / "B"
+    Ce_C = system / "C"
 
     assert Ce_A is not Ce_B
 
-    Y = system.find(component="Y", name="AB")
+    Y = system / "AB"
 
-    system.disconnect(Ce_A, Y)
+    bgt.disconnect(Ce_A, Y)
 
     J_A = bgt.new("0", name="Ce_A")
-    Se_A = bgt.new('Se', value=1, name='1')
+    Se_A = bgt.new('Se', value=1, name='e=1')
 
     system.add(J_A),
     system.add(Se_A)
@@ -172,9 +181,16 @@ def test_nlin_se():
     connect(Ce_A, J_A)
     connect(Se_A, J_A)
 
-    eqns= "dx_0, dx_1 + E * x_1 - x_2,dx_2 - E * x_1 + x_2, x_0 - E"
+    assert len(system.state_vars) == 3
+    state_basis , _, _ = system.basis_vectors
+
+    (x0, dx0), = (k for k, (v,_) in  state_basis.items() if v is Ce_A)
+    (x1, dx1), = (k for k, (v,_) in  state_basis.items() if v is Ce_B)
+    (x2, dx2), = (k for k, (v,_) in  state_basis.items() if v is Ce_C)
+    E = sympy.S("E")
+    solutions = {dx1 + E * x1 - x2, dx2 - E * x1 + x2, x0 - E, dx0}
+
     relations = set(system.constitutive_relations)
-    solutions = set(sympy.sympify(eqns))
 
     assert not solutions ^ relations
 

@@ -18,16 +18,17 @@
         "q_0":"Molar Quantity"
       },
       "constitutive_relations":[
-        "e_0 - R*T*log(k*q_0)"
+        "e_0 - R*T*log(k*q_0)",
+        "f_0 - dq_0"
       ]
     },
     "Re":{
       "description": "Biochemical Reaction",
-      "class": "BaseComponent",
+      "class": "BaseComponentSymmetric",
       "metaclass":"R",
       "ports":{
-        "0": {"description": "Primary"},
-        "1": {"description": "Secondary"}
+        "0":null,
+        "1":null
       },
       "params":{
         "r":{"description":"Reaction Rate"},

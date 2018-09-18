@@ -128,6 +128,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         component.parent = None
         self.components.remove(component)
 
+    def set_param(self, param, value):
+        c, p = self.params[param]
+        c.params[p] = value
+
     @property
     def params(self):
         j = 0
