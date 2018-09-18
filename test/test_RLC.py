@@ -131,7 +131,6 @@ def test_se():
     assert vc.constitutive_relations == [sympy.sympify("dx_0"),
                                          sympy.sympify("x_0 - 1")]
 
-
 def test_one():
     loop_law = bgt.new('1')
     Se = bgt.new('Se', value=1)

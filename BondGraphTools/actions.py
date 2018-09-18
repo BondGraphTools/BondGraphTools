@@ -194,6 +194,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
         del build_args["class"]
         comp = cls(**build_args)
         comp.__component__ = component
+        comp.__library__ = library
         return comp
 
     elif isinstance(component, BondGraphBase):

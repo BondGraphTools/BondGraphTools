@@ -12,7 +12,7 @@ version: 0.1
 #    or parameter=value for named parameters
 
 models:
-    RLC:
+    /:
       components:
         - R1  base/R   1
         - C1  base/C   1

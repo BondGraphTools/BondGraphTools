@@ -31,6 +31,10 @@ class BaseComponent(BondGraphBase, FixedPort):
         return self.__dict__ == self.__dict__
 
     @property
+    def template(self):
+        return f"{self.__library__}/{self.__component__}"
+
+    @property
     def metaclass(self):
         return self._metaclass
 
@@ -182,8 +186,12 @@ class EqualEffort(BondGraphBase, PortExpander):
 
     def __init__(self, **kwargs):
 
-        PortExpander .__init__(self, {"in": None})
+        PortExpander .__init__(self, {None: None})
         BondGraphBase.__init__(self, **kwargs)
+
+    @property
+    def template(self):
+        return "base/0"
 
     @property
     def basis_vectors(self):
@@ -225,6 +233,10 @@ class EqualFlow(BondGraphBase, PortExpander):
     def output(self):
         t, = (tp for tp in self._templates if tp.index == "output")
         return t
+
+    @property
+    def template(self):
+        return "base/1"
 
     @property
     def basis_vectors(self):

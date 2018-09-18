@@ -29,6 +29,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         self._model_changed = True
 
     @property
+    def template(self):
+        return None
+
+    @property
     def bonds(self):
         return list(self._bonds)
 

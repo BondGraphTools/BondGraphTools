@@ -13,10 +13,13 @@ import logging
 import pathlib
 import yaml
 
-from .base import Port, Bond
+from .compound import BondGraph
 from .actions import connect, new, expose
 from .exceptions import *
+
 logger = logging.getLogger(__name__)
+
+FILE_VERSION = "0.1"
 
 def save(model, filename):
     """
@@ -27,9 +30,91 @@ def save(model, filename):
         filename: The file to save to
 
     """
-    raise NotImplementedError
 
-def load(file_name):
+    model_directory = _build_model_directory(model)
+
+    models = {}
+    templates = {}
+
+    for uri, sub_model in model_directory.items():
+        models.update({
+            uri: _build_model_data(sub_model, templates)
+        })
+    data = {
+        "version":FILE_VERSION,
+         "root": model.name,
+         "models": models
+    }
+
+    with open(filename, 'w') as filestream:
+        yaml.dump(data, filestream, default_flow_style=False)
+
+
+def _build_model_directory(model):
+
+    try:
+        directory = {model.uri:model}
+        for c in model.components:
+            directory.update(_build_model_directory(c))
+        return directory
+    except AttributeError:
+        return {}
+
+
+def _build_model_data(model, templates):
+    components = []
+    out = {}
+    for c in model.components:
+        if isinstance(c, BondGraph):
+            components.append(
+                f"{c.name} {c.uri}"
+            )
+        else:
+            components.append(
+                _build_component_string(c)
+            )
+    out.update({"components": components})
+
+    netlist = []
+    for tail, head in model.bonds:
+        netlist.append(f"{tail} {head}")
+
+    if netlist:
+        out.update({"netlist": netlist})
+
+    ports = []
+    for port in model.ports:
+        (c1, e), (c2, f) = model._port_map[port]
+        if c1==c2:
+            ports.append(f"{c1.name} {port.name}")
+        else:
+            raise NotImplementedError
+    if ports:
+        out.update({"ports": ports})
+
+    return out
+
+
+def _build_component_string(component):
+
+    out_str = f"{component.name} {component.template}"
+
+    try:
+        for param, value in component.params.items():
+            if isinstance(value, (int, float)):
+                out_str += f" {param}={value}"
+            elif isinstance(value, dict) and isinstance(value["value"],
+                                                        (int, float)):
+                v = value["value"]
+                out_str += f" {param}={v}"
+
+    except AttributeError:
+        pass
+
+    return out_str
+
+
+def load(file_name, model=None, as_name=None):
     """
     Loads a model from file
 
@@ -46,13 +131,17 @@ def load(file_name):
         data = yaml.load(f)
 
     version = str(data['version'])
-    if version == "0.1":
-        return _builder(data)
+    if version == FILE_VERSION:
+        return _builder(data, model, as_name)
     else:
         raise NotImplementedError
 
-def _builder(data):
-    root = data["root"]
+
+def _builder(data, model=None, as_name=None):
+    if not model:
+        root = "/"
+    else:
+        root = model
     models = data['models']
 
     def _build(model_name, template_name):
@@ -68,7 +157,7 @@ def _builder(data):
 
             try:
                 comp = _base_component_from_str(comp_string)
-            except ValueError:
+            except (ValueError, KeyError):
                 name, sub_model = comp_string.split(" ")
                 comp = _build(name, sub_model)
 
@@ -82,6 +171,7 @@ def _builder(data):
             _expose(model, IO_ports)
         except KeyError:
             logger.info("No ports on model ")
+
         return model
 
     def _wire(model, netlist):
@@ -178,7 +268,14 @@ def _builder(data):
 
     _validate(models)
 
-    return _build(root, root)
+    out = _build(root, root)
+
+    if as_name:
+        out.name = as_name
+    elif not model:
+        out.name = data["root"]
+
+    return out
 
 
 
