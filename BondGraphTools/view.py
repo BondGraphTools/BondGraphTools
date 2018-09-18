@@ -21,8 +21,6 @@ import networkx as nx
 from .exceptions import InvalidComponentException
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
 FONT = 14
 FONT_SM = 10
 
@@ -33,6 +31,7 @@ def draw(system):
     )
     plt.ioff()
     ax = fig.gca()
+    ax.set_aspect("equal")
     return system.view.draw(ax)
 
 
@@ -277,7 +276,11 @@ class ZeroGlyph(Glyph):
     pass
 
 
-class Bond(Line2D):
+class BondView(Line2D):
+    th = 3 * np.pi / 4
+    R = np.array(((np.cos(th), -np.sin(th)), (np.sin(th), np.cos(th))))
+    shortest_bond = None
+
     def __init__(self, port_1, port_2, *args, **kwargs):
         self.port_1 = port_1
         self.port_2 = port_2
@@ -296,8 +299,25 @@ class Bond(Line2D):
         y1 += r1*dy
         x2 -= r2*dx
         y2 -= r2 * dy
-        self.set_xdata([x1, x2])
-        self.set_ydata([y1, y2])
+
+        lx, ly = x2-x1, y2-y1
+        L = np.sqrt((lx)**2 + (ly)**2)
+
+        if not self.shortest_bond or self.shortest_bond > L:
+            self.shortest_bond = L
+
+        lx /= L
+        ly /= L
+
+        headlength = self.shortest_bond/5
+
+        vect = np.array((lx, ly))
+
+        assert abs(np.linalg.norm(vect) - 1) < 0.01
+        x3, y3 = headlength *self.R.dot(vect) + (x2, y2)
+
+        self.set_xdata([x1, x2, x3])
+        self.set_ydata([y1, y2, y3])
 
 
 class GraphLayout(Glyph):
@@ -314,7 +334,7 @@ class GraphLayout(Glyph):
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
 
-        for (local_name, component), (x,y) in zip(self._node.components.items(),
+        for component, (x,y) in zip(self._node.components,
                                                   points):
             x_min = min(x, x_min)
             x_max = max(x, x_max)
@@ -338,26 +358,40 @@ class GraphLayout(Glyph):
                         t=component.metaclass, n=component.name)
             component.view.axes = ax
 
-        for (c1, port_1), (c2, port_2) in self._node.bonds:
+        for tail, head in self._node.bonds:
 
-            p1_v = c1.ports[port_1]
-            p2_v = c2.ports[port_2]
-            label_1 = f"[{p1_v}]" if p1_v and not isinstance(p1_v, dict) else ""
-            label_2 = f"[{p2_v}]" if p2_v and not isinstance(p2_v, dict) else ""
+            c1 = tail.component
+            c2 = head.component
+
+            try:
+                label_1 = f"[{tail.name}]"
+            except AttributeError:
+                label_1 = ""
+
+            try:
+                label_2 = f"[{head.name}]"
+            except AttributeError:
+                label_2 = ""
 
             dx = c2.view.x - c1.view.x
             dy = c2.view.y - c1.view.y
 
             p1 = c1.view.add_port(label_1, (dx, dy))
             p2 = c2.view.add_port(label_2, (-dx, -dy))
-            bond = Bond(p1, p2)
+            bond = BondView(p1, p2)
             ax.add_artist(bond)
             bonds.append(bond)
 
         for bond in bonds:
             bond.calc_lines()
 
-        ax.axis([x_min - 1, x_max + 1, y_min - 1, y_max + 1])
+        width = abs(x_max - x_min)
+        height = abs(y_min - y_max)
+        tweak = 0.1
+        ax.axis([x_min - tweak*width,
+                 x_max + tweak*width,
+                 y_min - tweak*height,
+                 y_max + tweak*height])
 
 
 def find_renderer(fig):
