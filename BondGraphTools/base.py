@@ -145,7 +145,6 @@ class Port(object):
         else:
             return f"{self.component.name}"
 
-
     def __repr__(self):
         return f"Port({self.component}, {self.index})"
 

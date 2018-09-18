@@ -42,8 +42,8 @@ def save(model, filename):
         })
     data = {
         "version":FILE_VERSION,
-         "root": model.name,
-         "models": models
+        "root": model.name,
+        "models": models
     }
 
     with open(filename, 'w') as filestream:
