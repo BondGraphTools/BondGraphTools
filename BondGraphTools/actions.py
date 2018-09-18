@@ -97,8 +97,10 @@ def _find_port_from_port_class(arg, is_tail=False):
             p = arg
         except AttributeError:
             c,p = arg
-
-    return c.get_port(p)
+    logging.info("Trying to find port %s: %s",str(c),str(p))
+    port = c.get_port(p)
+    logging.info("Got it")
+    return port
 
 
 def swap(old_component, new_component):

@@ -111,34 +111,38 @@ class Reaction_Network(object):
             )
             if len(bck_sto) == 1 and list(bck_sto.values())[0] == 1:
                 species = list(bck_sto.keys()).pop()
-                connect((reaction, 0), species_anchors[species])
+                connect(reaction, species_anchors[species])
             else:
-                reverse_complex = new("Y", library=LIBRARY, name=bck_name)
+                reverse_complex = new("1", name=bck_name)
                 system.add(reverse_complex)
-                connect((reaction, 0), (reverse_complex, 0))
+                connect(reaction, reverse_complex.output)
                 self._connect_complex(
                     system, species_anchors, reverse_complex, bck_sto
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
-                connect((reaction, 1), species_anchors[species])
+                connect(reaction, species_anchors[species])
             else:
-                forward_complex = new("Y", library=LIBRARY, name=fwd_name)
+                forward_complex = new("1", name=fwd_name)
                 system.add(forward_complex)
 
-                connect((reaction, 1), (forward_complex, 0))
+                connect(reaction, forward_complex.output)
 
                 self._connect_complex(
                     system, species_anchors, forward_complex, fwd_sto
                 )
 
-
-    @staticmethod
-    def _connect_complex(system, species_anchors, complex, stoichiometry):
+    def _connect_complex(self, system, species_anchors, complex, stoichiometry):
         for i, (species, qty) in enumerate(stoichiometry.items()):
-            port = i + 1
-            complex.make_port(port=port, value=qty)
-            connect((complex, port), species_anchors[species])
+
+            if qty == 1:
+                connect(complex.input, species_anchors[species])
+            else:
+                tf = new("TR", value=qty)
+                system.add(tf)
+                connect((tf, 1), complex.input)
+                connect(species_anchors, (tf,0))
+
 
     def _build_species(self, system, normalised):
         if normalised:

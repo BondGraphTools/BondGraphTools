@@ -66,6 +66,7 @@ def test_rlc_con_rel(rlc):
 
     _, v = rlc.state_vars['x_0']
 
+
     if str(v) != 'q_0':
         eq1 = sympy.sympify("dx_0 - x_1")
         eq2 = sympy.sympify("dx_1 + x_0 + x_1")
@@ -78,28 +79,6 @@ def test_rlc_con_rel(rlc):
 
     assert "x_0" in rlc.state_vars
     assert "x_1" in rlc.state_vars
-
-@pytest.mark.skip
-@pytest.mark.usefixture("rlc")
-def test_add_forcing(rlc):
-    port = rlc.make_port()
-
-    assert port == 0
-
-    bgt.connect((rlc, port), "0_0")
-
-    assert rlc.ports == {
-        0: (rlc, port)
-    }
-
-    ts, ps, cv = rlc.basis_vectors
-
-    assert len(ps) == 1
-
-    assert rlc.constitutive_relations == list(
-        sympy.sympify("dx_0 - x_1, dx_1 + f_0 + x_0 + x_1, e_0 - x_1")
-    )
-
 
 def test_tf():
     l = bgt.new("I", value=1)
