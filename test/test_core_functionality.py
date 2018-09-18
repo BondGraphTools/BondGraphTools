@@ -96,14 +96,16 @@ def test_one_port():
     one = new('1')
     bg = new()
     bg.add(c,se,r,one)
+
     connect(c, one.input)
-    connect(se, (one, "input"))
+    connect(se, one)
+    connect(one, r)
 
-    with pytest.raises(InvalidPortException):
-        connect(r, one)
+    p0,p1,p2 = tuple(one.ports)
 
-    connect(r, one.output)
-
+    assert p0.weight == 1
+    assert p1.weight == 1
+    assert p2.weight == -1
 
 
 def test_connect_ports():
@@ -376,8 +378,6 @@ def test_swap_components_2():
     one = bgt.new('1')
     with pytest.raises(InvalidComponentException):
         swap(zero, one)
-
-
 
 def test_swap_failstate():
     zero = bgt.new("0")
