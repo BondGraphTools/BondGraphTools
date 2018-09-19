@@ -4,7 +4,6 @@ This module provides functions for the actions one wishes to perform on
 models bond graph models.
 """
 
-
 import copy
 
 from .component_manager import get_component, base_id

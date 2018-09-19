@@ -37,7 +37,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         return list(self._bonds)
 
     def __truediv__(self, other):
-
         try:
             if not self.parent:
                 test_uri = f"/{other}"
@@ -138,7 +137,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         """
         Warning: Scheduled to be deprecated
         """
-
         c, p = self.params[param]
         c.params[p] = value
 

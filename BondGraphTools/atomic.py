@@ -283,7 +283,6 @@ class EqualFlow(BondGraphBase, PortExpander):
         while var:
             (e_i, f_i), port = var.pop()
             sigma_i = port.weight
-
             partial_sum += sigma_i*e_i
             relations.append(sigma_i*f_i - sigma_0*f_0)
 
