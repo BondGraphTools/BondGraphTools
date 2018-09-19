@@ -5,12 +5,14 @@ models bond graph models.
 """
 
 import copy
+import logging
 
 from .component_manager import get_component, base_id
 from .exceptions import *
 from .base import BondGraphBase, Bond, Port, FixedPort
 from .atomic import EqualFlow
 
+logger = logging.getLogger(__name__)
 
 def disconnect(target, other):
     """
