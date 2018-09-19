@@ -32,6 +32,7 @@ def draw(system):
     plt.ioff()
     ax = fig.gca()
     ax.set_aspect("equal")
+    ax.set_title(f"{system.name}")
     return system.view.draw(ax)
 
 
