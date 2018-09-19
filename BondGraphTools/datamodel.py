@@ -98,22 +98,24 @@ def _build_model_data(model, templates):
 def _build_component_string(component):
 
     out_str = f"{component.name} {component.template}"
-
+    logger.debug("Trying to serialise: %s", out_str)
     try:
         for param, value in component.params.items():
+            logger.debug("Param: %s, %s", param, value)
             if isinstance(value, (int, float)):
                 out_str += f" {param}={value}"
             elif isinstance(value, dict):
                 try:
                     v = value["value"]
-                    if isinstance(value, (float, int)):
+                    if isinstance(v, (float, int)):
                         out_str += f" {param}={v}"
-                except KeyError:
+                except KeyError as ex:
+                    logger.debug("Skipping: %s ", str(ex))
                     pass
 
     except AttributeError:
         pass
-
+    logger.debug("Saving component string: %s", out_str )
     return out_str
 
 
@@ -255,10 +257,6 @@ def _builder(data, model=None, as_name=None):
         label, tempate, *build_args = string.split()
         args, kwargs = _parse_build_args(build_args)
         library, component = tempate.split("/")
-        try:
-            name = kwargs.pop("name")
-        except KeyError:
-            name = None
 
         comp = new(name=label,
                    library=library,

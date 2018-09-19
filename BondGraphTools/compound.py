@@ -50,7 +50,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def metaclass(self):
-        return "BondGraph"
+        return "BG"
 
     @bonds.setter
     def bonds(self, arg):
@@ -138,7 +138,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         Warning: Scheduled to be deprecated
         """
         c, p = self.params[param]
-        c.params[p] = value
+        c.set_param(p, value)
 
     @property
     def params(self):

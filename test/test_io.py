@@ -8,6 +8,7 @@ import BondGraphTools.datamodel as dm
 import logging
 
 file_path = pathlib.Path(__file__).parent / 'files'
+logging.basicConfig(level=logging.DEBUG)
 
 def test_load_rlc():
 
@@ -264,11 +265,6 @@ def assert_atomics_are_equal(c1,c2):
         assert c1.params == c2.params
 
 
-
-
-
-
-
 class TempFile():
     def __init__(self, filename):
         self.file = filename
@@ -280,6 +276,8 @@ class TempFile():
             pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        with open(self.file, 'r' ) as file:
+            print("".join(line for line in file.readlines()))
         try:
             os.remove(self.file)
         except FileNotFoundError:
