@@ -56,6 +56,9 @@ class BaseComponent(BondGraphBase, FixedPort):
         return self._params if self._params else {}
 
     def set_param(self, param, value):
+        """
+        Warning: Scheduled to be deprecated
+        """
         if isinstance(self._params[param], dict):
             self._params[param]["value"] = value
         else:
