@@ -103,10 +103,13 @@ def _build_component_string(component):
         for param, value in component.params.items():
             if isinstance(value, (int, float)):
                 out_str += f" {param}={value}"
-            elif isinstance(value, dict) and isinstance(value["value"],
-                                                        (int, float)):
-                v = value["value"]
-                out_str += f" {param}={v}"
+            elif isinstance(value, dict):
+                try:
+                    v = value["value"]
+                    if isinstance(value, (float, int)):
+                        out_str += f" {param}={v}"
+                except KeyError:
+                    pass
 
     except AttributeError:
         pass
@@ -148,12 +151,12 @@ def _builder(data, model=None, as_name=None):
         model_data = models[template_name]
         netlist = model_data["netlist"]
 
-        logger.info("%s: Trying to build", model_name)
+        logger.debug("%s: Trying to build", model_name)
 
         model = new(name=model_name)
 
         for comp_string in model_data["components"]:
-            logger.info("%s: building", comp_string)
+            logger.debug("%s: building", comp_string)
 
             try:
                 comp = _base_component_from_str(comp_string)
@@ -162,7 +165,7 @@ def _builder(data, model=None, as_name=None):
                 comp = _build(name, sub_model)
 
             model.add(comp)
-            logger.info("%s components complete", model_name)
+            logger.debug("%s components complete", model_name)
 
         _wire(model, netlist)
 
@@ -170,12 +173,12 @@ def _builder(data, model=None, as_name=None):
             IO_ports = model_data["ports"]
             _expose(model, IO_ports)
         except KeyError:
-            logger.info("No ports on model ")
+            logger.debug("No ports on model ")
 
         return model
 
     def _wire(model, netlist):
-        logger.info("%s: trying to wire", model.name)
+        logger.debug("%s: trying to wire", model.name)
 
         def get_port(port_string):
 
@@ -194,16 +197,21 @@ def _builder(data, model=None, as_name=None):
             try:
                 t3 = next(tokens)
             except StopIteration:
-                logger.info("Tyring to get port %s, %s", comp, t2)
+
+                logger.debug("Tyring to get port %s, %s", str(comp), str(t2))
+                try:
+                    t2 = int(t2)
+                except ValueError:
+                    pass
                 port = comp.get_port(t2)
-                logger.info("Got %s", str(port))
+                logger.debug("Got %s", str(port))
                 return port
 
             else:
                 raise NotImplementedError
 
         for bond_string in netlist:
-            logger.info("%s: bond %s", model.name, bond_string)
+            logger.debug("%s: bond %s", model.name, bond_string)
             tail_str, head_str = bond_string.split()
             tail = get_port(tail_str)
             head = get_port(head_str)
