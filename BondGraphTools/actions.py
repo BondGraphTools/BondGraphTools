@@ -300,6 +300,7 @@ def expose(component, label=None):
 
     model.map_port(label, effort_port, flow_port)
 
+
 def add(model, *args):
     """
     Add the specified components to the model
@@ -310,6 +311,7 @@ def add(model, *args):
     """
     model.add(*args)
 
+
 def remove(model, component):
     """
     Removes the specified components from the Bond Graph model.
@@ -318,6 +320,7 @@ def remove(model, component):
         component:
     """
     model.remove(component)
+
 
 def set_param(component, param, value):
     """
