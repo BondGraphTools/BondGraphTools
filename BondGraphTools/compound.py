@@ -247,7 +247,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
-        logging.info("Getting IO ports: %s",out_ports)
+        logger.debug("Getting IO ports: %s",out_ports)
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
@@ -259,7 +259,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
-                logger.info("Adding constraint %s", repr(constraint))
+                logger.debug("Adding constraint %s", repr(constraint))
                 if constraint:
                     relations.append(constraint)
         else:

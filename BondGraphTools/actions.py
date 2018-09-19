@@ -103,9 +103,9 @@ def _find_port_from_port_class(arg, is_tail=False):
             p = arg
         except AttributeError:
             c,p = arg
-    logging.info("Trying to find port %s: %s",str(c),str(p))
+    logger.debug("Trying to find port %s: %s",str(c),str(p))
     port = c.get_port(p)
-    logging.info("Got it")
+    logger.debug("Got it")
     return port
 
 

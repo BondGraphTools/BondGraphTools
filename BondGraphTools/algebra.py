@@ -18,8 +18,8 @@ def extract_coefficients(equation, local_map, global_coords):
     subs = [(k, global_coords[v]) for k, v in local_map.items()]
 
     subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
-    logger.info("Extracting coefficients from %s", repr(equation))
-    logger.info("Using local-to-global substitutions %s", repr(subs))
+    logger.debug("Extracting coefficients from %s", repr(equation))
+    logger.debug("Using local-to-global substitutions %s", repr(subs))
 
     terms = equation.expand().args
     if not terms:
@@ -30,7 +30,7 @@ def extract_coefficients(equation, local_map, global_coords):
     else:
         for term in terms:
             factors = list(flatten(term.as_coeff_mul()))
-            logger.info("Factors: %s", repr(factors))
+            logger.debug("Factors: %s", repr(factors))
             coeff = sp.S(1)
             base = []
             while factors:
@@ -39,7 +39,7 @@ def extract_coefficients(equation, local_map, global_coords):
                     coeff *= factor
                 else:
                     base.append(factor)
-            logger.info("Base: %s", repr(base))
+            logger.debug("Base: %s", repr(base))
             if len(base) == 1 and base[0] in local_map:
                 coeff_dict[local_map[base[0]]] = coeff
             else:
@@ -47,8 +47,8 @@ def extract_coefficients(equation, local_map, global_coords):
                 new_term = new_term.subs(subs)
                 nonlinear_terms = sp.Add(new_term, nonlinear_terms)
 
-    logger.info("Linear terms: %s", repr(coeff_dict))
-    logger.info("Nonlinear terms: %s", repr(nonlinear_terms))
+    logger.debug("Linear terms: %s", repr(coeff_dict))
+    logger.debug("Nonlinear terms: %s", repr(nonlinear_terms))
 
     return coeff_dict, nonlinear_terms
 
@@ -65,7 +65,7 @@ def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_t
         atoms |= (constraint.atoms() & c_atoms)
 
     if not atoms:
-        logger.info("No substitutions required")
+        logger.debug("No substitutions required")
         return []
 
     Rx = (sp.eye(linear_op.rows) - linear_op)
@@ -79,7 +79,7 @@ def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_t
 
             eqn = (Rx[i,:]*coords_vect)[0] - nonlinear_op[i]
             pair = (coords[i], eqn)
-            logger.info("Generating substition %s = %s",
+            logger.debug("Generating substition %s = %s",
                         repr(coords[i]), repr(eqn))
             substitutions = [
                 (c, s.subs(*pair)) for c, s in substitutions
@@ -112,13 +112,13 @@ def _process_constraints(linear_op,
 
     while constraints:
         constraint, _ = sp.fraction(constraints.pop())
-        logger.info("Processing constraint: %s",repr(constraint))
+        logger.debug("Processing constraint: %s",repr(constraint))
         atoms = constraint.atoms() & set(coord_atoms)
 
         # todo: check to see if we can solve f(x) = u => g(u) = x
         if len(atoms) == 1:
             c = atoms.pop()
-            logger.info("Attempting to find inverse")
+            logger.debug("Attempting to find inverse")
             solns = list(sp.solveset(constraint, c))
             if len(solns) == 1:
                 idx = coordinates.index(c)
@@ -298,7 +298,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     lin_dict = {}
     nlin_dict = {}
 
-    logger.info("Handling algebraic constraints")
+    logger.debug("Handling algebraic constraints")
 
     ###
     # First; take care of control variables
@@ -311,17 +311,17 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     subs_list = _generate_substitutions(
         linear_op, nonlinear_op, constraints, coordinates, size_tuple
     )
-    logger.info("Applying substitutions")
+    logger.debug("Applying substitutions")
 
     nonlinear_op = nonlinear_op.subs(subs_list)
     constraints = [c.subs(subs_list) for c in constraints]
 
-    logger.info("Reducing purely algebraic constraints")
+    logger.debug("Reducing purely algebraic constraints")
     # second, reduce the order of all nonlinear constraints
     linear_op, nonlinear_op, constraints, coordinates, size_tuple =\
         _process_constraints(linear_op, nonlinear_op,
                              constraints, coordinates, size_tuple)
-    logger.info("Applying substitutions, round 2")
+    logger.debug("Applying substitutions, round 2")
     subs_list = _generate_substitutions(
         linear_op, nonlinear_op, constraints, coordinates, size_tuple
     )
@@ -341,7 +341,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     for row in reversed(range(linear_op.rows, offset)):
         atoms = nonlinear_op[row].atoms()
         if not atoms & set(coordinates) and linear_op[row].nnz() > 1:
-            logger.info("Linear constraint in row %s", repr(row))
+            logger.debug("Linear constraint in row %s", repr(row))
             for idx in range(ss_size):
                 v = linear_op[row, idx + offset]
                 if v:
@@ -352,7 +352,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                     cv_diff_dict.update({(rows_added, idx): v})
 
     for row in range(offset, linear_op.rows):
-        logger.info("Testing row %s: %s + %s", repr(row),
+        logger.debug("Testing row %s: %s + %s", repr(row),
                     repr(linear_op[row, :] * sp.Matrix(coordinates)),
                     repr(nonlinear_op[row]) if nonlinear_op else '')
 
@@ -369,7 +369,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
         cv_dict = {}
         if not control_constraint.is_zero:
-            logging.info("Found higher order control constraint")
+            logger.debug("Found higher order control constraint")
             for cv_col in range(control_constraint.cols):
                 const = control_constraint[cv_col]
                 if not const:
@@ -417,9 +417,9 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             logger.warning("First order control constriants not implemented: %s",
                            jac_cv)
         elif any(x!=0 for x in jac_x):
-            logger.info("First order constriants: %s", jac_x)
+            logger.debug("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
-            logger.info(repr(fx))
+            logger.debug(repr(fx))
             p, q = sp.fraction(sp.simplify(fx))
             if row.is_zero:
                 lin_dict, nlin = extract_coefficients(
@@ -622,10 +622,10 @@ def get_relations_iterator(component, mappings, coordinates, io_map=None):
         try:
             local_map[cv] = 2*(num_ports+num_state_vars) + inv_cv[value]
         except KeyError:
-            logger.info("Could not find %s, trying the io_map", value)
+            logger.debug("Could not find %s, trying the io_map", value)
             key = io_map[value]
             local_map[cv] = key
-            logger.info("Mapping %s to co-ord %s",cv, coordinates[key])
+            logger.debug("Mapping %s to co-ord %s",cv, coordinates[key])
 
     for (x, dx), coord in local_tm.items():
         local_map[dx] = inv_tm[coord]
@@ -634,7 +634,7 @@ def get_relations_iterator(component, mappings, coordinates, io_map=None):
     for (e, f), port in local_js.items():
         local_map[e] = 2*inv_js[port] + num_state_vars
         local_map[f] = 2*inv_js[port] + num_state_vars + 1
-    logger.info("Getting relations iterator for %s", repr(component))
+    logger.debug("Getting relations iterator for %s", repr(component))
     for relation in component.constitutive_relations:
         if relation:
             yield extract_coefficients(relation, local_map, coordinates)
