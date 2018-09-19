@@ -91,6 +91,9 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         self._port_map[port] = (e,f)
 
     def add(self, *args):
+        """
+        Warning: Scheduled to be deprecated
+        """
 
         def validate(component):
             if not isinstance(component, BondGraphBase):
@@ -119,6 +122,9 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
 
     def remove(self, component):
+        """
+        Warning: Scheduled to be deprecated
+        """
         if [b for b in self._bonds if b.head.component is component or
                 b.tail.component is component]:
             raise InvalidComponentException("Component is still connected")
@@ -129,6 +135,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         self.components.remove(component)
 
     def set_param(self, param, value):
+        """
+        Warning: Scheduled to be deprecated
+        """
+
         c, p = self.params[param]
         c.params[p] = value
 
