@@ -203,7 +203,10 @@ class FixedPort:
             if p:
                 return p
 
-        raise InvalidPortException
+        if port:
+            raise InvalidPortException(f"Could not find port: {self}.{port}")
+        else:
+            raise InvalidPortException(f"Could not find a free port: {self}")
 
     def _port_vectors(self):
         return {
