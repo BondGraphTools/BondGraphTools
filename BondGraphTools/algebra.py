@@ -161,9 +161,6 @@ def _process_constraints(linear_op,
                         lin_dict.update({(0, idx): new_coeff})
                     else:
                         nlin += new_coeff * coordinates[idx]
-            if factor == 0:
-                raise SymbolicException("Invalid Constraint %s",
-                                        repr(constraint))
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
                     cv = coordinates[offset+ss_size+idx]
@@ -256,7 +253,6 @@ def _generate_cv_substitutions(subs_pairs, mappins, coords):
     cv_offset = 2*(ss_size + len(port_map))
 
     control_vars = {str(c) for c in coords[cv_offset:]}
-    print(control_vars)
     subs = []
     for var, fx_str in subs_pairs.items():
 
@@ -611,3 +607,36 @@ def inverse_coord_maps(tangent_space, port_space, control_space):
         coordinates.append(u)
 
     return (inverse_tm, inverse_js, inverse_cm), coordinates
+
+
+def get_relations_iterator(component, mappings, coordinates, io_map=None):
+    local_tm, local_js, local_cv = component.basis_vectors
+    inv_tm, inv_js, inv_cv = mappings
+
+    num_ports = len(inv_js)
+    num_state_vars = len(inv_tm)
+    local_map = {}
+
+    # todo: Fix this dirty hack; there has to be a better way to hand io ports
+    for cv, value in local_cv.items():
+        try:
+            local_map[cv] = 2*(num_ports+num_state_vars) + inv_cv[value]
+        except KeyError:
+            logger.info("Could not find %s, trying the io_map", value)
+            key = io_map[value]
+            local_map[cv] = key
+            logger.info("Mapping %s to co-ord %s",cv, coordinates[key])
+
+    for (x, dx), coord in local_tm.items():
+        local_map[dx] = inv_tm[coord]
+        local_map[x] = inv_tm[coord] + num_state_vars + 2 * num_ports
+
+    for (e, f), port in local_js.items():
+        local_map[e] = 2*inv_js[port] + num_state_vars
+        local_map[f] = 2*inv_js[port] + num_state_vars + 1
+    logger.info("Getting relations iterator for %s", repr(component))
+    for relation in component.constitutive_relations:
+        if relation:
+            yield extract_coefficients(relation, local_map, coordinates)
+        else:
+            yield {}, 0.0

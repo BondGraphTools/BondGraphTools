@@ -1,38 +1,27 @@
 {
-  "name": "Basic Components",
+  "description": "Basic Components",
   "id":"base",
   "components": {
     "0": {
-      "name": "Equipotential Node",
-      "class": "NPort",
-      "ports": {
-        "i": null
-      },
-      "constitutive_relations": [
-        "sum(f_i)",
-        "e_i - e_0"
-      ]
+      "description": "Equal Effort Node",
+      "metaclass": "0",
+      "class": "EqualEffort"
     },
     "1": {
-      "name": "Equal Flow Node",
-      "class": "NPort",
-      "ports": {
-        "i":null
-      },
-      "constitutive_relations": [
-        "sum(e_i)",
-        "f_i - f_0"
-      ]
+      "description": "Equal Flow Node",
+      "class": "EqualFlow",
+      "metaclass":"1"
     },
     "R": {
-      "name": "Generalised Linear Resistor",
+      "description": "Generalised Linear Resistor",
       "class": "BaseComponent",
+      "metaclass":"R",
       "ports": {
         "0": null
       },
       "params": {
         "r": {
-          "name": "Resistance",
+          "description": "Resistance",
           "value": 1000,
           "range": [
             0,
@@ -45,14 +34,15 @@
       ]
     },
     "C": {
-      "name": "Generalised Linear Capacitor",
+      "description": "Generalised Linear Capacitor",
       "class": "BaseComponent",
+      "metaclass":"C",
       "ports": {
         "0": null
       },
       "params": {
         "C": {
-          "name": "Capacitance",
+          "description": "Capacitance",
           "value": 1000,
           "range": [
             0,
@@ -64,12 +54,14 @@
         "q_0":"Generalised Position"
       },
       "constitutive_relations": [
-        "q_0 - C * e_0"
+        "q_0 - C * e_0",
+        "dq_0 - f_0"
       ]
     },
     "I": {
-      "name": "Generalised Linear Inductor",
+      "description": "Generalised Linear Inductor",
       "class": "BaseComponent",
+      "metaclass": "I",
       "ports": {
         "0": null
       },
@@ -78,7 +70,7 @@
       },
       "params": {
         "L": {
-          "name": "Inductance",
+          "description": "Inductance",
           "value": 2000,
           "range": [
             0,
@@ -87,12 +79,14 @@
         }
       },
       "constitutive_relations": [
-        "p_0 - L*f_0"
+        "p_0 - L*f_0",
+        "dp_0 - e_0"
       ]
     },
     "Se": {
-      "name": "Effort Source",
+      "description": "Effort Source",
       "class": "BaseComponent",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -104,8 +98,9 @@
       ]
     },
     "Sf": {
-      "name": "Flow Source",
+      "description": "Flow Source",
       "class": "BaseComponent",
+      "metaclass":"SS",
       "ports": {
         "0": null
       },
@@ -117,19 +112,20 @@
       ]
     },
     "TF": {
-      "name": "Linear Transformer",
+      "description": "Linear Transformer",
       "class": "BaseComponent",
+      "metaclass":"TF",
       "ports": {
         "0": {
-          "name": "Primary"
+          "description": "Primary"
         },
         "1": {
-          "name": "Secondary"
+          "description": "Secondary"
         }
       },
       "params": {
         "r": {
-          "name": "Ratio",
+          "description": "Ratio",
           "value": 1
         }
       },
@@ -139,19 +135,20 @@
       ]
     },
     "GY": {
-      "name": "Linear Gyrator",
+      "description": "Linear Gyrator",
       "class": "BaseComponent",
+      "metaclass":"GY",
       "ports": {
         "0": {
-          "name": "Primary"
+          "description": "Primary"
         },
         "1": {
-          "name": "Secondary"
+          "description": "Secondary"
         }
       },
       "params": {
         "R": {
-          "name": "Ratio",
+          "description": "Ratio",
           "value": 1
         }
       },
@@ -159,6 +156,19 @@
         "e_1 - R*f_0",
         "e_0 + R*f_1"
       ]
+    },
+    "SS":{
+      "description": "Source Sensor",
+      "class": "BaseComponent",
+      "metaclass":"SS",
+      "ports": {
+        "0": null
+      },
+      "params":{
+          "f":null,
+          "e":null
+      },
+      "constitutive_relations": ["e_0 - e", "f_0+f"]
     }
   }
 }

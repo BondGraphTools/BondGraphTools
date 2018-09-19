@@ -130,6 +130,8 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         if dcv:
             function_header += dcv
 
+    assert model.constitutive_relations
+
     for relation in model.constitutive_relations:
 
         eqn_str = str(relation.subs(subs))
