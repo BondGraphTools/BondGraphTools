@@ -6,7 +6,7 @@ import logging
 from subprocess import Popen, PIPE, run
 logger = logging.getLogger(__name__)
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 
 def as_str(path):

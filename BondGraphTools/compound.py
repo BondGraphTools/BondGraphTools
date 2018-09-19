@@ -144,14 +144,21 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def params(self):
         j = 0
         out = dict()
+
+        excluded = {
+            v for pair in self._port_map.values() for v in pair
+        }
+
         for v in self.components:
             try:
                 params = v.params
             except AttributeError:
                 continue
             for p in params:
-                out.update({j: (v, p)})
-                j+=1
+                param = (v, p)
+                if param not in excluded:
+                    out.update({j: param})
+                    j+=1
         return out
 
     @property
