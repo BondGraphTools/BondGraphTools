@@ -1,3 +1,10 @@
+""" actions.py contains methods for manipulating models.
+
+This module provides functions for the actions one wishes to perform on
+models bond graph models.
+"""
+
+
 import copy
 
 from .component_manager import get_component, base_id
@@ -292,3 +299,36 @@ def expose(component, label=None):
         label = str(len(model.ports))
 
     model.map_port(label, effort_port, flow_port)
+
+
+def add(model, *args):
+    """
+    Add the specified components to the model
+
+    Args:
+        model (`BondGraph`): The working model
+        *args: A component, or a list of components
+    """
+    model.add(*args)
+
+
+def remove(model, component):
+    """
+    Removes the specified components from the Bond Graph model.
+    Args:
+        model (`BondGraph`):
+        component:
+    """
+    model.remove(component)
+
+
+def set_param(component, param, value):
+    """
+    Sets the specified parameter to a particular value.
+
+    Args:
+        component (`BondGraphBase`): The particular component.
+        param: The parameter to set
+        value: The value to assign it to, may be None
+    """
+    component.set_param(param, value)
