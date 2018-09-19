@@ -31,3 +31,31 @@ Julia dependencies:
 3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
 4. Install using PyPI; `pip install BondGraphTools`
 
+## Usage
+
+Coming Soon
+
+
+
+## v0.3 Changelog 19.09.2018
+
+## New
+
+- Users can now save a load to file.
+- Source Sensor component has been added
+- SS component can be exposed using `expose` to create IO ports.
+- Model hierarchy can now be traversed in a posix-like manner using
+`component.uri` as unambiguous references
+
+### Changes
+- The reaction builder no longer uses the 'Y' component
+- Certain connections are now order aware (1 junction for example)
+- Rebuilt how ports are referenced
+- Moved all 'verb' actions out of class definition; including (`new`, `add`,
+`remove`, `connect`, `disconnect`)
+- `Find` has been removed; users can now use `uri`
+
+### Fixed
+- 1 junction now corresponds to the existing literature
+- Drawing algorithm now has half-arrow heads
+- Updated to sympy v1.2
