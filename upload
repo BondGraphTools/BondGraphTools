@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ "$1" != "release" ]; then
+    repo="--repository-url http://test.pypi.org/legacy/"
+else
+    repo = ""
+fi
+
+rm dist/*
+python3 setup.py sdist bdist_wheel
+
+if pytest; then
+    twine upload -u pete_cudmore $repo dist/*
+fi
