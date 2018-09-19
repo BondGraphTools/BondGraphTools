@@ -203,6 +203,7 @@ class EqualEffort(BondGraphBase, PortExpander):
 
         PortExpander .__init__(self, {None: None})
         BondGraphBase.__init__(self, **kwargs)
+        self.view = Glyph(self)
 
     @property
     def template(self):
@@ -238,6 +239,7 @@ class EqualFlow(BondGraphBase, PortExpander):
         PortExpander.__init__(self, {"input": {"weight": 1},
                                      "output": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
+        self.view = Glyph(self)
 
     @property
     def input(self):
