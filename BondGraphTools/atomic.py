@@ -76,7 +76,6 @@ class BaseComponent(BondGraphBase, FixedPort):
 
         """
         models = self._build_relations()
-
         # for var in self.state_vars:
         #     var_type, port = var.split("_")
         #
@@ -94,18 +93,28 @@ class BaseComponent(BondGraphBase, FixedPort):
         #     models.append(sp.sympify(f"d{var} - {ef_var}"))
 
         subs = []
-        for param, value in self.params.items():
 
-            if isinstance(value, (int, float, complex)):
-                subs.append((sp.symbols(param), value))
-            elif isinstance(value, str) and value.isnumeric():
-                subs.append((sp.symbols(param), float(value)))
-            elif isinstance(value, dict) and "value" in value:
-                if isinstance(value["value"], (int, float, complex)):
-                    subs.append((sp.symbols(param), value["value"]))
-                elif isinstance(value["value"], str) \
-                        and value["value"].isnumeric():
-                    subs.append((sp.symbols(param), float(value["value"])))
+        def _value_of(v):
+            if isinstance(v, (int, float, complex, sp.Symbol)):
+                return v
+            elif not v:
+                raise KeyError
+            elif isinstance(v, str):
+                v_out, = v.split(" ")
+                return sp.S(v_out)
+            elif isinstance(v, dict):
+                return _value_of(v["value"])
+            else:
+                raise ValueError(f"Invalid Parameter")
+
+        for param, value in self.params.items():
+            try:
+                v = _value_of(value)
+                subs.append((sp.symbols(param), v))
+            except KeyError:
+                pass
+            except ValueError as ex:
+                raise ValueError(f"{self}.{oaram}: {ex.args}")
 
         return [model.subs(subs) for model in models]
 
@@ -137,12 +146,14 @@ class BaseComponent(BondGraphBase, FixedPort):
     def _build_relations(self):
         rels = []
         for string in self._constitutive_relations:
+
             iloc = 0
             iloc = string.find("_i", iloc)
 
             if iloc < 0:
                 # just a plain old string; sympy can take care of it
                 rels.append(sp.sympify(string))
+
                 continue
 
             sloc = string.rfind("sum(", 0, iloc)
@@ -154,8 +165,8 @@ class BaseComponent(BondGraphBase, FixedPort):
                         rels.append(
                         sp.sympify(
                             string.replace("_i", "_{}".format(port_id))))
-
             else:
+
                 tiers = 0
 
                 next_open = string.find("(", sloc + 4)
@@ -176,6 +187,7 @@ class BaseComponent(BondGraphBase, FixedPort):
                          for p in self.ports if isinstance(p, int)]
                 symstr = string[0:sloc] + "(" + " + ".join(terms) + string[
                                                                     eloc:]
+
                 rels.append(
                     sp.sympify(symstr)
                 )
