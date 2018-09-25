@@ -30,16 +30,16 @@ def extract_coefficients(equation, local_map, global_coords):
     else:
         for term in terms:
             factors = list(flatten(term.as_coeff_mul()))
-            logger.debug("Factors: %s", repr(factors))
             coeff = sp.S(1)
             base = []
             while factors:
                 factor = factors.pop()
                 if factor.is_number:
                     coeff *= factor
+                elif factor.is_symbol and factor not in local_map:
+                    coeff *= factor
                 else:
                     base.append(factor)
-            logger.debug("Base: %s", repr(base))
             if len(base) == 1 and base[0] in local_map:
                 coeff_dict[local_map[base[0]]] = coeff
             else:
@@ -408,14 +408,17 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         nlin_row = sp.S(0)
 
         if any(x!=0 for x in jac_dx):
-            logger.warning("Second order constriants not implemented: %s",
+            logger.warning("Second order constraint not implemented: %s",
                            jac_dx)
+
         elif any(x!=0 for x in jac_junciton):
-            logger.warning("First order junciton constriants not implemented: %s",
-                           jac_cv)
+            logger.warning("First order junciton constraint not implemented: %s",
+                           str(jac_junciton))
+
         elif any(x!=0 for x in jac_cv):
-            logger.warning("First order control constriants not implemented: %s",
-                           jac_cv)
+            logger.warning("First order control constraint not implemented: %s",
+                           str(jac_cv))
+
         elif any(x!=0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
@@ -466,7 +469,11 @@ def augmented_rref(matrix, augment=0):
             for row in range(pivot, matrix.rows):
                 val = matrix[row, col]
                 v = abs(val)
-                if v > v_max:
+                try:
+                    if v > v_max:
+                        j = row
+                        v_max = v
+                except TypeError: # symbolic variable
                     j = row
                     v_max = v
             if not j:

@@ -40,19 +40,35 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def control_vars(self):
-        if self.params:
-            return [param for param, value in self.params.items()
-                    if ((not value) and not isinstance(value,(int,float, complex)))
-                    or (isinstance(value, dict) and "value"
-                    not in value)]
-        else:
-            return []
+        """See `BondGraphBase`"""
+
+        def is_const(value):
+            if isinstance(value, (int, float, complex)):
+                return True
+            elif isinstance(value, sp.Symbol):
+                return True
+            else:
+                return False
+
+        out = []
+
+        for p, v in self.params.items():
+            try:
+                if is_const(v) or is_const(v["value"]):
+                    continue
+            except (KeyError, TypeError):
+                pass
+
+            out.append(p)
+        return out
+
     # @property
     # def max_ports(self):
     #     return len(self._ports)
 
     @property
     def params(self):
+        """See `BondGraphBase`"""
         return self._params if self._params else {}
 
     def set_param(self, param, value):
