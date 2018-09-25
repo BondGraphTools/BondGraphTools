@@ -1,7 +1,9 @@
+"""Algebraic Manipulations and model reduction"""
+
 
 import logging
-import sympy as sp
-import numpy as np
+import sympy
+
 from .exceptions import SymbolicException
 
 logger = logging.getLogger(__name__)
@@ -11,9 +13,10 @@ class NotInvertible(Exception):
     pass
 
 
-def extract_coefficients(equation, local_map, global_coords):
-    """
-    Extracts the coordinates from the given equation and maps them into
+def extract_coefficients(equation: sympy.Expr, 
+                         local_map: dict,
+                         global_coords: list):
+    """Extracts the coordinates from the given equation and maps them into
     the global coordinate space.
 
     Equations are assumed to come in as sympy expressions of the form
@@ -25,22 +28,23 @@ def extract_coefficients(equation, local_map, global_coords):
     global coordinate.
 
     The result is :math:`L,N` such that
-    ..math:
+    .. math::
         Ly + N(y) = 0
 
     Args:
-        equation:
-        local_map: Dictionary specifying the map from local symbolic
-         co-ordinates to the index of a global co-ordinate.
+        equation: The equation in local coordinates.
+        local_map: A dictionary specifying the mapping from local symbolic
+            co-ordinates to the index of a global co-ordinate.
         global_coords: The list of global co-ordinates.
 
-    Returns: (dict, sympy.core) where the dictionary contains index-coefficient
-    pairs and the sympy variable is the nonlinear parts of the equation.
+    Returns:
+        (dict, sympy.core) where the dictionary contains index-coefficient
+        pairs and the sympy variable is the nonlinear parts of the equation.
 
     """
 
     coeff_dict = {}
-    nonlinear_terms = sp.S(0)
+    nonlinear_terms = sympy.S(0)
     subs = [(k, global_coords[v]) for k, v in local_map.items()]
 
     subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
@@ -50,13 +54,13 @@ def extract_coefficients(equation, local_map, global_coords):
     terms = equation.expand().args
     if not terms:
         if equation in local_map:
-            coeff_dict[local_map[equation]] = sp.S(1)
+            coeff_dict[local_map[equation]] = sympy.S(1)
         else:
             nonlinear_terms = equation
     else:
         for term in terms:
             factors = list(flatten(term.as_coeff_mul()))
-            coeff = sp.S(1)
+            coeff = sympy.S(1)
             base = []
             while factors:
                 factor = factors.pop()
@@ -71,7 +75,7 @@ def extract_coefficients(equation, local_map, global_coords):
             else:
                 new_term = term
                 new_term = new_term.subs(subs)
-                nonlinear_terms = sp.Add(new_term, nonlinear_terms)
+                nonlinear_terms = sympy.Add(new_term, nonlinear_terms)
 
     logger.debug("Linear terms: %s", repr(coeff_dict))
     logger.debug("Nonlinear terms: %s", repr(nonlinear_terms))
@@ -94,11 +98,11 @@ def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_t
         logger.debug("No substitutions required")
         return []
 
-    Rx = (sp.eye(linear_op.rows) - linear_op)
+    Rx = (sympy.eye(linear_op.rows) - linear_op)
 
     ss_size, js_size, cv_size, n = size_tup
     substitutions = []
-    coords_vect = sp.Matrix(coords)
+    coords_vect = sympy.Matrix(coords)
     for i in reversed(range(2*(ss_size  + js_size))):
         co = coords[i]
         if Rx[i,i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
@@ -127,7 +131,7 @@ def _process_constraints(linear_op,
 
     coord_atoms = set(coordinates[0:offset+ss_size])
 
-    coords_vect = sp.Matrix(coordinates)
+    coords_vect = sympy.Matrix(coordinates)
     cv_constraints = list(
         linear_op[offset+ss_size:n,:]*coords_vect +
         nonlinear_op[offset+ss_size:n,0]
@@ -137,7 +141,7 @@ def _process_constraints(linear_op,
     nonlinear_op = nonlinear_op[:offset+ss_size, :]
 
     while constraints:
-        constraint, _ = sp.fraction(constraints.pop())
+        constraint, _ = sympy.fraction(constraints.pop())
         logger.debug("Processing constraint: %s",repr(constraint))
         atoms = constraint.atoms() & set(coord_atoms)
 
@@ -145,16 +149,16 @@ def _process_constraints(linear_op,
         if len(atoms) == 1:
             c = atoms.pop()
             logger.debug("Attempting to find inverse")
-            solns = list(sp.solveset(constraint, c))
+            solns = list(sympy.solveset(constraint, c))
             if len(solns) == 1:
                 idx = coordinates.index(c)
                 sol = solns.pop()
 
                 linear_op = linear_op.col_join(
-                    sp.SparseMatrix(1, linear_op.cols, {(0, idx): 1})
+                    sympy.SparseMatrix(1, linear_op.cols, {(0, idx): 1})
                 )
                 nonlinear_op = nonlinear_op.col_join(
-                    sp.SparseMatrix(1, 1, {(0,0): -sol})
+                    sympy.SparseMatrix(1, 1, {(0,0): -sol})
                 )
                 constraint = c - sol
         else:
@@ -182,7 +186,7 @@ def _process_constraints(linear_op,
                     factor = 1 / coeff
                     lin_dict.update({(0, idx): 1})
                 elif factor != 0 and coeff != 0:
-                    new_coeff = sp.simplify(coeff / factor)
+                    new_coeff = sympy.simplify(coeff / factor)
                     if new_coeff.is_number:
                         lin_dict.update({(0, idx): new_coeff})
                     else:
@@ -190,7 +194,7 @@ def _process_constraints(linear_op,
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
                     cv = coordinates[offset+ss_size+idx]
-                    dvc = sp.Symbol(f"d{str(cv)}")
+                    dvc = sympy.Symbol(f"d{str(cv)}")
                     try:
                         dc_idx = coordinates.index(dvc)
                     except ValueError:
@@ -199,7 +203,7 @@ def _process_constraints(linear_op,
                         cv_size += 1
                         n += 1
                         linear_op = linear_op.row_join(
-                            sp.SparseMatrix(linear_op.rows, 1, {})
+                            sympy.SparseMatrix(linear_op.rows, 1, {})
                         )
                     eqn = coeff/factor
                     if eqn.is_number:
@@ -207,10 +211,10 @@ def _process_constraints(linear_op,
                     else:
                         nlin += eqn*dvc
             linear_op = linear_op.col_join(
-                sp.SparseMatrix(1,linear_op.cols, lin_dict)
+                sympy.SparseMatrix(1,linear_op.cols, lin_dict)
             )
             nonlinear_op = nonlinear_op.col_join(
-                    sp.SparseMatrix(1,1,{(0,0):nlin})
+                    sympy.SparseMatrix(1,1,{(0,0):nlin})
             )
 
     linear_op, nonlinear_op, new_constraints = smith_normal_form(
@@ -232,13 +236,13 @@ def _generate_cv_substitutions(subs_pairs, mappins, coords):
     for var, fx_str in subs_pairs.items():
 
         if var in control_vars:
-            u = sp.S(var)
+            u = sympy.S(var)
         elif var in control_map:
-            u = sp.S(f"u_{control_map[var]}")
+            u = sympy.S(f"u_{control_map[var]}")
         else:
             raise SymbolicException("Could not substitute control variable %s",
                                     str(var))
-        fx = sp.sympify(fx_str)
+        fx = sympy.sympify(fx_str)
 
         subs.append((u, fx))
 
@@ -337,7 +341,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
     for row in range(offset, linear_op.rows):
         logger.debug("Testing row %s: %s + %s", repr(row),
-                    repr(linear_op[row, :] * sp.Matrix(coordinates)),
+                    repr(linear_op[row, :] * sympy.Matrix(coordinates)),
                     repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
@@ -349,7 +353,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         state_constraint = linear_op[row, offset: offset + ss_size]
         control_constraint = linear_op[row, offset + ss_size:]
 
-        row = state_constraint.row_join(sp.SparseMatrix(1, offset + cv_size, {}))
+        row = state_constraint.row_join(sympy.SparseMatrix(1, offset + cv_size, {}))
 
         cv_dict = {}
         if not control_constraint.is_zero:
@@ -364,16 +368,16 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                 except ValueError:
                     idx = len(added_cvs)
                     added_cvs.append(cv_col)
-                    linear_op= linear_op.row_join(sp.SparseMatrix(linear_op.rows, 1, {}))
+                    linear_op= linear_op.row_join(sympy.SparseMatrix(linear_op.rows, 1, {}))
                     coord = coordinates[offset + ss_size + cv_col]
-                    d_coord = sp.Symbol(f"d{str(coord)}")
+                    d_coord = sympy.Symbol(f"d{str(coord)}")
                     coordinates.append(d_coord)
                     cv_size += 1
                     n += 1
 
                 cv_dict[(0,idx)] = const
 
-        row = row.row_join(sp.SparseMatrix(1, len(added_cvs), cv_dict))
+        row = row.row_join(sympy.SparseMatrix(1, len(added_cvs), cv_dict))
         jac_dx = [nonlinear_constraint.diff(c) for c in coordinates[:ss_size]]
         jac_junciton = [
             nonlinear_constraint.diff(c)
@@ -389,7 +393,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             for c in coordinates[offset + ss_size:]
         ]
 
-        nlin_row = sp.S(0)
+        nlin_row = sympy.S(0)
 
         if any(x!=0 for x in jac_dx):
             logger.warning("Second order constraint not implemented: %s",
@@ -407,7 +411,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             logger.debug("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
             logger.debug(repr(fx))
-            p, q = sp.fraction(sp.simplify(fx))
+            p, q = sympy.fraction(sympy.simplify(fx))
             if row.is_zero:
                 lin_dict, nlin = extract_coefficients(
                     p, {c:i for i,c in enumerate(coordinates)},
@@ -421,7 +425,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             else:
                 nlin_row += fx
 
-        nonlinear_op = nonlinear_op.col_join(sp.SparseMatrix(1,1,[nlin_row]))
+        nonlinear_op = nonlinear_op.col_join(sympy.SparseMatrix(1,1,[nlin_row]))
 
         linear_op = linear_op.col_join(row)
         rows_added += 1
@@ -502,22 +506,22 @@ def augmented_rref(matrix, augmented_rows=0):
 
 
 def smith_normal_form(matrix, augment=None):
-    """
-    Assume n >= m
+    """Computes the Smith normal form of the given matrix.
+
+
     Args:
         matrix:
         augment:
 
     Returns:
-    n x n smith normal form of the matrix.
-    Particularly for projection onto the nullspace of M and the orthogonal
-    complement
-    that is, for a matrix M,
-    P = _smith_normal_form(M) is a projection operator onto the nullspace of M
+        n x n smith normal form of the matrix.
+        Particularly for projection onto the nullspace of M and the orthogonal
+        complement that is, for a matrix M,
+        P = _smith_normal_form(M) is a projection operator onto the nullspace of M
     """
     # M, _ = matrix.rref()
     # m, n = M.shape
-    # M = sp.SparseMatrix(m, n, M)
+    # M = sympy.SparseMatrix(m, n, M)
     # m_dict = {}
     # current_row = 0
     #
@@ -535,7 +539,7 @@ def smith_normal_form(matrix, augment=None):
     #
     #     m_dict[(r_idx, c_idx)] = entry
     #
-    # return sp.SparseMatrix(n, n, m_dict)
+    # return sympy.SparseMatrix(n, n, m_dict)
 
     if augment:
         M = matrix.row_join(augment)
@@ -546,7 +550,7 @@ def smith_normal_form(matrix, augment=None):
     m, n = M.shape
     M = augmented_rref(M, k)
 
-    Mp = sp.MutableSparseMatrix(n-k, n, {})
+    Mp = sympy.MutableSparseMatrix(n-k, n, {})
 
     constraints = []
     for row in range(m):
@@ -564,7 +568,7 @@ def smith_normal_form(matrix, augment=None):
     if augment:
         return Mp[:,:-k], Mp[:, -k:], constraints
     else:
-        return Mp, sp.SparseMatrix(m,k,{}), constraints
+        return Mp, sympy.SparseMatrix(m,k,{}), constraints
 
 
 def adjacency_to_dict(nodes, edges, offset=0):

@@ -14,7 +14,7 @@
     },
     "R": {
       "description": "Generalised Linear Resistor",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"R",
       "ports": {
         "0": null
@@ -35,7 +35,7 @@
     },
     "C": {
       "description": "Generalised Linear Capacitor",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"C",
       "ports": {
         "0": null
@@ -60,7 +60,7 @@
     },
     "I": {
       "description": "Generalised Linear Inductor",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass": "I",
       "ports": {
         "0": null
@@ -85,7 +85,7 @@
     },
     "Se": {
       "description": "Effort Source",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"SS",
       "ports": {
         "0": null
@@ -99,7 +99,7 @@
     },
     "Sf": {
       "description": "Flow Source",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"SS",
       "ports": {
         "0": null
@@ -113,7 +113,7 @@
     },
     "TF": {
       "description": "Linear Transformer",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"TF",
       "ports": {
         "0": {
@@ -136,7 +136,7 @@
     },
     "GY": {
       "description": "Linear Gyrator",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"GY",
       "ports": {
         "0": {
@@ -159,7 +159,7 @@
     },
     "SS":{
       "description": "Source Sensor",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"SS",
       "ports": {
         "0": null

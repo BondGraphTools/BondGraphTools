@@ -1,14 +1,11 @@
-import logging
-import sympy as sp
 
 from .base import *
 from .exceptions import *
-from .compound import BondGraph
 from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
-class BaseComponent(BondGraphBase, FixedPort):
+class Component(BondGraphBase, FixedPort):
     """
     Atomic bond graph components are those defined by constitutive relations.
     """
@@ -211,15 +208,15 @@ class BaseComponent(BondGraphBase, FixedPort):
         return super().__hash__()
 
 
-class BaseComponentSymmetric(BaseComponent):
+class SymmetricComponent(Component):
     """
-    Refer to `BaseComponent`.
+    Refer to `Component`.
 
     Instances of this class are multi-port components which are able to have
     connections made without specifying ports.
     """
     def get_port(self, port=None):
-        """See `BaseComponent`"""
+        """See `Component`"""
         if not port and not isinstance(port, int):
             p = [port for port in self.ports if not port.is_connected]
 

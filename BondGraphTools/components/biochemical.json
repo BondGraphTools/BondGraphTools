@@ -4,7 +4,7 @@
   "components":{
     "Ce":{
       "description":"Concentration of Chemical Species",
-      "class": "BaseComponent",
+      "class": "Component",
       "metaclass":"C",
       "ports":{
         "0":null
@@ -24,7 +24,7 @@
     },
     "Re":{
       "description": "Biochemical Reaction",
-      "class": "BaseComponentSymmetric",
+      "class": "SymmetricComponent",
       "metaclass":"R",
       "ports":{
         "0":null,

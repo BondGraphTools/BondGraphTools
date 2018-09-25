@@ -3,18 +3,19 @@ Bond Graph Model base files.
 """
 
 import logging
-
 from collections import namedtuple
-
 import sympy as sp
 from .exceptions import *
 
 logger = logging.getLogger(__name__)
 
 
+
 class BondGraphBase:
-    def __init__(self, name=None, parent=None,
-                 ports=None, description=None, params=None, metaclass=None):
+    def __init__(self,
+                 name=None,
+                 parent=None,
+                 metaclass=None, **kwargs):
         """
         Base class definition for all bond graphs.
 
@@ -26,28 +27,17 @@ class BondGraphBase:
         # TODO: This is a dirty hack
         # Job for meta classes maybe?
         if not metaclass:
-            self.__metaclass = "BondGraph"
+            self.__metaclass = "BG"
         else:
             self.__metaclass = metaclass
+
         if not name:
             self.name = f"{self.metaclass}" \
                         f"{self.__class__.instances}"
         else:
             self.name = name
+
         self.parent = parent
-
-        self.description = description
-        # if ports:
-        #     self._ports = {
-        #         (int(p) if p.isnumeric() else p):v for p,v in ports.items()
-        #     }
-        # else:
-        #     self._ports = {}
-        """ List of exposed Power ports"""
-
-        """ Dictionary of internal parameter and their values. The key is 
-        the internal parameter, the value may be an exposed control value,
-        a function of time, or a constant."""
         self.view = None
 
     def __repr__(self):
@@ -315,13 +305,13 @@ class PortTemplate(object):
           index (srt): The label or identifier
 
     """
-    def __new__(cls, parent, index, data=None):
-        self = object.__new__(cls)
+
+    def __init__(self, parent, index, data=None):
         self.parent = parent
         self.index = index
         self.ports = []
         self.data = data if data else {}
-        return self
+
 
     def __hash__(self):
         return id(self)

@@ -4,7 +4,7 @@ import sympy as sp
 import os
 import yaml
 from BondGraphTools import load, save, new, connect
-import BondGraphTools.datamodel as dm
+import BondGraphTools.fileio as dm
 import logging
 
 file_path = pathlib.Path(__file__).parent / 'files'

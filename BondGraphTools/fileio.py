@@ -28,7 +28,6 @@ def save(model, filename):
     Args:
         model: The model to be saved
         filename: The file to save to
-
     """
 
     model_directory = _build_model_directory(model)
