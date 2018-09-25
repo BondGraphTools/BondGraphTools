@@ -97,7 +97,7 @@ def test_one_port():
     bg = new()
     bg.add(c,se,r,one)
 
-    connect(c, one.input)
+    connect(c, one.non_inverting)
     connect(se, one)
     connect(one, r)
 
@@ -241,9 +241,9 @@ def test_disconnect_multiport():
     bg = bgt.new()
     bg.add([zero, r, c, one])
 
-    connect(zero, one.input)
+    connect(zero, one.non_inverting)
     connect(r,zero)
-    connect(c, one.output)
+    connect(c, one.inverting)
 
     assert len(bg.bonds) == 3
     disconnect(zero, one)
@@ -261,7 +261,7 @@ def test_disconnect_component():
     bg = bgt.new()
     bg.add([zero, r, c, one])
 
-    connect(c, (one, one.input))
+    connect(c, (one, one.non_inverting))
 
     with pytest.raises(TypeError):
         disconnect(c)

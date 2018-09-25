@@ -24,9 +24,9 @@ def test_c_se_build_ode():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl, kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c,(kcl, kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     # "dx_0 - u_0 + x_0"
     # so f(x,t) = exp(-t) - x
@@ -50,9 +50,9 @@ def test_c_se_sim():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c, (kcl, kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c, (kcl, kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     with pytest.raises(ModelException) as ex:
         t, x = simulate(
@@ -84,9 +84,9 @@ def test_c_se_sum_switch():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c, (kcl, kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c, (kcl, kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     bang_bang = ["x_0 >= 1 ?  1.5: -2 "]
 

@@ -115,7 +115,7 @@ class Reaction_Network(object):
             else:
                 reverse_complex = new("1", name=bck_name)
                 system.add(reverse_complex)
-                connect(reaction, reverse_complex.output)
+                connect(reaction, reverse_complex.inverting)
                 self._connect_complex(
                     system, species_anchors, reverse_complex, bck_sto
                 )
@@ -126,7 +126,7 @@ class Reaction_Network(object):
                 forward_complex = new("1", name=fwd_name)
                 system.add(forward_complex)
 
-                connect(reaction, forward_complex.output)
+                connect(reaction, forward_complex.inverting)
 
                 self._connect_complex(
                     system, species_anchors, forward_complex, fwd_sto
@@ -136,11 +136,11 @@ class Reaction_Network(object):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
             if qty == 1:
-                connect(junct.input, species_anchors[species])
+                connect(junct.non_inverting, species_anchors[species])
             else:
                 tf = new("TR", value=qty)
                 system.add(tf)
-                connect((tf, 1), junct.input)
+                connect((tf, 1), junct.non_inverting)
                 connect(species_anchors, (tf,0))
 
     def _build_species(self, system, normalised):

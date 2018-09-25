@@ -118,9 +118,9 @@ def test_one():
     vc = bgt.new()
     vc.add([Se, c, loop_law, r])
 
-    bgt.connect(Se, (loop_law, loop_law.input))
-    bgt.connect(c, (loop_law, loop_law.output))
-    bgt.connect(r, (loop_law, loop_law.output))
+    bgt.connect(Se, (loop_law, loop_law.non_inverting))
+    bgt.connect(c, (loop_law, loop_law.inverting))
+    bgt.connect(r, (loop_law, loop_law.inverting))
 
     assert vc.constitutive_relations == [
         sympy.sympify("dx_0 + x_0 - 1")

@@ -267,19 +267,19 @@ class EqualEffort(BondGraphBase, PortExpander):
 class EqualFlow(BondGraphBase, PortExpander):
 
     def __init__(self, **kwargs):
-        PortExpander.__init__(self, {"input": {"weight": 1},
-                                     "output": {"weight": -1}})
+        PortExpander.__init__(self, {"non_inverting": {"weight": 1},
+                                     "inverting": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
         self.view = Glyph(self)
 
     @property
-    def input(self):
-        t, = (tp for tp in self._templates if tp.index == "input")
+    def non_inverting(self):
+        t, = (tp for tp in self._templates if tp.index == "non_inverting")
         return t
 
     @property
-    def output(self):
-        t, = (tp for tp in self._templates if tp.index == "output")
+    def inverting(self):
+        t, = (tp for tp in self._templates if tp.index == "inverting")
         return t
 
     @property

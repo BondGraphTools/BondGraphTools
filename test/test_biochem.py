@@ -84,10 +84,10 @@ def test_a_to_b_model():
     a_to_b = bgt.new()
     a_to_b.add(A , Re, B,Y_A, Y_B)
 
-    connect(A, Y_A.input)
-    connect(B, Y_B.input)
-    connect((Re,0), Y_A.output)
-    connect((Re,1), Y_B.output)
+    connect(A, Y_A.non_inverting)
+    connect(B, Y_B.non_inverting)
+    connect((Re,0), Y_A.inverting)
+    connect((Re,1), Y_B.inverting)
 
     eqns ={
         sympy.sympify("dx_0 + x_0 -x_1"), sympy.sympify("dx_1 + x_1 -x_0")

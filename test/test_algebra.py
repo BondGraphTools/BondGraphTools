@@ -260,9 +260,9 @@ def test_cv_relations():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl,kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c,(kcl,kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     assert bg.constitutive_relations == [sympy.sympify("dx_0 + u_0 + x_0")]
 
@@ -316,9 +316,9 @@ def test_cv_subs_func():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl,kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c,(kcl,kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     cv_s = {'u_0': ' -exp(-t)'}
 
@@ -336,9 +336,9 @@ def test_cv_subs_const():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl,kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c,(kcl,kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     cv_s = {'u_0': ' 2'}
 
@@ -356,9 +356,9 @@ def test_cv_subs_state_func():
     bg = bgt.new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl,kcl.input))
-    connect(r, (kcl, kcl.input))
-    connect(se, (kcl, kcl.input))
+    connect(c,(kcl,kcl.non_inverting))
+    connect(r, (kcl, kcl.non_inverting))
+    connect(se, (kcl, kcl.non_inverting))
 
     cv_s = {'u_0': ' -exp(-x_0)'}
 
@@ -412,10 +412,10 @@ def test_ported_series_resistor():
         Se,r1,r2,kvl, ss
     )
     expose(ss)
-    connect(Se, kvl.input)
-    connect(kvl.output, r1)
-    connect(kvl.output, r2)
-    connect(kvl.output, ss)
+    connect(Se, kvl.non_inverting)
+    connect(kvl.inverting, r1)
+    connect(kvl.inverting, r2)
+    connect(kvl.inverting, ss)
 
     assert len(model.ports) == 1
 
