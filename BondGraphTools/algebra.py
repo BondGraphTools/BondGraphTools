@@ -12,6 +12,32 @@ class NotInvertible(Exception):
 
 
 def extract_coefficients(equation, local_map, global_coords):
+    """
+    Extracts the coordinates from the given equation and maps them into
+    the global coordinate space.
+
+    Equations are assumed to come in as sympy expressions of the form
+    :math:`\Phi(x) = 0`.
+
+    local_map is a dictionary mappings :math:`M:x\rightarrow i` where :math:`x`
+    are the local co-ordinates and the keys of local_map, and the values are
+    the indices :math:`i` such that `global_coord[i]` is the corresponding
+    global coordinate.
+
+    The result is :math:`L,N` such that
+    ..math:
+        Ly + N(y) = 0
+
+    Args:
+        equation:
+        local_map: Dictionary specifying the map from local symbolic
+         co-ordinates to the index of a global co-ordinate.
+        global_coords: The list of global co-ordinates.
+
+    Returns: (dict, sympy.core) where the dictionary contains index-coefficient
+    pairs and the sympy variable is the nonlinear parts of the equation.
+
+    """
 
     coeff_dict = {}
     nonlinear_terms = sp.S(0)
@@ -30,16 +56,16 @@ def extract_coefficients(equation, local_map, global_coords):
     else:
         for term in terms:
             factors = list(flatten(term.as_coeff_mul()))
-            logger.debug("Factors: %s", repr(factors))
             coeff = sp.S(1)
             base = []
             while factors:
                 factor = factors.pop()
                 if factor.is_number:
                     coeff *= factor
+                elif factor.is_symbol and factor not in local_map:
+                    coeff *= factor
                 else:
                     base.append(factor)
-            logger.debug("Base: %s", repr(base))
             if len(base) == 1 and base[0] in local_map:
                 coeff_dict[local_map[base[0]]] = coeff
             else:
@@ -195,57 +221,6 @@ def _process_constraints(linear_op,
            coordinates, (ss_size, js_size, cv_size, n)
 
 
-def create_ds(coords, mapping, linear, nonlinear, constraints):
-
-    ss_size = len(mapping[0])
-    js_size = len(mapping[1])
-
-    ##
-    # We'd hope that the Linear Operator is in block form
-    #
-    # L =  [[A_1 B_1 C_1],
-    #       [0   B_2 C_2],
-    #
-    # X = [[dx, l, x]]
-    #
-    # So that L.dot(X) + F(X,t) = 0
-    #
-
-    A_1 = linear[0:ss_size, 0:ss_size]
-    B_1 = linear[0:ss_size, ss_size: 2*js_size + ss_size]
-    C_1 = linear[0:ss_size, 2*js_size + ss_size:2*(js_size + ss_size)]
-    D_1 = linear[0:ss_size, 2*(js_size + ss_size):]
-    F_1 = nonlinear[0:ss_size,:]
-
-    B_2 = linear[ss_size: 2*js_size + ss_size, ss_size: 2*js_size + ss_size]
-    C_2 = linear[ss_size: 2 * js_size + ss_size,
-          2 * js_size + ss_size:2 * (js_size + ss_size)]
-    D_2 = linear[ss_size: 2 * js_size + ss_size, 2 * (js_size + ss_size):]
-    F_2 = nonlinear[ss_size: 2 * js_size + ss_size, :]
-
-    assert (B_2 - sp.eye(B_2.rows)).is_zero
-    assert (A_1 - sp.eye(A_1.rows)).is_zero
-
-    ds = (
-        np.array(A_1).astype(np.float64),
-        np.array(C_1).astype(np.float64),
-        np.array(D_1).astype(np.float64)
-    )
-
-    def port_func(x,t):
-
-        pass
-
-
-    # dX = -C_1*X + -D_1*U - F_1(X)
-    # J = -C_2*X - -D_2*U - F_2(X)
-    #
-    # x=(y,z) s.t. [dy,dz] = [0, f(y,z,u)]
-    # set x = [[ M_1^T ]  (y
-    #          [ M_2^T ]]  z)
-    #
-
-
 def _generate_cv_substitutions(subs_pairs, mappins, coords):
     state_map, port_map, control_map = mappins
     ss_size = len(state_map)
@@ -273,21 +248,29 @@ def _generate_cv_substitutions(subs_pairs, mappins, coords):
 def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                  control_vars=None):
     """
+    Simplifies the given system equation.
+
     Args:
         linear_op: Linear part of the constitutive relations.
         nonlinear_op: The corresponding nonlinear part; a symbolic vector with
         the same number of rows.
         coordinates: a list of all the relevant co-ordinates
         size_tuple:
+        control_vars:
 
-    Returns:
+    Returns: a tuple describing the reduced system.
 
+    The output of the reduced system is of the form :math:`(x, L, N, G)`
+    such that the system dynamics satisfies
+    .. math::
+        Lx + N(x) = 0
+        G(x) = 0
 
     Todo:
         refactor so as to remove size_tuple;
         the co-ordinates should arrive partitioned!
     """
-    #
+
     linear_op, nonlinear_op, constraints = smith_normal_form(
         matrix=linear_op,
         augment=nonlinear_op)
@@ -335,6 +318,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     # Linear constraints are rows with more than 1 non-zero
     # that are not in the derivative subspace, and have a zero nonlinear part
     #
+
     # ## New Code
     ss_size, js_size, cv_size, n = size_tuple
     offset = 2 * js_size + ss_size
@@ -408,14 +392,17 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         nlin_row = sp.S(0)
 
         if any(x!=0 for x in jac_dx):
-            logger.warning("Second order constriants not implemented: %s",
+            logger.warning("Second order constraint not implemented: %s",
                            jac_dx)
+
         elif any(x!=0 for x in jac_junciton):
-            logger.warning("First order junciton constriants not implemented: %s",
-                           jac_cv)
+            logger.warning("First order junciton constraint not implemented: %s",
+                           str(jac_junciton))
+
         elif any(x!=0 for x in jac_cv):
-            logger.warning("First order control constriants not implemented: %s",
-                           jac_cv)
+            logger.warning("First order control constraint not implemented: %s",
+                           str(jac_cv))
+
         elif any(x!=0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
@@ -447,6 +434,13 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
 
 def flatten(sequence):
+    """
+    Gets a first visit iterator for the given tree.
+    Args:
+        sequence: The iterable that is to be flattened
+
+    Returns: iterable
+    """
     for item in sequence:
         if isinstance(item, (list, tuple)):
             for subitem in flatten(item):
@@ -455,10 +449,23 @@ def flatten(sequence):
             yield item
 
 
-def augmented_rref(matrix, augment=0):
+def augmented_rref(matrix, augmented_rows=0):
+    """ Computes the reduced row-echelon form (rref) of the given augmented
+    matrix.
 
+    That is for the augmented  [ A | B ], we fine the reduced row echelon form
+    of A.
+
+    Args:
+        matrix (sympy.MutableSparseMatrix): The augmented matrix
+        augmented_rows (int): The number of rows that have been augmented onto
+         the matrix.
+
+    Returns: a matrix M =  [A' | B'] such that A' is in rref.
+
+    """
     pivot = 0
-    m = matrix.cols - augment
+    m = matrix.cols - augmented_rows
     for col in range(m):
         if matrix[pivot, col] == 0:
             j = None
@@ -466,7 +473,11 @@ def augmented_rref(matrix, augment=0):
             for row in range(pivot, matrix.rows):
                 val = matrix[row, col]
                 v = abs(val)
-                if v > v_max:
+                try:
+                    if v > v_max:
+                        j = row
+                        v_max = v
+                except TypeError: # symbolic variable
                     j = row
                     v_max = v
             if not j:

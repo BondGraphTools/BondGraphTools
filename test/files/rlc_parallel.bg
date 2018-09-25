@@ -21,7 +21,7 @@ models:
         - Se  base/Se
 
       netlist:
-        - R1 kvl.output
-        - C1 kvl.output
-        - L1 kvl.output
-        - Se kvl.input
+        - R1 kvl.inverting
+        - C1 kvl.inverting
+        - L1 kvl.inverting
+        - Se kvl.non_inverting

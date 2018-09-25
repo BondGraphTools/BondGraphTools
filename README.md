@@ -35,11 +35,15 @@ Julia dependencies:
 
 Coming Soon
 
+## v0.3.3 Changelog 25.09.2018
 
+### New
+
+- Improved support for symbolic parameters
 
 ## v0.3 Changelog 19.09.2018
 
-## New
+### New
 
 - Users can now save a load to file.
 - Source Sensor component has been added

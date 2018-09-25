@@ -40,19 +40,35 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def control_vars(self):
-        if self.params:
-            return [param for param, value in self.params.items()
-                    if ((not value) and not isinstance(value,(int,float, complex)))
-                    or (isinstance(value, dict) and "value"
-                    not in value)]
-        else:
-            return []
+        """See `BondGraphBase`"""
+
+        def is_const(value):
+            if isinstance(value, (int, float, complex)):
+                return True
+            elif isinstance(value, sp.Symbol):
+                return True
+            else:
+                return False
+
+        out = []
+
+        for p, v in self.params.items():
+            try:
+                if is_const(v) or is_const(v["value"]):
+                    continue
+            except (KeyError, TypeError):
+                pass
+
+            out.append(p)
+        return out
+
     # @property
     # def max_ports(self):
     #     return len(self._ports)
 
     @property
     def params(self):
+        """See `BondGraphBase`"""
         return self._params if self._params else {}
 
     def set_param(self, param, value):
@@ -66,15 +82,12 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def state_vars(self):
+        """See `BondGraphBase`"""
         return self._state_vars if self._state_vars else []
 
     @property
     def constitutive_relations(self):
-        """
-
-        Returns:
-
-        """
+        """See `BondGraphBase`"""
         models = self._build_relations()
         # for var in self.state_vars:
         #     var_type, port = var.split("_")
@@ -122,7 +135,7 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def basis_vectors(self):
-
+        """See `BondGraphBase.basis_vectors`"""
         port_space = self._port_vectors()
 
         tangent_space = dict()
@@ -199,8 +212,14 @@ class BaseComponent(BondGraphBase, FixedPort):
 
 
 class BaseComponentSymmetric(BaseComponent):
+    """
+    Refer to `BaseComponent`.
 
+    Instances of this class are multi-port components which are able to have
+    connections made without specifying ports.
+    """
     def get_port(self, port=None):
+        """See `BaseComponent`"""
         if not port and not isinstance(port, int):
             p = [port for port in self.ports if not port.is_connected]
 
@@ -213,7 +232,15 @@ class BaseComponentSymmetric(BaseComponent):
 
 
 class EqualEffort(BondGraphBase, PortExpander):
+    """Implements 0-junction.
 
+    Attributes:
+         template:
+         view:
+         basis_vectors:
+         constitutive_relations:
+
+    """
     def __init__(self, **kwargs):
 
         PortExpander .__init__(self, {None: None})
@@ -251,19 +278,19 @@ class EqualEffort(BondGraphBase, PortExpander):
 class EqualFlow(BondGraphBase, PortExpander):
 
     def __init__(self, **kwargs):
-        PortExpander.__init__(self, {"input": {"weight": 1},
-                                     "output": {"weight": -1}})
+        PortExpander.__init__(self, {"non_inverting": {"weight": 1},
+                                     "inverting": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
         self.view = Glyph(self)
 
     @property
-    def input(self):
-        t, = (tp for tp in self._templates if tp.index == "input")
+    def non_inverting(self):
+        t, = (tp for tp in self._templates if tp.index == "non_inverting")
         return t
 
     @property
-    def output(self):
-        t, = (tp for tp in self._templates if tp.index == "output")
+    def inverting(self):
+        t, = (tp for tp in self._templates if tp.index == "inverting")
         return t
 
     @property

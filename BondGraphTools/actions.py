@@ -86,9 +86,9 @@ def _find_port(arg, is_tail=False):
         # Dirty hack to make the 1 port behave like PG wants.
         if isinstance(arg, EqualFlow):
             if is_tail:
-                return arg.get_port("output")
+                return arg.get_port(arg.inverting)
             else:
-                return arg.get_port("input")
+                return arg.get_port(arg.non_inverting)
         else:
             return arg.get_port()
     except AttributeError as ex:

@@ -273,7 +273,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
             subs.append(sp.symbols((f"e_{c_idx}", f"e_{label}")))
             subs.append(sp.symbols((f"f_{c_idx}", f"f_{label}")))
 
-        return [r.subs(subs).nsimplify() for r in relations if r]
+        return [r.subs(subs).simplify().nsimplify() for r in relations if r]
 
     def system_model(self, control_vars=None):
         mappings, coordinates = inverse_coord_maps(

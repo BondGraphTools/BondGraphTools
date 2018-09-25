@@ -1,5 +1,5 @@
-v0.3 Changelog 19.09.2018
-=========================
+v0.3.3 Changelog 25.09.2018
+===========================
 
 New
 ^^^
@@ -8,6 +8,7 @@ New
 - SS component can be exposed using `expose` to create IO ports.
 - Model hierarchy can now be traversed in a posix-like manner using
 `component.uri` as unambiguous references
+- Added support for symbolic parameters
 
 Changes
 ^^^^^^^
@@ -17,6 +18,8 @@ Changes
 - Moved all 'verb' actions out of class definition; including (`new`, `add`,
 `remove`, `connect`, `disconnect`)
 - `Find` has been removed; users can now use `uri`
+- 'input' and 'output' ports on the 1 junction changed to 'non-inverting and
+'inverting' respectively
 
 Fixed
 ^^^^^
