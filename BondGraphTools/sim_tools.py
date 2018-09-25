@@ -1,12 +1,12 @@
+import logging
+
 import numpy as np
 import sympy as sp
 from sympy.core import SympifyError
-from .config import config
-import os, sys
 
+from .config import config
 from .exceptions import ModelException
-from .algebra import inverse_coord_maps, create_ds
-import logging
+
 logger = logging.getLogger(__name__)
 
 
