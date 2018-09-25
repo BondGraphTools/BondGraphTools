@@ -82,15 +82,12 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def state_vars(self):
+        """See `BondGraphBase`"""
         return self._state_vars if self._state_vars else []
 
     @property
     def constitutive_relations(self):
-        """
-
-        Returns:
-
-        """
+        """See `BondGraphBase`"""
         models = self._build_relations()
         # for var in self.state_vars:
         #     var_type, port = var.split("_")
@@ -138,7 +135,7 @@ class BaseComponent(BondGraphBase, FixedPort):
 
     @property
     def basis_vectors(self):
-
+        """See `BondGraphBase.basis_vectors`"""
         port_space = self._port_vectors()
 
         tangent_space = dict()
@@ -215,8 +212,14 @@ class BaseComponent(BondGraphBase, FixedPort):
 
 
 class BaseComponentSymmetric(BaseComponent):
+    """
+    Refer to `BaseComponent`.
 
+    Instances of this class are multi-port components which are able to have
+    connections made without specifying ports.
+    """
     def get_port(self, port=None):
+        """See `BaseComponent`"""
         if not port and not isinstance(port, int):
             p = [port for port in self.ports if not port.is_connected]
 
@@ -229,7 +232,15 @@ class BaseComponentSymmetric(BaseComponent):
 
 
 class EqualEffort(BondGraphBase, PortExpander):
+    """Implements 0-junction.
 
+    Attributes:
+         template:
+         view:
+         basis_vectors:
+         constitutive_relations:
+
+    """
     def __init__(self, **kwargs):
 
         PortExpander .__init__(self, {None: None})
