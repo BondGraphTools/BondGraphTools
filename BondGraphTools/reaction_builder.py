@@ -117,7 +117,7 @@ class Reaction_Network(object):
                 system.add(reverse_complex)
                 connect(reverse_complex.inverting, reaction)
                 self._connect_complex(
-                    system, species_anchors, reverse_complex, bck_sto, "bck"
+                    system, species_anchors, reverse_complex, bck_sto, is_reversed=True
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
@@ -129,27 +129,27 @@ class Reaction_Network(object):
                 connect(reaction, forward_complex.inverting)
 
                 self._connect_complex(
-                    system, species_anchors, forward_complex, fwd_sto, "fwd"
+                    system, species_anchors, forward_complex, fwd_sto, is_reversed=False
                 )
 
     def _connect_complex(self, system, species_anchors, junct, stoichiometry,
-                         direction):
+                         is_reversed=False):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
             if qty == 1:
-                if direction == "fwd":
-                    connect(junct.non_inverting,species_anchors[species])
-                else:
+                if is_reversed:
                     connect(species_anchors[species],junct.non_inverting)
+                else:
+                    connect(junct.non_inverting,species_anchors[species])
             else:
                 tf = new("TF", value=qty)
                 system.add(tf)
-                if direction == "fwd":
-                    connect(junct.non_inverting, (tf, 1))
-                    connect((tf,0), species_anchors[species])
-                else:
+                if is_reversed:
                     connect((tf, 1), junct.non_inverting)
                     connect(species_anchors[species], (tf,0))
+                else:
+                    connect(junct.non_inverting, (tf, 1))
+                    connect((tf,0), species_anchors[species])
 
     def _build_species(self, system, normalised):
         if normalised:
