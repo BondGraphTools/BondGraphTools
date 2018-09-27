@@ -1,4 +1,4 @@
-""" actions.py contains methods for manipulating models.
+""" Methods for manipulating models.
 
 This module provides functions for the actions one wishes to perform on
 models bond graph models.
@@ -13,6 +13,17 @@ from .base import BondGraphBase, Bond, Port, FixedPort
 from .atomic import EqualFlow
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "disconnect",
+    "connect",
+    "swap",
+    "new",
+    "expose",
+    "add",
+    "remove",
+    "set_param"
+]
 
 def disconnect(target, other):
     """

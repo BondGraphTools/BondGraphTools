@@ -8,6 +8,7 @@ Additionally libraries can be added via :func:`load_library`.
 
 Component Libraries are expected to be in json format.
 The structure must be::
+
     {
         "id": The unique library id (str),
         "description": The description of this library
@@ -18,6 +19,7 @@ The structure must be::
     }
 
 Each Component dictionary must be of the form::
+
     {
 
     }

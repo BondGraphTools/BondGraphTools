@@ -13,33 +13,38 @@ class NotInvertible(Exception):
     pass
 
 
-def extract_coefficients(equation: sympy.Expr, 
+def extract_coefficients(equation: sympy.Expr,
                          local_map: dict,
-                         global_coords: list):
-    """Extracts the coordinates from the given equation and maps them into
-    the global coordinate space.
-
-    Equations are assumed to come in as sympy expressions of the form
-    :math:`\Phi(x) = 0`.
-
-    local_map is a dictionary mappings :math:`M:x\rightarrow i` where :math:`x`
-    are the local co-ordinates and the keys of local_map, and the values are
-    the indices :math:`i` such that `global_coord[i]` is the corresponding
-    global coordinate.
-
-    The result is :math:`L,N` such that
-    .. math::
-        Ly + N(y) = 0
+                         global_coords: list) -> tuple:
+    """
 
     Args:
         equation: The equation in local coordinates.
-        local_map: A dictionary specifying the mapping from local symbolic
-            co-ordinates to the index of a global co-ordinate.
+        local_map: The mapping from local coordinates to the index of a
+            global coordinate.
         global_coords: The list of global co-ordinates.
 
     Returns:
-        (dict, sympy.core) where the dictionary contains index-coefficient
-        pairs and the sympy variable is the nonlinear parts of the equation.
+        The linear and nonlinear parts of the equation in the global 
+        co-ordinate system. 
+
+    Extracts the coordinates from the given equation and maps them into
+    the global coordinate space.
+    Equations are assumed to come in as sympy expressions of the form
+    :math:`\Phi(x) = 0`.
+    local_map is a dictionary mappings
+
+    .. math::
+
+       M: \\rightarrow i
+
+    where :math:`x` are the local co-ordinates and the keys of local_map, and
+    the values are the indices :math:`i` such that `global_coord[i]` is the
+    corresponding global coordinate. The result is :math:`L,N` such that:
+
+    .. math::
+
+       Ly + N(y) = 0
 
     """
 
@@ -266,13 +271,11 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
     The output of the reduced system is of the form :math:`(x, L, N, G)`
     such that the system dynamics satisfies
+
     .. math::
+
         Lx + N(x) = 0
         G(x) = 0
-
-    Todo:
-        refactor so as to remove size_tuple;
-        the co-ordinates should arrive partitioned!
     """
 
     linear_op, nonlinear_op, constraints = smith_normal_form(

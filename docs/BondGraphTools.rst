@@ -1,99 +1,82 @@
-BondGraphTools package
-======================
+BondGraphTools package API reference
+====================================
 
-Submodules
-----------
+Module contents
+---------------
+.. automodule:: BondGraphTools
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-BondGraphTools.actions module
------------------------------
+
+Core Functionality
+------------------
 
 .. automodule:: BondGraphTools.actions
     :members:
     :undoc-members:
     :show-inheritance:
 
-BondGraphTools.algebra module
------------------------------
-
-.. automodule:: BondGraphTools.algebra
+.. automodule:: BondGraphTools.base
     :members:
     :undoc-members:
     :show-inheritance:
-
-BondGraphTools.atomic module
-----------------------------
 
 .. automodule:: BondGraphTools.atomic
     :members:
     :undoc-members:
     :show-inheritance:
 
-BondGraphTools.base module
---------------------------
-
-.. automodule:: BondGraphTools.base
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-BondGraphTools.component\_manager module
-----------------------------------------
-
-.. automodule:: BondGraphTools.component_manager
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-BondGraphTools.compound module
-------------------------------
-
 .. automodule:: BondGraphTools.compound
     :members:
     :undoc-members:
     :show-inheritance:
 
-BondGraphTools.config module
-----------------------------
 
-.. automodule:: BondGraphTools.config
+Analysis and Simulation
+-----------------------
+
+.. automodule:: BondGraphTools.algebra
     :members:
     :undoc-members:
     :show-inheritance:
-
-BondGraphTools.datamodel module
--------------------------------
-
-.. automodule:: BondGraphTools.datamodel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-BondGraphTools.exceptions module
---------------------------------
-
-.. automodule:: BondGraphTools.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-BondGraphTools.reaction\_builder module
----------------------------------------
-
-.. automodule:: BondGraphTools.reaction_builder
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-BondGraphTools.sim\_tools module
---------------------------------
 
 .. automodule:: BondGraphTools.sim_tools
     :members:
     :undoc-members:
     :show-inheritance:
 
-BondGraphTools.view module
---------------------------
+File IO and Helper Functions
+----------------------------
+
+.. automodule:: BondGraphTools.component_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: BondGraphTools.fileio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: BondGraphTools.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: BondGraphTools.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Addons
+------
+
+.. automodule:: BondGraphTools.reaction_builder
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. automodule:: BondGraphTools.view
     :members:
@@ -101,10 +84,3 @@ BondGraphTools.view module
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: BondGraphTools
-    :members:
-    :undoc-members:
-    :show-inheritance:

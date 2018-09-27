@@ -202,30 +202,32 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         Basis vectors for the state space (X), port space (J),
         and control space (U) from an external point of view.
 
-        For the state space dictionaries are of the form
-        ```
+        For the state space dictionaries are of the form::
+
             X = {
                 sympy.Symbol('x_i'): (object, var)
             }
-        ```
+
+
         We assume the object is a subclass of BondGraphBase
         and the var refers to the variable name in the objects local
         co-ordinate system and may be a string or a sympy.Symbol
 
-        For the port space, dictionaries are of the form
-        ```
+        For the port space, dictionaries are of the form::
+
             J = {
                 (sympy.Symbol(e_i), sympy.Symbol(f_i)): Port(obj, idx)
             }
-        ```
-        where Port is an instance of `Port`.
 
-        Finally for the cotrol variables we have
-        ```
+
+        where Port is an instance of `Port`.
+        Finally for the control variables we have::
+
             U = {
-            sympy.Symbol(u_i):(object, var)
+                sympy.Symbol(u_i):(object, var)
             }
-        ```
+
+
         Where object and var are specified as per the state space.
         """
 
