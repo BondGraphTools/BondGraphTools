@@ -3,7 +3,7 @@
 if [ "$1" != "release" ]; then
     repo="--repository-url http://test.pypi.org/legacy/"
 else
-    repo = " "
+    repo=""
 fi
 
 rm dist/*

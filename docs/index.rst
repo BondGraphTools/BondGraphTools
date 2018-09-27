@@ -5,7 +5,13 @@
 
 Welcome to BondGraphTools's documentation!
 ==========================================
+Overview
+--------
+.. automodule:: BondGraphTools
 
+
+Table Of Contents
+-----------------
 .. toctree::
    :maxdepth: 1
 
