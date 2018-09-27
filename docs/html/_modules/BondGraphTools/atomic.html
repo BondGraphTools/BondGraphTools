@@ -1,0 +1,407 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>BondGraphTools.atomic &#8212; BondGraphTools 0.3.3 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BondGraphTools.atomic</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.view</span> <span class="k">import</span> <span class="n">Glyph</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">FixedPort</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Atomic bond graph components are those defined by constitutive relations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metaclass</span><span class="p">,</span> <span class="n">constitutive_relations</span><span class="p">,</span>
+                 <span class="n">state_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metaclass</span> <span class="o">=</span> <span class="n">metaclass</span>
+        <span class="n">ports</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ports&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">FixedPort</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ports</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state_vars</span> <span class="o">=</span> <span class="n">state_vars</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">Glyph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_constitutive_relations</span> <span class="o">=</span> <span class="n">constitutive_relations</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__library__}</span><span class="s2">/</span><span class="si">{self.__component__}</span><span class="s2">&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metaclass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metaclass</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">control_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `BondGraphBase`&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">is_const</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_const</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_const</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]):</span>
+                    <span class="k">continue</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">pass</span>
+
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def max_ports(self):</span>
+    <span class="c1">#     return len(self._ports)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `BondGraphBase`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="k">else</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Component.set_param"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.Component.set_param">[docs]</a>    <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Warning: Scheduled to be deprecated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="n">param</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">state_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `BondGraphBase`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_vars</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_vars</span> <span class="k">else</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">constitutive_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `BondGraphBase`&quot;&quot;&quot;</span>
+        <span class="n">models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_relations</span><span class="p">()</span>
+        <span class="c1"># for var in self.state_vars:</span>
+        <span class="c1">#     var_type, port = var.split(&quot;_&quot;)</span>
+        <span class="c1">#</span>
+        <span class="c1">#     if var_type == &quot;q&quot;:</span>
+        <span class="c1">#         ef_var = f&#39;f_{port}&#39;</span>
+        <span class="c1">#     elif var_type == &quot;p&quot;:</span>
+        <span class="c1">#         ef_var = f&#39;e_{port}&#39;</span>
+        <span class="c1">#     else:</span>
+        <span class="c1">#         raise ModelParsingError(</span>
+        <span class="c1">#             &quot;Error parsing model %s: &quot;</span>
+        <span class="c1">#             &quot;state variable %s must be either p or q&quot;,</span>
+        <span class="c1">#             self.metaclass, var</span>
+        <span class="c1">#         )</span>
+        <span class="c1">#</span>
+        <span class="c1">#     models.append(sp.sympify(f&quot;d{var} - {ef_var}&quot;))</span>
+
+        <span class="n">subs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">_value_of</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">v</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">v_out</span><span class="p">,</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">v_out</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">_value_of</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Invalid Parameter&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">_value_of</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">subs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="n">param</span><span class="p">),</span> <span class="n">v</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self}</span><span class="s2">.</span><span class="si">{oaram}</span><span class="s2">: </span><span class="si">{ex.args}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subs</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">]</span>
+
+        <span class="c1"># for each relation, pull out the linear part</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basis_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `BondGraphBase.basis_vectors`&quot;&quot;&quot;</span>
+        <span class="n">port_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">()</span>
+
+        <span class="n">tangent_space</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">control_space</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_vars</span><span class="p">:</span>
+            <span class="n">tangent_space</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;d</span><span class="si">{var}</span><span class="s2">&quot;</span><span class="p">))]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+
+        <span class="c1"># for port in self.ports:</span>
+        <span class="c1">#     if not isinstance(port, int):</span>
+        <span class="c1">#         continue</span>
+        <span class="c1">#</span>
+        <span class="c1">#     port_space[sp.symbols((f&quot;e_{port}&quot;, f&quot;f_{port}&quot;))] = (self, port)</span>
+
+        <span class="k">for</span> <span class="n">control</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_vars</span><span class="p">:</span>
+            <span class="n">control_space</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="n">control</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tangent_space</span><span class="p">,</span> <span class="n">port_space</span><span class="p">,</span> <span class="n">control_space</span>
+
+    <span class="k">def</span> <span class="nf">_build_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constitutive_relations</span><span class="p">:</span>
+
+            <span class="n">iloc</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">iloc</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;_i&quot;</span><span class="p">,</span> <span class="n">iloc</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">iloc</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># just a plain old string; sympy can take care of it</span>
+                <span class="n">rels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+
+                <span class="k">continue</span>
+
+            <span class="n">sloc</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;sum(&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">iloc</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">sloc</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># we have a vector equation here.</span>
+                <span class="k">for</span> <span class="n">port_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ports</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                        <span class="n">rels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span>
+                            <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_i&quot;</span><span class="p">,</span> <span class="s2">&quot;_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port_id</span><span class="p">))))</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">tiers</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">next_open</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="n">sloc</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
+                <span class="n">eloc</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="n">sloc</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
+                <span class="k">while</span> <span class="n">next_open</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tiers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">next_open</span> <span class="o">&lt;</span> <span class="n">eloc</span><span class="p">:</span>
+                        <span class="n">tiers</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">next_open</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="n">next_open</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">tiers</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="n">eloc</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="n">eloc</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">eloc</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unbalanced brackets&quot;</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+                <span class="n">substring</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="n">sloc</span> <span class="o">+</span> <span class="mi">4</span><span class="p">:</span> <span class="n">eloc</span><span class="p">]</span>
+                <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span><span class="n">substring</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_i&quot;</span><span class="p">,</span> <span class="s2">&quot;_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+                         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ports</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">int</span><span class="p">)]</span>
+                <span class="n">symstr</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">sloc</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="s2">&quot; + &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span> <span class="o">+</span> <span class="n">string</span><span class="p">[</span>
+                                                                    <span class="n">eloc</span><span class="p">:]</span>
+
+                <span class="n">rels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span><span class="n">symstr</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rels</span> <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SymmetricComponent"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.SymmetricComponent">[docs]</a><span class="k">class</span> <span class="nc">SymmetricComponent</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Refer to `Component`.</span>
+
+<span class="sd">    Instances of this class are multi-port components which are able to have</span>
+<span class="sd">    connections made without specifying ports.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SymmetricComponent.get_port"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.SymmetricComponent.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See `Component`&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">port</span> <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ports</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span><span class="o">.</span><span class="n">is_connected</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidPortException</span><span class="p">(</span><span class="s2">&quot;No free ports&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">port</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="EqualEffort"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualEffort">[docs]</a><span class="k">class</span> <span class="nc">EqualEffort</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implements 0-junction.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">         template:</span>
+<span class="sd">         view:</span>
+<span class="sd">         basis_vectors:</span>
+<span class="sd">         constitutive_relations:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">PortExpander</span> <span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">{</span><span class="kc">None</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
+        <span class="n">BondGraphBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">Glyph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;base/0&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basis_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">(),</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">constitutive_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">())</span>
+        <span class="n">e_0</span><span class="p">,</span> <span class="n">f_0</span> <span class="o">=</span> <span class="nb">vars</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">partial_sum</span> <span class="o">=</span> <span class="n">f_0</span>
+
+        <span class="n">relations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="nb">vars</span><span class="p">:</span>
+            <span class="n">e_i</span><span class="p">,</span> <span class="n">f_i</span> <span class="o">=</span> <span class="nb">vars</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">relations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">e_i</span> <span class="o">-</span> <span class="n">e_0</span>
+            <span class="p">)</span>
+            <span class="n">partial_sum</span> <span class="o">+=</span> <span class="n">f_i</span>
+
+        <span class="n">relations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">partial_sum</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">relations</span></div>
+
+<div class="viewcode-block" id="EqualFlow"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualFlow">[docs]</a><span class="k">class</span> <span class="nc">EqualFlow</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">PortExpander</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;non_inverting&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                                     <span class="s2">&quot;inverting&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}})</span>
+        <span class="n">BondGraphBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">Glyph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">non_inverting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span><span class="p">,</span> <span class="o">=</span> <span class="p">(</span><span class="n">tp</span> <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_templates</span> <span class="k">if</span> <span class="n">tp</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="s2">&quot;non_inverting&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inverting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span><span class="p">,</span> <span class="o">=</span> <span class="p">(</span><span class="n">tp</span> <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_templates</span> <span class="k">if</span> <span class="n">tp</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="s2">&quot;inverting&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;base/1&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">basis_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{},</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">(),</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="EqualFlow.get_port"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualFlow.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidPortException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidPortException</span><span class="p">(</span><span class="s2">&quot;You must specify a port&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">constitutive_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">relations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">var</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">(</span><span class="n">e_0</span><span class="p">,</span> <span class="n">f_0</span><span class="p">),</span> <span class="n">port</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="n">sigma_0</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">weight</span>
+        <span class="n">partial_sum</span> <span class="o">=</span> <span class="n">sigma_0</span><span class="o">*</span><span class="n">e_0</span>
+
+        <span class="k">while</span> <span class="n">var</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">e_i</span><span class="p">,</span> <span class="n">f_i</span><span class="p">),</span> <span class="n">port</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">sigma_i</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">weight</span>
+            <span class="n">partial_sum</span> <span class="o">+=</span> <span class="n">sigma_i</span><span class="o">*</span><span class="n">e_i</span>
+            <span class="n">relations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sigma_i</span><span class="o">*</span><span class="n">f_i</span> <span class="o">-</span> <span class="n">sigma_0</span><span class="o">*</span><span class="n">f_0</span><span class="p">)</span>
+
+        <span class="n">relations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">partial_sum</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">relations</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Peter Cudmore.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

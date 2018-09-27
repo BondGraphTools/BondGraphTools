@@ -1,0 +1,373 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>BondGraphTools.reaction_builder &#8212; BondGraphTools 0.3.3 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BondGraphTools.reaction_builder</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sympy</span> <span class="k">import</span> <span class="n">SparseMatrix</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Matrix</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">.actions</span> <span class="k">import</span> <span class="n">connect</span><span class="p">,</span> <span class="n">disconnect</span><span class="p">,</span> <span class="n">new</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Gas constant, J/Mo/K</span>
+<span class="n">R</span> <span class="o">=</span> <span class="mf">8.3144598</span>
+
+<span class="c1"># Component Library</span>
+<span class="n">LIBRARY</span> <span class="o">=</span> <span class="s2">&quot;BioChem&quot;</span>
+
+
+<div class="viewcode-block" id="Reaction_Network"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network">[docs]</a><span class="k">class</span> <span class="nc">Reaction_Network</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reactions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">volume</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            reactions:</span>
+<span class="sd">            name:</span>
+<span class="sd">            T: Temperature in Kelvin (Default 300K, or approx 27c)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flowstats</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chemostats</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="n">volume</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;New Reaction&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reactions</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_reaction</span><span class="p">(</span><span class="n">reactions</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reactions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">reaction</span> <span class="ow">in</span> <span class="n">reactions</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_reaction</span><span class="p">(</span><span class="n">reaction</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">species</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stoichiometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_stoichiometry</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_stoichiometry</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reverse_stoichiometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">SparseMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="p">),{})</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">forward_species</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">species</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="n">forward_species</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">matrix</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">species</span><span class="p">),</span> <span class="n">col</span><span class="p">)]</span> <span class="o">=</span> <span class="n">qty</span>
+
+        <span class="k">return</span> <span class="n">matrix</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">forward_stoichiometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">SparseMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="p">),{})</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="p">(</span><span class="n">back_species</span><span class="p">,</span><span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">species</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="n">back_species</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">matrix</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">species</span><span class="p">),</span> <span class="n">col</span><span class="p">)]</span> <span class="o">=</span> <span class="n">qty</span>
+
+        <span class="k">return</span> <span class="n">matrix</span>
+
+<div class="viewcode-block" id="Reaction_Network.fluxes"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network.fluxes">[docs]</a>    <span class="k">def</span> <span class="nf">fluxes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">f</span><span class="s2">&quot;x_{{</span><span class="si">{s}</span><span class="s2">}}&quot;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">species</span><span class="p">]))</span>
+        <span class="n">fluxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="p">(</span><span class="n">back_species</span><span class="p">,</span> <span class="n">forward_species</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">prod</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">subst</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="n">forward_species</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">subst</span> <span class="o">*=</span> <span class="n">Pow</span><span class="p">(</span><span class="n">symbols</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;k_{{</span><span class="si">{s}</span><span class="s2">}}&quot;</span><span class="p">)</span> <span class="o">*</span>
+                             <span class="n">symbols</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;x_{{</span><span class="si">{s}</span><span class="s2">}}&quot;</span><span class="p">),</span> <span class="n">qty</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="n">back_species</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">prod</span> <span class="o">*=</span> <span class="n">Pow</span><span class="p">(</span><span class="n">symbols</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;k_{{</span><span class="si">{s}</span><span class="s2">}}&quot;</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="n">symbols</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;x_{{</span><span class="si">{s}</span><span class="s2">}}&quot;</span><span class="p">),</span> <span class="n">qty</span><span class="p">)</span>
+            <span class="n">eqn</span> <span class="o">=</span> <span class="n">prod</span> <span class="o">-</span> <span class="n">subst</span>
+            <span class="n">fluxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fluxes</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span> <span class="n">fluxes</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">coords</span></div>
+
+<div class="viewcode-block" id="Reaction_Network.as_network_model"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network.as_network_model">[docs]</a>    <span class="k">def</span> <span class="nf">as_network_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalised</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="n">system</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">species_anchor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_species</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">normalised</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_reactions</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">species_anchor</span><span class="p">,</span> <span class="n">normalised</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">system</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">,</span> <span class="n">normalised</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">normalised</span><span class="p">:</span>
+            <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">reaction_name</span><span class="p">,</span> <span class="p">(</span><span class="n">bck_sto</span><span class="p">,</span> <span class="n">fwd_sto</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">reaction</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="s2">&quot;Re&quot;</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">LIBRARY</span><span class="p">,</span>
+                           <span class="n">name</span><span class="o">=</span><span class="n">reaction_name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">param_dict</span><span class="p">)</span>
+            <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reaction</span><span class="p">)</span>
+            <span class="n">fwd_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">fwd_sto</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="p">)</span>
+            <span class="n">bck_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">bck_sto</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bck_sto</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="n">bck_sto</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">species</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bck_sto</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reverse_complex</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">bck_name</span><span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reverse_complex</span><span class="p">)</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="n">reverse_complex</span><span class="o">.</span><span class="n">inverting</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_connect_complex</span><span class="p">(</span>
+                    <span class="n">system</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">,</span> <span class="n">reverse_complex</span><span class="p">,</span> <span class="n">bck_sto</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fwd_sto</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="n">fwd_sto</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">species</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">fwd_sto</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">forward_complex</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">fwd_name</span><span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">forward_complex</span><span class="p">)</span>
+
+                <span class="n">connect</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="n">forward_complex</span><span class="o">.</span><span class="n">inverting</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_connect_complex</span><span class="p">(</span>
+                    <span class="n">system</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">,</span> <span class="n">forward_complex</span><span class="p">,</span> <span class="n">fwd_sto</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_connect_complex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">,</span> <span class="n">junct</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">species</span><span class="p">,</span> <span class="n">qty</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stoichiometry</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+
+            <span class="k">if</span> <span class="n">qty</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">junct</span><span class="o">.</span><span class="n">non_inverting</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tf</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="s2">&quot;TR&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">qty</span><span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="p">)</span>
+                <span class="n">connect</span><span class="p">((</span><span class="n">tf</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">junct</span><span class="o">.</span><span class="n">non_inverting</span><span class="p">)</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">species_anchors</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_build_species</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">normalised</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">normalised</span><span class="p">:</span>
+            <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;R&quot;</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">}</span>
+
+        <span class="n">species_anchors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">species</span><span class="p">,</span> <span class="n">n_reactions</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># edit: create new component for chemostat</span>
+            <span class="k">if</span> <span class="n">species</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chemostats</span><span class="p">:</span>
+                <span class="n">this_species</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span>
+                        <span class="s2">&quot;Se&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">species</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_chemostats</span><span class="p">[</span><span class="n">species</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">n_reactions</span> <span class="o">=</span> <span class="n">n_reactions</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">this_species</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span>
+                        <span class="s2">&quot;Ce&quot;</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">LIBRARY</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">species</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">param_dict</span>
+                <span class="p">)</span>
+            <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">this_species</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">n_reactions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_species</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">species</span><span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">this_species</span><span class="p">,</span> <span class="n">anchor</span><span class="p">)</span>
+                <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchor</span>
+
+            <span class="k">if</span> <span class="n">species</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flowstats</span><span class="p">:</span>
+                <span class="n">flowstat</span> <span class="o">=</span> <span class="n">new</span><span class="p">(</span>
+                    <span class="s2">&quot;Sf&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flowstats</span><span class="p">[</span><span class="n">species</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">species</span>
+                <span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">flowstat</span><span class="p">)</span>
+                <span class="n">connect</span><span class="p">(</span><span class="n">flowstat</span><span class="p">,</span> <span class="n">species_anchors</span><span class="p">[</span><span class="n">species</span><span class="p">])</span>
+
+
+<span class="c1">#            if species in self._chemostats:</span>
+<span class="c1">#                chemostat = new(&quot;Se&quot;, value=0, name=species)</span>
+<span class="c1">#                connect(chemostat, species_anchors[species])</span>
+<span class="c1">#                this_species.initial_values[&#39;p_0&#39;] = self._chemostats[species]</span>
+
+        <span class="k">return</span> <span class="n">species_anchors</span>
+
+<div class="viewcode-block" id="Reaction_Network.add_reaction"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network.add_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reaction</span><span class="p">,</span>
+                     <span class="n">forward_rates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse_rates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+
+        <span class="n">reaction_step</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">remaining_reactions</span> <span class="o">=</span> <span class="n">reaction</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">while</span> <span class="s2">&quot;r_{{</span><span class="si">{base}</span><span class="s2">}}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;;0&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;;&#39;</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="s2">&quot;r_{{</span><span class="si">{base}</span><span class="s2">}}&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">while</span> <span class="n">remaining_reactions</span><span class="p">:</span>
+            <span class="n">in_react</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">remaining_reactions</span> <span class="o">=</span> <span class="n">remaining_reactions</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span>
+                <span class="s2">&quot;=&quot;</span><span class="p">)</span>
+            <span class="n">reactants</span> <span class="o">=</span> <span class="n">_split_reactants</span><span class="p">(</span><span class="n">in_react</span><span class="p">)</span>
+
+            <span class="n">reaction_step</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reactants</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reaction_step</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">f_rate</span> <span class="o">=</span> <span class="n">forward_rates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">f_rate</span> <span class="o">=</span> <span class="n">forward_rates</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">r_rate</span> <span class="o">=</span> <span class="n">reverse_rates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">r_rate</span> <span class="o">=</span> <span class="n">reverse_rates</span>
+
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">reaction_step</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">reaction_step</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reactions</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))]</span> <span class="o">=</span> <span class="p">(</span><span class="n">reaction_step</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                              <span class="n">reaction_step</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span>
+                                              <span class="n">f_rate</span><span class="p">,</span> <span class="n">r_rate</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Reaction_Network.add_chemostat"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network.add_chemostat">[docs]</a>    <span class="k">def</span> <span class="nf">add_chemostat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">concentration</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a (generalised) Chemostat to the reaction network.</span>
+<span class="sd">        This provides a variable source of the particular species so as to</span>
+<span class="sd">        maintain a particular concentration. This can also act as a I/O source.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">             Only one chemostat is available per species; so adding a duplicate</span>
+<span class="sd">             will overwrite the previous chemostatic concentration (if defined)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            species: The name/identifier of the particular chemical species</span>
+<span class="sd">            concentration: (default None) The fixed concentration. Left as a</span>
+<span class="sd">             free parameter if None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">species</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chemostats</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chemostats</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="n">concentration</span></div>
+
+<div class="viewcode-block" id="Reaction_Network.add_flowstat"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.reaction_builder.Reaction_Network.add_flowstat">[docs]</a>    <span class="k">def</span> <span class="nf">add_flowstat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a (generalised) Flowstat, which provides a flux of the particular</span>
+<span class="sd">        species in or out of the reaction network.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            Only one flowstat per species, so adding duplicate flowstats will</span>
+<span class="sd">            overwrite the previous flowstatic fluxes (if defined)</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :func:`add_chemostat`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            species: The name/identifier of the chemical species</span>
+<span class="sd">            flux: (default None) The rate at which this species is</span>
+<span class="sd">             added/removed. Left as a free paramter if None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">species</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flowstats</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flowstats</span><span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="o">=</span> <span class="n">flux</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_split_reactants</span><span class="p">(</span><span class="n">reactants</span><span class="p">):</span>
+    <span class="n">reactants</span> <span class="o">=</span> <span class="n">reactants</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span>
+
+    <span class="n">stoiciometrics</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">reactant</span> <span class="ow">in</span> <span class="n">reactants</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coeff</span><span class="p">,</span> <span class="n">prod</span> <span class="o">=</span> <span class="n">reactant</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">prod</span> <span class="o">=</span> <span class="n">reactant</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">stoiciometrics</span><span class="p">[</span><span class="n">prod</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">stoiciometrics</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Peter Cudmore.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

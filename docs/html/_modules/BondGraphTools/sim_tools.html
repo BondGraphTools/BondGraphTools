@@ -1,0 +1,277 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>BondGraphTools.sim_tools &#8212; BondGraphTools 0.3.3 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BondGraphTools.sim_tools</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="k">import</span> <span class="n">SympifyError</span>
+
+<span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">ModelException</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="simulate"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.simulate">[docs]</a><span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="n">system</span><span class="p">,</span>
+             <span class="n">timespan</span><span class="p">,</span>
+             <span class="n">x0</span><span class="p">,</span>
+             <span class="n">dx0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">dt</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+             <span class="n">control_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simulate the system dynamics.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        system obj:`BondGraph`:</span>
+<span class="sd">        timespan tuple(float):</span>
+<span class="sd">        initial list(float):</span>
+<span class="sd">        control_vars (str,list(str), dict(str)):</span>
+
+<span class="sd">    Returns: t, X</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">de</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">de</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">julia</span>
+    <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">ports</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ModelException</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot Simulate </span><span class="si">%s</span><span class="s2">: unconnected ports </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">system</span><span class="p">,</span> <span class="n">system</span><span class="o">.</span><span class="n">ports</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">system</span><span class="o">.</span><span class="n">control_vars</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">control_vars</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ModelException</span><span class="p">(</span><span class="s2">&quot;Control variable not specified&quot;</span><span class="p">)</span>
+
+    <span class="n">tspan</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timespan</span><span class="p">)</span>
+    <span class="n">X0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">X0</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">state_vars</span><span class="p">)</span>
+
+    <span class="n">func_str</span><span class="p">,</span> <span class="n">diffs</span> <span class="o">=</span> <span class="n">to_julia_function_string</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">control_vars</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dx0</span><span class="p">:</span>
+        <span class="n">DX0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dx0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">DX0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X0</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">func</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">func_str</span><span class="p">)</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">de</span><span class="o">.</span><span class="n">DAEProblem</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">DX0</span><span class="p">,</span> <span class="n">X0</span><span class="p">,</span> <span class="n">tspan</span><span class="p">,</span> <span class="n">differential_vars</span><span class="o">=</span><span class="n">diffs</span><span class="p">)</span>
+
+    <span class="n">sol</span> <span class="o">=</span> <span class="n">de</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">dense</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">saveat</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">dt</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">sol</span><span class="o">.</span><span class="n">retcode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Default&quot;</span><span class="p">,</span> <span class="s2">&quot;Success&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">SolverException</span><span class="p">(</span><span class="s2">&quot;Integration error: Solver returned </span><span class="si">%s</span><span class="s2"> &quot;</span>
+                              <span class="o">%</span> <span class="n">sol</span><span class="o">.</span><span class="n">retcode</span><span class="p">,</span> <span class="n">sol</span><span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="Simulation"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.Simulation">[docs]</a><span class="k">class</span> <span class="nc">Simulation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span>
+                 <span class="n">timespan</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">dx_0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">control_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sol</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Simulation.run"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.Simulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">timespan</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="to_julia_function_string"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.to_julia_function_string">[docs]</a><span class="k">def</span> <span class="nf">to_julia_function_string</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">control_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">in_place</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a Julia function string from the given model.</span>
+
+<span class="sd">    We expect that that control_vars is a dict with the same keys,</span>
+<span class="sd">    or list of the same size, as the model.control_vars</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model:</span>
+<span class="sd">        control_vars:</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (string, list)</span>
+<span class="sd">        A string containing the function definition, and a list of bools</span>
+<span class="sd">        identifing which variables contain derivatives.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dX</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">IndexedBase</span><span class="p">(</span><span class="s1">&#39;dX&#39;</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">IndexedBase</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">x_subs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dx_subs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_vars</span><span class="p">):</span>
+        <span class="n">x_subs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">dx_subs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;dx_</span><span class="si">{i}</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">dX</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
+
+
+    <span class="n">cv_strings</span><span class="p">,</span> <span class="n">dcv_strings</span> <span class="o">=</span> <span class="n">generate_control_strings</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">control_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+        <span class="n">control_vars</span><span class="p">,</span>
+        <span class="n">x_subs</span><span class="p">,</span>
+        <span class="n">dx_subs</span>
+    <span class="p">)</span>
+
+    <span class="n">differential_vars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">subs</span> <span class="o">=</span> <span class="n">x_subs</span> <span class="o">+</span> <span class="n">dx_subs</span>
+
+    <span class="n">function_header</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">function_body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">function_footer</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">in_place</span><span class="p">:</span>
+        <span class="n">function_header</span> <span class="o">=</span> <span class="s2">&quot;function f(res, dX, X, p, t)</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">constitutive_relations</span><span class="p">)</span>
+        <span class="n">function_header</span> <span class="o">=</span> <span class="s2">&quot;function f(dX, X, p, t)</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">function_header</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;    res = zeros(</span><span class="si">{k}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">for</span> <span class="n">cv</span><span class="p">,</span> <span class="n">dcv</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cv_strings</span><span class="p">,</span> <span class="n">dcv_strings</span><span class="p">):</span>
+        <span class="n">function_header</span> <span class="o">+=</span> <span class="n">cv</span>
+        <span class="k">if</span> <span class="n">dcv</span><span class="p">:</span>
+            <span class="n">function_header</span> <span class="o">+=</span> <span class="n">dcv</span>
+
+    <span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">constitutive_relations</span>
+
+    <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">constitutive_relations</span><span class="p">:</span>
+
+        <span class="n">eqn_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">relation</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subs</span><span class="p">))</span>
+        <span class="n">eqn_str</span> <span class="o">=</span> <span class="n">eqn_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;**&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;dX&#39;</span> <span class="ow">in</span> <span class="n">eqn_str</span><span class="p">:</span>
+            <span class="n">differential_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">differential_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">function_body</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;    res[{len(differential_vars)}] = </span><span class="si">{eqn_str}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">in_place</span><span class="p">:</span>
+        <span class="n">function_footer</span> <span class="o">+=</span> <span class="s2">&quot;end</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">function_footer</span> <span class="o">+=</span> <span class="s2">&quot;    return res</span><span class="se">\n</span><span class="s2"> end</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="n">out_str</span> <span class="o">=</span> <span class="n">function_header</span> <span class="o">+</span> <span class="n">function_body</span> <span class="o">+</span> <span class="n">function_footer</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">out_str</span><span class="p">,</span>
+            <span class="n">differential_vars</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_control_strings"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.generate_control_strings">[docs]</a><span class="k">def</span> <span class="nf">generate_control_strings</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span> <span class="n">cv_substitutions</span><span class="p">,</span> <span class="n">x_subs</span><span class="p">,</span> <span class="n">dx_subs</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cv_substitutions</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">cv_i</span><span class="p">,</span> <span class="n">cv_substitutions</span><span class="p">[</span><span class="n">cv_i</span><span class="p">])</span> <span class="k">for</span> <span class="n">cv_i</span> <span class="ow">in</span> <span class="n">cv</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cv_substitutions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span> <span class="n">cv_substitutions</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">cv_substitutions</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Expr</span><span class="p">))):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cv_substitutions</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">cv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cv_substitutions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="n">cv_strings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dcv_strings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">subs</span> <span class="o">=</span> <span class="n">x_subs</span> <span class="o">+</span> <span class="n">dx_subs</span>
+    <span class="n">partial_pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">X_i</span><span class="p">,</span><span class="n">DX_i</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="n">X_i</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="n">DX_i</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_subs</span><span class="p">,</span> <span class="n">dx_subs</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">u_i</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subs</span><span class="p">)</span>
+            <span class="n">du_i</span> <span class="o">=</span> <span class="n">u_i</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">))</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">([</span>
+                <span class="n">u_i</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">*</span><span class="n">DX</span> <span class="k">for</span> <span class="n">X</span><span class="p">,</span><span class="n">DX</span> <span class="ow">in</span> <span class="n">partial_pairs</span>
+            <span class="p">])</span>
+            <span class="n">cv_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;    {str(var)} = </span><span class="si">{u_i}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">dcv_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;    d{str(var)} = </span><span class="si">{du_i}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">SympifyError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">val</span>
+
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">X</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">x_subs</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+
+            <span class="n">cv_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;    {str(var)} = </span><span class="si">{s}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">dcv_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cv_strings</span><span class="p">,</span> <span class="n">dcv_strings</span></div>
+
+
+<div class="viewcode-block" id="SolverException"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.sim_tools.SolverException">[docs]</a><span class="k">class</span> <span class="nc">SolverException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Peter Cudmore.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>
