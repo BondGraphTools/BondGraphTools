@@ -111,13 +111,13 @@ class Reaction_Network(object):
             )
             if len(bck_sto) == 1 and list(bck_sto.values())[0] == 1:
                 species = list(bck_sto.keys()).pop()
-                connect(reaction, species_anchors[species])
+                connect(species_anchors[species], reaction)
             else:
                 reverse_complex = new("1", name=bck_name)
                 system.add(reverse_complex)
-                connect(reaction, reverse_complex.inverting)
+                connect(reverse_complex.inverting, reaction)
                 self._connect_complex(
-                    system, species_anchors, reverse_complex, bck_sto
+                    system, species_anchors, reverse_complex, bck_sto, "bck"
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
@@ -129,19 +129,27 @@ class Reaction_Network(object):
                 connect(reaction, forward_complex.inverting)
 
                 self._connect_complex(
-                    system, species_anchors, forward_complex, fwd_sto
+                    system, species_anchors, forward_complex, fwd_sto, "fwd"
                 )
 
-    def _connect_complex(self, system, species_anchors, junct, stoichiometry):
+    def _connect_complex(self, system, species_anchors, junct, stoichiometry,
+                         direction):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
             if qty == 1:
-                connect(junct.non_inverting, species_anchors[species])
+                if direction == "fwd":
+                    connect(junct.non_inverting,species_anchors[species])
+                else:
+                    connect(species_anchors[species],junct.non_inverting)
             else:
-                tf = new("TR", value=qty)
+                tf = new("TF", value=qty)
                 system.add(tf)
-                connect((tf, 1), junct.non_inverting)
-                connect(species_anchors, (tf,0))
+                if direction == "fwd":
+                    connect(junct.non_inverting, (tf, 1))
+                    connect((tf,0), species_anchors[species])
+                else:
+                    connect((tf, 1), junct.non_inverting)
+                    connect(species_anchors[species], (tf,0))
 
     def _build_species(self, system, normalised):
         if normalised:
@@ -168,7 +176,7 @@ class Reaction_Network(object):
             else:
                 anchor = new("0", name=species)
                 system.add(anchor)
-                connect(this_species, anchor)
+                connect(anchor, this_species)
                 species_anchors[species] = anchor
 
             if species in self._flowstats:
