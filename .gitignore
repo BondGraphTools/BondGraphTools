@@ -1,3 +1,5 @@
 .idea/
 *.pyc
 \.ipynb_checkpoints/
+docs/doctrees/
+.buildinfo
