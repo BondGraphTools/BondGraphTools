@@ -54,7 +54,13 @@ def save(model, filename):
 def _build_model_directory(model):
 
     try:
-        directory = {model.uri:model}
+        if not model.parent:
+            uri = "/"
+        else:
+            _, uri = model.uri.split(":")
+
+        directory = {uri: model}
+
         for c in model.components:
             directory.update(_build_model_directory(c))
         return directory
@@ -67,8 +73,9 @@ def _build_model_data(model, templates):
     out = {}
     for c in model.components:
         if isinstance(c, BondGraph):
+            _, uri = c.uri.split(":")
             components.append(
-                f"{c.name} {c.uri}"
+                f"{c.name} {uri}"
             )
         else:
             components.append(

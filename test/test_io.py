@@ -15,11 +15,11 @@ def test_load_rlc():
     path = str(file_path / 'rlc.bg')
 
     model = load(path)
-    uris = ["/C1",
-            "/R1",
-            "/L1",
-            "/kcl",
-            "/Sf"]
+    uris = ["RLC:/C1",
+            "RLC:/R1",
+            "RLC:/L1",
+            "RLC:/kcl",
+            "RLC:/Sf"]
 
     c, r, l, kcl, sf =  (comp for uri in uris for comp in model.components if
                       comp.uri == uri)
@@ -85,7 +85,7 @@ def test_load_modular():
 
     model_1 = load(file_path / "modular.bg")
 
-    assert model_1.uri == "/"
+    assert model_1.uri == "system:"
     assert model_1.name == "system"
 
     tree = set()
@@ -102,18 +102,18 @@ def test_load_modular():
     uri_tree(model_1)
 
     assert tree == {
-        "/",
-        "/Vs",
-        "/Z",
-        "/kvl",
-        "/Vs/Sf",
-        "/Vs/pout",
-        "/Vs/kvl",
-        "/Z/R1",
-        "/Z/pin",
-        "/Z/kvl",
-        "/Z/L1",
-        "/Z/C1"
+        "system:",
+        "system:/Vs",
+        "system:/Z",
+        "system:/kvl",
+        "system:/Vs/Sf",
+        "system:/Vs/pout",
+        "system:/Vs/kvl",
+        "system:/Z/R1",
+        "system:/Z/pin",
+        "system:/Z/kvl",
+        "system:/Z/L1",
+        "system:/Z/C1"
     }
 
 
