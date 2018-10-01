@@ -64,17 +64,17 @@ def simulate(system,
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
 
-class Simulation(object):
-    def __init__(self, model,
-                 timespan=None,
-                 x0=None,
-                 dx_0=None,
-                 control_vars=None):
-
-        self.sol = None
-
-    def run(self, x0, timespan):
-        pass
+# class Simulation(object):
+#     def __init__(self, model,
+#                  timespan=None,
+#                  x0=None,
+#                  dx_0=None,
+#                  control_vars=None):
+#
+#         self.sol = None
+#
+#     def run(self, x0, timespan):
+#         pass
 
 
 def to_julia_function_string(model, control_vars=None, in_place=False):
@@ -104,7 +104,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
 
 
-    cv_strings, dcv_strings = generate_control_strings(
+    cv_strings, dcv_strings = _generate_control_strings(
         list(model.control_vars.keys()),
         control_vars,
         x_subs,
@@ -154,7 +154,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
             differential_vars)
 
 
-def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
+def _generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
 
     if isinstance(cv_substitutions, dict):
         pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
@@ -165,7 +165,9 @@ def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
     elif not cv and not cv_substitutions:
         return [], []
     else:
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"Could not substitute {cv_substitutions} into {cv}"
+        )
 
     cv_strings = []
     dcv_strings = []
