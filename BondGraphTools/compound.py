@@ -38,14 +38,10 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     def __truediv__(self, other):
         try:
-            if not self.parent:
-                test_uri = f"/{other}"
-            else:
-                test_uri = f"{self.uri}/{other}"
+            test_uri = f"{self.uri}/{other}"
             c, = (c for c in self.components if c.uri == test_uri)
             return c
         except (ValueError, TypeError):
-
             raise ValueError(f"Cannot find {other}")
 
     @property

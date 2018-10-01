@@ -79,13 +79,9 @@ class BondGraphBase:
     @property
     def uri(self):
         if not self.parent:
-            return "/"
+            return f"{self.name}:"
         else:
-            parent_uri = self.parent.uri
-            if parent_uri == "/":
-                return f"{self.parent.uri}{self.name}"
-            else:
-                return f"{self.parent.uri}/{self.name}"
+            return f"{self.parent.uri}/{self.name}"
 
     @property
     def root(self):
