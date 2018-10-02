@@ -1,6 +1,6 @@
+[![PyPI version](https://badge.fury.io/py/BondGraphTools.svg)](https://badge.fury.io/py/BondGraphTools)
 [![Build Status](https://travis-ci.org/peter-cudmore/BondGraph.svg?branch=master)](https://travis-ci.org/peter-cudmore/BondGraph)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/727c4f858ad693439f3f/test_coverage)](https://codeclimate.com/github/peter-cudmore/BondGraph/test_coverage)
-[![PyPI version](https://badge.fury.io/py/BondGraphTools.svg)](https://badge.fury.io/py/BondGraphTools)
 # BondGraph - A Bond graph toolkit
 ## Summary
 
