@@ -77,7 +77,7 @@
 <span class="n">base_id</span> <span class="o">=</span> <span class="s2">&quot;base&quot;</span>
 
 
-<div class="viewcode-block" id="load_library"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.component_manager.load_library">[docs]</a><span class="k">def</span> <span class="nf">load_library</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<div class="viewcode-block" id="load_library"><a class="viewcode-back" href="../../api.html#BondGraphTools.component_manager.load_library">[docs]</a><span class="k">def</span> <span class="nf">load_library</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads the library specified by the filename and makes it available for use.</span>
 
@@ -110,7 +110,7 @@
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="get_library_list"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.component_manager.get_library_list">[docs]</a><span class="k">def</span> <span class="nf">get_library_list</span><span class="p">():</span>
+<div class="viewcode-block" id="get_library_list"><a class="viewcode-back" href="../../api.html#BondGraphTools.component_manager.get_library_list">[docs]</a><span class="k">def</span> <span class="nf">get_library_list</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetches a list of the libraries available for use.</span>
 
@@ -121,7 +121,7 @@
     <span class="k">return</span> <span class="p">[(</span><span class="n">l</span><span class="p">,</span> <span class="n">__libraries</span><span class="p">[</span><span class="n">l</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">__libraries</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_components_list"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.component_manager.get_components_list">[docs]</a><span class="k">def</span> <span class="nf">get_components_list</span><span class="p">(</span><span class="n">library</span><span class="p">):</span>
+<div class="viewcode-block" id="get_components_list"><a class="viewcode-back" href="../../api.html#BondGraphTools.component_manager.get_components_list">[docs]</a><span class="k">def</span> <span class="nf">get_components_list</span><span class="p">(</span><span class="n">library</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetches a list of components available in the given library.</span>
 
@@ -136,7 +136,7 @@
     <span class="k">return</span> <span class="p">[(</span><span class="n">comp_id</span><span class="p">,</span> <span class="n">components</span><span class="p">[</span><span class="n">comp_id</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">comp_id</span> <span class="ow">in</span> <span class="n">components</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_component"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.component_manager.get_component">[docs]</a><span class="k">def</span> <span class="nf">get_component</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">base_id</span><span class="p">):</span>
+<div class="viewcode-block" id="get_component"><a class="viewcode-back" href="../../api.html#BondGraphTools.component_manager.get_component">[docs]</a><span class="k">def</span> <span class="nf">get_component</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">base_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetches the component data for the specified component</span>
 <span class="sd">    Args:</span>
@@ -150,7 +150,7 @@
     <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">__libraries</span><span class="p">[</span><span class="n">library</span><span class="p">][</span><span class="s2">&quot;components&quot;</span><span class="p">][</span><span class="n">component</span><span class="p">])</span></div>
 
 
-<div class="viewcode-block" id="find"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.component_manager.find">[docs]</a><span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">restrict_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ensure_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="find"><a class="viewcode-back" href="../../api.html#BondGraphTools.component_manager.find">[docs]</a><span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">restrict_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ensure_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Finds the specified component.</span>
 

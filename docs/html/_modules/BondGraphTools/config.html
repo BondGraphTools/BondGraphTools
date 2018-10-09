@@ -48,14 +48,14 @@
 <span class="n">VERSION</span> <span class="o">=</span> <span class="s2">&quot;0.3.3&quot;</span>
 
 
-<div class="viewcode-block" id="as_str"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.as_str">[docs]</a><span class="k">def</span> <span class="nf">as_str</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="as_str"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.as_str">[docs]</a><span class="k">def</span> <span class="nf">as_str</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">path</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span></div>
 
 
-<div class="viewcode-block" id="check_julia"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.check_julia">[docs]</a><span class="k">def</span> <span class="nf">check_julia</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+<div class="viewcode-block" id="check_julia"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.check_julia">[docs]</a><span class="k">def</span> <span class="nf">check_julia</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
     <span class="c1"># Check to see if Julia is already in the path</span>
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="n">command</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -68,7 +68,7 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
     <span class="n">_which</span> <span class="o">=</span> <span class="s1">&#39;which&#39;</span>
     <span class="n">base</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span> <span class="o">/</span> <span class="s1">&#39;.BondGraphTools&#39;</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="s1">&#39;config.json&#39;</span>
@@ -100,7 +100,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">install_dependencies</span><span class="p">(</span><span class="n">rebuild</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Config.find_julia"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.find_julia">[docs]</a>    <span class="k">def</span> <span class="nf">find_julia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.find_julia"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.find_julia">[docs]</a>    <span class="k">def</span> <span class="nf">find_julia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">check_julia</span><span class="p">(</span><span class="s1">&#39;julia&#39;</span><span class="p">):</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_which</span><span class="p">,</span> <span class="s1">&#39;julia&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
@@ -109,7 +109,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Could not find Julia 0.6.4: please install and add to path&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Config.find_conda"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.find_conda">[docs]</a>    <span class="k">def</span> <span class="nf">find_conda</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.find_conda"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.find_conda">[docs]</a>    <span class="k">def</span> <span class="nf">find_conda</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_which</span><span class="p">,</span> <span class="s1">&#39;conda&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
         <span class="n">conda_dir</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -118,7 +118,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">conda_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Config.install_dependencies"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.install_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">install_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rebuild</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.install_dependencies"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.install_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">install_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rebuild</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="c1"># we assume julia and python are already in the path</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Installing Julia dependencies; this may take some time&#39;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
@@ -155,7 +155,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_julia</span>
 
-<div class="viewcode-block" id="Config.start_julia"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.start_julia">[docs]</a>    <span class="k">def</span> <span class="nf">start_julia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.start_julia"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.start_julia">[docs]</a>    <span class="k">def</span> <span class="nf">start_julia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="kn">import</span> <span class="nn">diffeqpy</span>
         <span class="kn">from</span> <span class="nn">diffeqpy</span> <span class="k">import</span> <span class="n">de</span>
@@ -169,7 +169,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_de</span>
 
 
-<div class="viewcode-block" id="Config.load"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.load">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Config.load"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.load">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">as_str</span><span class="p">(</span><span class="n">Config</span><span class="o">.</span><span class="n">file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -182,7 +182,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Config</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Config.save"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.Config.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.save"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.Config.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">config_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;julia_executable&#39;</span><span class="p">:</span> <span class="n">as_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">julia_executable</span><span class="p">),</span>
@@ -193,7 +193,7 @@
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="WinConfig"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.config.WinConfig">[docs]</a><span class="k">class</span> <span class="nc">WinConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+<div class="viewcode-block" id="WinConfig"><a class="viewcode-back" href="../../api.html#BondGraphTools.config.WinConfig">[docs]</a><span class="k">class</span> <span class="nc">WinConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
     <span class="n">_which</span> <span class="o">=</span> <span class="s1">&#39;where&#39;</span></div>
 
 

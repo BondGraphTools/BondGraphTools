@@ -44,7 +44,7 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">FixedPort</span><span class="p">):</span>
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">FixedPort</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Atomic bond graph components are those defined by constitutive relations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -107,7 +107,7 @@
         <span class="sd">&quot;&quot;&quot;See `BondGraphBase`&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="k">else</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="Component.set_param"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.Component.set_param">[docs]</a>    <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.set_param"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.Component.set_param">[docs]</a>    <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Warning: Scheduled to be deprecated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -247,14 +247,14 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="SymmetricComponent"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.SymmetricComponent">[docs]</a><span class="k">class</span> <span class="nc">SymmetricComponent</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="SymmetricComponent"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.SymmetricComponent">[docs]</a><span class="k">class</span> <span class="nc">SymmetricComponent</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Refer to `Component`.</span>
 
 <span class="sd">    Instances of this class are multi-port components which are able to have</span>
 <span class="sd">    connections made without specifying ports.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="SymmetricComponent.get_port"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.SymmetricComponent.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SymmetricComponent.get_port"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.SymmetricComponent.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;See `Component`&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">port</span> <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ports</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">port</span><span class="o">.</span><span class="n">is_connected</span><span class="p">]</span>
@@ -267,7 +267,7 @@
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">port</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="EqualEffort"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualEffort">[docs]</a><span class="k">class</span> <span class="nc">EqualEffort</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
+<div class="viewcode-block" id="EqualEffort"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.EqualEffort">[docs]</a><span class="k">class</span> <span class="nc">EqualEffort</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Implements 0-junction.</span>
 
 <span class="sd">    Attributes:</span>
@@ -311,7 +311,7 @@
 
         <span class="k">return</span> <span class="n">relations</span></div>
 
-<div class="viewcode-block" id="EqualFlow"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualFlow">[docs]</a><span class="k">class</span> <span class="nc">EqualFlow</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
+<div class="viewcode-block" id="EqualFlow"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.EqualFlow">[docs]</a><span class="k">class</span> <span class="nc">EqualFlow</span><span class="p">(</span><span class="n">BondGraphBase</span><span class="p">,</span> <span class="n">PortExpander</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">PortExpander</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;non_inverting&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
@@ -337,7 +337,7 @@
     <span class="k">def</span> <span class="nf">basis_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{},</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_port_vectors</span><span class="p">(),</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="EqualFlow.get_port"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.atomic.EqualFlow.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="EqualFlow.get_port"><a class="viewcode-back" href="../../api.html#BondGraphTools.atomic.EqualFlow.get_port">[docs]</a>    <span class="k">def</span> <span class="nf">get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">InvalidPortException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to BondGraphTools’s documentation! &#8212; BondGraphTools 0.3.3 documentation</title>
+    <title>BondGraphTools &#8212; BondGraphTools 0.3.3 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -16,7 +16,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting Started" href="intro.html" /> 
+    <link rel="next" title="Tutorials" href="tutorials.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,7 +28,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="intro.html" title="Getting Started"
+          <a href="tutorials.html" title="Tutorials"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">BondGraphTools 0.3.3 documentation</a> &#187;</li> 
       </ul>
@@ -39,24 +39,98 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-bondgraphtools-s-documentation">
-<h1>Welcome to BondGraphTools’s documentation!<a class="headerlink" href="#welcome-to-bondgraphtools-s-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-BondGraphTools">
-<span id="overview"></span><h2>Overview<a class="headerlink" href="#module-BondGraphTools" title="Permalink to this headline">¶</a></h2>
-<p>BondGraphTools is a python library for systems modelling and control using
-bond graphs.</p>
+  <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="table-of-contents">
-<h2>Table Of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides.html">How-To Guides</a></li>
-<li class="toctree-l1"><a class="reference internal" href="discussion.html">Discussion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="BondGraphTools.html">API Reference</a></li>
+<div class="section" id="bondgraphtools">
+<h1>BondGraphTools<a class="headerlink" href="#bondgraphtools" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>BondGraphTools is a python library for systems modelling based on the bond graph
+methodology <a class="reference internal" href="#gaw1996" id="id1">[Gaw1996]</a>, <a class="reference internal" href="#gaw2007" id="id2">[Gaw2007]</a>.</p>
+<dl class="docutils">
+<dt>BondGraphTools is intended to be used by:</dt>
+<dd><ul class="first last simple">
+<li>software developers; as a framework to build modelling interfaces on top of</li>
+<li>engineers; to quickly build and simulate physical systems</li>
+<li>mathematicians; to perform model reduction and analysis</li>
+</ul>
+</dd>
+</dl>
+<p>BondGraphTools is built upon the scientific python stack; numpy, scipy, sympy
+and matplotlib, and relies on Julia and DifferentialEquations.jl to handle
+numnerical simulation.</p>
+<div class="section" id="how-to-read-the-docs">
+<h3>How to read the docs<a class="headerlink" href="#how-to-read-the-docs" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>The documentation for this library is organised into five sections.</dt>
+<dd><ul class="first last simple">
+<li>This page show how to install BondGraphTools</li>
+<li><a class="reference internal" href="tutorials.html"><span class="doc">Tutorials</span></a> contains a list of step-by-step tutorials demonstrating how
+to use BondGraphTools.</li>
+<li><a class="reference internal" href="guides.html"><span class="doc">How-To Guides</span></a> contains recipes for common tasks.</li>
+<li><a class="reference internal" href="discussion.html"><span class="doc">Discussion</span></a> contains high level discussion about to library.</li>
+<li><a class="reference internal" href="api.html"><span class="doc">API reference</span></a> is the library reference documentation.</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Python 3.6 or above.</li>
+<li>Julia 0.6. <em>Note: Julia 0.7 and above are not yet supported</em></li>
 </ul>
 </div>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Install Julia 0.6.4 which can be downloaded from <a class="reference external" href="https://julialang.org/downloads/oldreleases.html">here</a>.</li>
+<li>Make sure Julia 0.6.4 is in your path variables. You can test this by typing
+<code class="docutils literal notranslate"><span class="pre">julia</span> <span class="pre">-v</span></code> at the command prompt. If this returns <code class="docutils literal notranslate"><span class="pre">julia</span> <span class="pre">version</span> <span class="pre">0.6.4</span></code>
+then julia is in your path variables.</li>
+<li>Install BondGraphTools via pip: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">BondGraphTools</span></code></li>
+</ol>
+<p>BondGraphTools is now installed and will download and install the required
+julia packages the first time you import it.</p>
+</div>
+<div class="section" id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<p>BondGraphTools can be loaded inside a jupyter-notebook, python interpreter, or
+script by using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">BondGraphTools</span>
+</pre></div>
+</div>
+<p>Users need an internet connection during the first load as the it will download
+the required packages from the julia package repository.</p>
+<p>Api reference for the package and it’s contents can be accessed using the help
+command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">BondGraphTools</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="contributing">
+<h3>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h3>
+<p>The best way to contribute right now is to use it!
+If you wish to help out, please visit the project <a class="reference external" href="https://github.com/BondGraphTools/BondGraphTools">github</a>.</p>
+</div>
+</div>
+<div class="section" id="bibliography">
+<h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="gaw2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[Gaw2007]</a></td><td><a class="reference external" href="https://ieeexplore.ieee.org/document/4140745">https://ieeexplore.ieee.org/document/4140745</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="gaw1996" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Gaw1996]</a></td><td><a class="reference external" href="http://www.gawthrop.net/Books/GawSmi96.pdf">http://www.gawthrop.net/Books/GawSmi96.pdf</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 
@@ -68,16 +142,26 @@ bond graphs.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to BondGraphTools’s documentation!</a><ul>
-<li><a class="reference internal" href="#module-BondGraphTools">Overview</a></li>
-<li><a class="reference internal" href="#table-of-contents">Table Of Contents</a></li>
+<li><a class="reference internal" href="#">BondGraphTools</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#how-to-read-the-docs">How to read the docs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#contributing">Contributing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bibliography">Bibliography</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="intro.html"
-                        title="next chapter">Getting Started</a></p>
+  <p class="topless"><a href="tutorials.html"
+                        title="next chapter">Tutorials</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -111,7 +195,7 @@ bond graphs.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="intro.html" title="Getting Started"
+          <a href="tutorials.html" title="Tutorials"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">BondGraphTools 0.3.3 documentation</a> &#187;</li> 
       </ul>

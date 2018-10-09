@@ -64,7 +64,7 @@
     <span class="s2">&quot;set_param&quot;</span>
 <span class="p">]</span>
 
-<div class="viewcode-block" id="disconnect"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.disconnect">[docs]</a><span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="disconnect"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.disconnect">[docs]</a><span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Args:</span>
 <span class="sd">        target: Port or BondGraphBase</span>
@@ -106,7 +106,7 @@
         <span class="n">model</span><span class="o">.</span><span class="n">_bonds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">target_bond</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="connect"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.connect">[docs]</a><span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
+<div class="viewcode-block" id="connect"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.connect">[docs]</a><span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Connects two components or ports with a bond.</span>
 <span class="sd">    We assume that either the source and/or destination is or has a free</span>
@@ -161,7 +161,7 @@
     <span class="k">return</span> <span class="n">port</span>
 
 
-<div class="viewcode-block" id="swap"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.swap">[docs]</a><span class="k">def</span> <span class="nf">swap</span><span class="p">(</span><span class="n">old_component</span><span class="p">,</span> <span class="n">new_component</span><span class="p">):</span>
+<div class="viewcode-block" id="swap"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.swap">[docs]</a><span class="k">def</span> <span class="nf">swap</span><span class="p">(</span><span class="n">old_component</span><span class="p">,</span> <span class="n">new_component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Replaces the old component with a new component.</span>
 <span class="sd">    Components must be of compatible classes; 1 one port cannot replace an</span>
@@ -229,7 +229,7 @@
     <span class="n">model</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">old_component</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="new"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.new">[docs]</a><span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">base_id</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="new"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.new">[docs]</a><span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">base_id</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a new Bond Graph from a library component.</span>
 
@@ -314,7 +314,7 @@
                 <span class="k">return</span> <span class="n">sc</span>
 
 
-<div class="viewcode-block" id="expose"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.expose">[docs]</a><span class="k">def</span> <span class="nf">expose</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="expose"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.expose">[docs]</a><span class="k">def</span> <span class="nf">expose</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Exposes the component as port on the parent.</span>
 
@@ -352,7 +352,7 @@
     <span class="n">model</span><span class="o">.</span><span class="n">map_port</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">effort_port</span><span class="p">,</span> <span class="n">flow_port</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="add"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.add">[docs]</a><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="add"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.add">[docs]</a><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add the specified components to the model</span>
 
@@ -363,7 +363,7 @@
     <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="remove"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.remove">[docs]</a><span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+<div class="viewcode-block" id="remove"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.remove">[docs]</a><span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Removes the specified components from the Bond Graph model.</span>
 <span class="sd">    Args:</span>
@@ -373,7 +373,7 @@
     <span class="n">model</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">component</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="set_param"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.actions.set_param">[docs]</a><span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="set_param"><a class="viewcode-back" href="../../api.html#BondGraphTools.actions.set_param">[docs]</a><span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sets the specified parameter to a particular value.</span>
 

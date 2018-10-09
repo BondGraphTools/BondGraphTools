@@ -1,5 +1,5 @@
-BondGraphTools package API reference
-====================================
+API reference
+=============
 
 Module contents
 ---------------

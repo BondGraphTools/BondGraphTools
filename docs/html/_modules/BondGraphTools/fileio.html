@@ -62,7 +62,7 @@
 
 <span class="n">FILE_VERSION</span> <span class="o">=</span> <span class="s2">&quot;0.1&quot;</span>
 
-<div class="viewcode-block" id="save"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.fileio.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<div class="viewcode-block" id="save"><a class="viewcode-back" href="../../api.html#BondGraphTools.fileio.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Saves the model to the specified path</span>
 
@@ -93,7 +93,13 @@
 <span class="k">def</span> <span class="nf">_build_model_directory</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">directory</span> <span class="o">=</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">uri</span><span class="p">:</span><span class="n">model</span><span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">uri</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+
+        <span class="n">directory</span> <span class="o">=</span> <span class="p">{</span><span class="n">uri</span><span class="p">:</span> <span class="n">model</span><span class="p">}</span>
+
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
             <span class="n">directory</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_build_model_directory</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">directory</span>
@@ -106,8 +112,9 @@
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">BondGraph</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">uri</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{c.name}</span><span class="s2"> </span><span class="si">{c.uri}</span><span class="s2">&quot;</span>
+                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{c.name}</span><span class="s2"> </span><span class="si">{uri}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -159,7 +166,7 @@
     <span class="k">return</span> <span class="n">out_str</span>
 
 
-<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../BondGraphTools.html#BondGraphTools.fileio.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../api.html#BondGraphTools.fileio.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loads a model from file</span>
 
