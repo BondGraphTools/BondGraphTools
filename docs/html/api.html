@@ -1,43 +1,164 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>API reference &#8212; BondGraphTools 0.3.3 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API reference &mdash; BondGraphTools 0.3.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Discussion" href="discussion.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="discussion.html" title="Discussion"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li> 
-      </ul>
-    </div>  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> BondGraphTools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">How-To Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="discussion.html">Discussion</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-BondGraphTools">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-BondGraphTools.actions">Core Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-BondGraphTools.algebra">Analysis and Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-BondGraphTools.component_manager">File IO and Helper Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#component-library-manager">Component Library Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-BondGraphTools.reaction_builder">Addons</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BondGraphTools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
@@ -52,71 +173,8 @@ bond graphs.</p>
 <p>This module provides functions for the actions one wishes to perform on
 models bond graph models.</p>
 <dl class="function">
-<dt id="BondGraphTools.actions.disconnect">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">disconnect</code><span class="sig-paren">(</span><em>target</em>, <em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.disconnect" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>target</strong> – Port or BondGraphBase</li>
-<li><strong>other</strong> – BondGraphComponent or (Port or tuple)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="BondGraphTools.actions.connect">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">connect</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Connects two components or ports with a bond.
-We assume that either the source and/or destination is or has a free
-port.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>source</strong> (<a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><em>Port</em></a><em> or </em><a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><em>BondGraphBase</em></a>) – </li>
-<li><strong>destination</strong> (<a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><em>Port</em></a><em> or </em><a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><em>BondGraphBase</em></a>) – </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">InvalidPortException, InvalidComponentException</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="BondGraphTools.actions.swap">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">swap</code><span class="sig-paren">(</span><em>old_component</em>, <em>new_component</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.swap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replaces the old component with a new component.
-Components must be of compatible classes; 1 one port cannot replace an
-n-port, for example.
-The old component will be completely removed from the system model.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>old_component</strong> – The component to be replaced. Must already be in the
-model.</li>
-<li><strong>new_component</strong> – The substitute component which must not be in the
-model</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="BondGraphTools.actions.new">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">new</code><span class="sig-paren">(</span><em>component=None</em>, <em>name=None</em>, <em>library='base'</em>, <em>value=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.new" title="Permalink to this definition">¶</a></dt>
+<code class="descname">new</code><span class="sig-paren">(</span><em>component=None</em>, <em>name=None</em>, <em>library='base'</em>, <em>value=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.new" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new Bond Graph from a library component.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -140,8 +198,71 @@ graph will be cloned.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="BondGraphTools.actions.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><em>target</em>, <em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>target</strong> – Port or BondGraphBase</li>
+<li><strong>other</strong> – BondGraphComponent or (Port or tuple)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="BondGraphTools.actions.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects two components or ports with a bond.
+We assume that either the source and/or destination is or has a free
+port.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> (<a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><em>Port</em></a><em> or </em><a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><em>BondGraphBase</em></a>) – </li>
+<li><strong>destination</strong> (<a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><em>Port</em></a><em> or </em><a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><em>BondGraphBase</em></a>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">InvalidPortException, InvalidComponentException</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="BondGraphTools.actions.swap">
+<code class="descname">swap</code><span class="sig-paren">(</span><em>old_component</em>, <em>new_component</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.swap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the old component with a new component.
+Components must be of compatible classes; 1 one port cannot replace an
+n-port, for example.
+The old component will be completely removed from the system model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>old_component</strong> – The component to be replaced. Must already be in the
+model.</li>
+<li><strong>new_component</strong> – The substitute component which must not be in the
+model</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="BondGraphTools.actions.expose">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">expose</code><span class="sig-paren">(</span><em>component</em>, <em>label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#expose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.expose" title="Permalink to this definition">¶</a></dt>
+<code class="descname">expose</code><span class="sig-paren">(</span><em>component</em>, <em>label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#expose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.expose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exposes the component as port on the parent.</p>
 <p>If the target component is not a SS component, it is replaced with a new
 ss component.
@@ -163,7 +284,7 @@ A new external port is added to the parent model, and</p>
 
 <dl class="function">
 <dt id="BondGraphTools.actions.add">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">add</code><span class="sig-paren">(</span><em>model</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.add" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add</code><span class="sig-paren">(</span><em>model</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add the specified components to the model</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -181,7 +302,7 @@ A new external port is added to the parent model, and</p>
 
 <dl class="function">
 <dt id="BondGraphTools.actions.remove">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">remove</code><span class="sig-paren">(</span><em>model</em>, <em>component</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.remove" title="Permalink to this definition">¶</a></dt>
+<code class="descname">remove</code><span class="sig-paren">(</span><em>model</em>, <em>component</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.remove" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes the specified components from the Bond Graph model.
 :param model:
 :type model: <cite>BondGraph</cite>
@@ -190,7 +311,7 @@ A new external port is added to the parent model, and</p>
 
 <dl class="function">
 <dt id="BondGraphTools.actions.set_param">
-<code class="descclassname">BondGraphTools.actions.</code><code class="descname">set_param</code><span class="sig-paren">(</span><em>component</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#set_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.set_param" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_param</code><span class="sig-paren">(</span><em>component</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/actions.html#set_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.actions.set_param" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the specified parameter to a particular value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -210,7 +331,7 @@ A new external port is added to the parent model, and</p>
 <span class="target" id="module-BondGraphTools.base"></span><p>Bond Graph Model base files.</p>
 <dl class="class">
 <dt id="BondGraphTools.base.Bond">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">Bond</code><span class="sig-paren">(</span><em>tail</em>, <em>head</em><span class="sig-paren">)</span><a class="headerlink" href="#BondGraphTools.base.Bond" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Bond</code><span class="sig-paren">(</span><em>tail</em>, <em>head</em><span class="sig-paren">)</span><a class="headerlink" href="#BondGraphTools.base.Bond" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="BondGraphTools.base.Bond.head">
@@ -228,7 +349,7 @@ A new external port is added to the parent model, and</p>
 
 <dl class="class">
 <dt id="BondGraphTools.base.BondGraphBase">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">BondGraphBase</code><span class="sig-paren">(</span><em>name=None</em>, <em>parent=None</em>, <em>metaclass=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#BondGraphBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.BondGraphBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">BondGraphBase</code><span class="sig-paren">(</span><em>name=None</em>, <em>parent=None</em>, <em>metaclass=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#BondGraphBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.BondGraphBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="BondGraphTools.base.BondGraphBase.basis_vectors">
@@ -264,13 +385,13 @@ A new external port is added to the parent model, and</p>
 
 <dl class="class">
 <dt id="BondGraphTools.base.ExpandedPort">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">ExpandedPort</code><span class="sig-paren">(</span><em>*args</em>, <em>port_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#ExpandedPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.ExpandedPort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">ExpandedPort</code><span class="sig-paren">(</span><em>*args</em>, <em>port_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#ExpandedPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.ExpandedPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.Port</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="BondGraphTools.base.FixedPort">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">FixedPort</code><span class="sig-paren">(</span><em>ports</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#FixedPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.FixedPort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">FixedPort</code><span class="sig-paren">(</span><em>ports</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#FixedPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.FixedPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class provides methods for interfacing with static ports on
 components.</p>
@@ -309,13 +430,13 @@ this component.</td>
 
 <dl class="class">
 <dt id="BondGraphTools.base.LabeledPort">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">LabeledPort</code><span class="sig-paren">(</span><em>*args</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#LabeledPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.LabeledPort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">LabeledPort</code><span class="sig-paren">(</span><em>*args</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#LabeledPort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.LabeledPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.Port" title="BondGraphTools.base.Port"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.Port</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="BondGraphTools.base.LabeledPortManager">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">LabeledPortManager</code><span class="sig-paren">(</span><em>ports=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#LabeledPortManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.LabeledPortManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">LabeledPortManager</code><span class="sig-paren">(</span><em>ports=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#LabeledPortManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.LabeledPortManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.FixedPort" title="BondGraphTools.base.FixedPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.FixedPort</span></code></a></p>
 <dl class="method">
 <dt id="BondGraphTools.base.LabeledPortManager.get_port">
@@ -337,7 +458,7 @@ this component.</td>
 
 <dl class="class">
 <dt id="BondGraphTools.base.Port">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">Port</code><span class="sig-paren">(</span><em>component</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#Port"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.Port" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Port</code><span class="sig-paren">(</span><em>component</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#Port"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.Port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Basic object for representing ports;
 Looks and behaves like a namedtuple:
@@ -364,7 +485,7 @@ component, index =  Port</p>
 
 <dl class="class">
 <dt id="BondGraphTools.base.PortExpander">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">PortExpander</code><span class="sig-paren">(</span><em>ports</em>, <em>static_ports=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#PortExpander"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.PortExpander" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">PortExpander</code><span class="sig-paren">(</span><em>ports</em>, <em>static_ports=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#PortExpander"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.PortExpander" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.FixedPort" title="BondGraphTools.base.FixedPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.FixedPort</span></code></a></p>
 <p>Class for handling templated virtual ports; for example summing junctions.
 Additionally, attributes can be attached to the generated ports by via a
@@ -403,7 +524,7 @@ requested port</td>
 
 <dl class="class">
 <dt id="BondGraphTools.base.PortTemplate">
-<em class="property">class </em><code class="descclassname">BondGraphTools.base.</code><code class="descname">PortTemplate</code><span class="sig-paren">(</span><em>parent</em>, <em>index</em>, <em>data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#PortTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.PortTemplate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">PortTemplate</code><span class="sig-paren">(</span><em>parent</em>, <em>index</em>, <em>data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/base.html#PortTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.base.PortTemplate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Template class for generating new ports of a specific type.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -440,7 +561,7 @@ the port instances.</li>
 
 <span class="target" id="module-BondGraphTools.atomic"></span><dl class="class">
 <dt id="BondGraphTools.atomic.Component">
-<em class="property">class </em><code class="descclassname">BondGraphTools.atomic.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>metaclass</em>, <em>constitutive_relations</em>, <em>state_vars=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#Component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Component</code><span class="sig-paren">(</span><em>metaclass</em>, <em>constitutive_relations</em>, <em>state_vars=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#Component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.BondGraphBase</span></code></a>, <a class="reference internal" href="#BondGraphTools.base.FixedPort" title="BondGraphTools.base.FixedPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.FixedPort</span></code></a></p>
 <p>Atomic bond graph components are those defined by constitutive relations.</p>
 <dl class="attribute">
@@ -493,7 +614,7 @@ the port instances.</li>
 
 <dl class="class">
 <dt id="BondGraphTools.atomic.EqualEffort">
-<em class="property">class </em><code class="descclassname">BondGraphTools.atomic.</code><code class="descname">EqualEffort</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#EqualEffort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.EqualEffort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">EqualEffort</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#EqualEffort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.EqualEffort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.BondGraphBase</span></code></a>, <a class="reference internal" href="#BondGraphTools.base.PortExpander" title="BondGraphTools.base.PortExpander"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.PortExpander</span></code></a></p>
 <p>Implements 0-junction.</p>
 <dl class="attribute">
@@ -535,7 +656,7 @@ the port instances.</li>
 
 <dl class="class">
 <dt id="BondGraphTools.atomic.EqualFlow">
-<em class="property">class </em><code class="descclassname">BondGraphTools.atomic.</code><code class="descname">EqualFlow</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#EqualFlow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.EqualFlow" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">EqualFlow</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#EqualFlow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.EqualFlow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.BondGraphBase</span></code></a>, <a class="reference internal" href="#BondGraphTools.base.PortExpander" title="BondGraphTools.base.PortExpander"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.PortExpander</span></code></a></p>
 <dl class="attribute">
 <dt id="BondGraphTools.atomic.EqualFlow.basis_vectors">
@@ -583,7 +704,7 @@ requested port</td>
 
 <dl class="class">
 <dt id="BondGraphTools.atomic.SymmetricComponent">
-<em class="property">class </em><code class="descclassname">BondGraphTools.atomic.</code><code class="descname">SymmetricComponent</code><span class="sig-paren">(</span><em>metaclass</em>, <em>constitutive_relations</em>, <em>state_vars=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#SymmetricComponent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.SymmetricComponent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">SymmetricComponent</code><span class="sig-paren">(</span><em>metaclass</em>, <em>constitutive_relations</em>, <em>state_vars=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/atomic.html#SymmetricComponent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.atomic.SymmetricComponent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.atomic.Component" title="BondGraphTools.atomic.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.atomic.Component</span></code></a></p>
 <p>Refer to <cite>Component</cite>.</p>
 <p>Instances of this class are multi-port components which are able to have
@@ -598,7 +719,7 @@ connections made without specifying ports.</p>
 
 <span class="target" id="module-BondGraphTools.compound"></span><dl class="class">
 <dt id="BondGraphTools.compound.BondGraph">
-<em class="property">class </em><code class="descclassname">BondGraphTools.compound.</code><code class="descname">BondGraph</code><span class="sig-paren">(</span><em>name</em>, <em>components=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/compound.html#BondGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.compound.BondGraph" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">BondGraph</code><span class="sig-paren">(</span><em>name</em>, <em>components=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/compound.html#BondGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.compound.BondGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.base.BondGraphBase" title="BondGraphTools.base.BondGraphBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.BondGraphBase</span></code></a>, <a class="reference internal" href="#BondGraphTools.base.LabeledPortManager" title="BondGraphTools.base.LabeledPortManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.base.LabeledPortManager</span></code></a></p>
 <dl class="method">
 <dt id="BondGraphTools.compound.BondGraph.add">
@@ -722,7 +843,7 @@ Finally for the control variables we have:</p>
 
 <dl class="class">
 <dt id="BondGraphTools.compound.BondSet">
-<em class="property">class </em><code class="descclassname">BondGraphTools.compound.</code><code class="descname">BondSet</code><a class="reference internal" href="_modules/BondGraphTools/compound.html#BondSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.compound.BondSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">BondSet</code><a class="reference internal" href="_modules/BondGraphTools/compound.html#BondSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.compound.BondSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></p>
 <p>Container class for internal bonds.</p>
 <dl class="method">
@@ -747,13 +868,13 @@ Finally for the control variables we have:</p>
 <p>Algebraic Manipulations and model reduction</p>
 <dl class="exception">
 <dt id="BondGraphTools.algebra.NotInvertible">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.algebra.</code><code class="descname">NotInvertible</code><a class="reference internal" href="_modules/BondGraphTools/algebra.html#NotInvertible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.NotInvertible" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">NotInvertible</code><a class="reference internal" href="_modules/BondGraphTools/algebra.html#NotInvertible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.NotInvertible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.adjacency_to_dict">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">adjacency_to_dict</code><span class="sig-paren">(</span><em>nodes</em>, <em>edges</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#adjacency_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.adjacency_to_dict" title="Permalink to this definition">¶</a></dt>
+<code class="descname">adjacency_to_dict</code><span class="sig-paren">(</span><em>nodes</em>, <em>edges</em>, <em>offset=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#adjacency_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.adjacency_to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>matrix has 2*#bonds rows
 and 2*#ports columes
 so that MX = 0 and X^T = (e_1,f_1,e_2,f_2)</p>
@@ -770,7 +891,7 @@ so that MX = 0 and X^T = (e_1,f_1,e_2,f_2)</p>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.augmented_rref">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">augmented_rref</code><span class="sig-paren">(</span><em>matrix</em>, <em>augmented_rows=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#augmented_rref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.augmented_rref" title="Permalink to this definition">¶</a></dt>
+<code class="descname">augmented_rref</code><span class="sig-paren">(</span><em>matrix</em>, <em>augmented_rows=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#augmented_rref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.augmented_rref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the reduced row-echelon form (rref) of the given augmented
 matrix.</p>
 <p>That is for the augmented  [ A | B ], we fine the reduced row echelon form
@@ -793,7 +914,7 @@ the matrix.</li>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.extract_coefficients">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">extract_coefficients</code><span class="sig-paren">(</span><em>equation: sympy.core.expr.Expr</em>, <em>local_map: dict</em>, <em>global_coords: list</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/BondGraphTools/algebra.html#extract_coefficients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.extract_coefficients" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_coefficients</code><span class="sig-paren">(</span><em>equation: sympy.core.expr.Expr</em>, <em>local_map: dict</em>, <em>global_coords: list</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/BondGraphTools/algebra.html#extract_coefficients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.extract_coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -828,7 +949,7 @@ corresponding global coordinate. The result is <span class="math notranslate noh
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.flatten">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.flatten" title="Permalink to this definition">¶</a></dt>
+<code class="descname">flatten</code><span class="sig-paren">(</span><em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.flatten" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets a first visit iterator for the given tree.
 :param sequence: The iterable that is to be flattened</p>
 <p>Returns: iterable</p>
@@ -836,17 +957,17 @@ corresponding global coordinate. The result is <span class="math notranslate noh
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.get_relations_iterator">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">get_relations_iterator</code><span class="sig-paren">(</span><em>component</em>, <em>mappings</em>, <em>coordinates</em>, <em>io_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#get_relations_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.get_relations_iterator" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_relations_iterator</code><span class="sig-paren">(</span><em>component</em>, <em>mappings</em>, <em>coordinates</em>, <em>io_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#get_relations_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.get_relations_iterator" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.inverse_coord_maps">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">inverse_coord_maps</code><span class="sig-paren">(</span><em>tangent_space</em>, <em>port_space</em>, <em>control_space</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#inverse_coord_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.inverse_coord_maps" title="Permalink to this definition">¶</a></dt>
+<code class="descname">inverse_coord_maps</code><span class="sig-paren">(</span><em>tangent_space</em>, <em>port_space</em>, <em>control_space</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#inverse_coord_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.inverse_coord_maps" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.reduce_model">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">reduce_model</code><span class="sig-paren">(</span><em>linear_op</em>, <em>nonlinear_op</em>, <em>coordinates</em>, <em>size_tuple</em>, <em>control_vars=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#reduce_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.reduce_model" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reduce_model</code><span class="sig-paren">(</span><em>linear_op</em>, <em>nonlinear_op</em>, <em>coordinates</em>, <em>size_tuple</em>, <em>control_vars=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#reduce_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.reduce_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simplifies the given system equation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -874,7 +995,7 @@ G(x) = 0\]</div>
 
 <dl class="function">
 <dt id="BondGraphTools.algebra.smith_normal_form">
-<code class="descclassname">BondGraphTools.algebra.</code><code class="descname">smith_normal_form</code><span class="sig-paren">(</span><em>matrix</em>, <em>augment=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#smith_normal_form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.smith_normal_form" title="Permalink to this definition">¶</a></dt>
+<code class="descname">smith_normal_form</code><span class="sig-paren">(</span><em>matrix</em>, <em>augment=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/algebra.html#smith_normal_form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.algebra.smith_normal_form" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the Smith normal form of the given matrix.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -898,13 +1019,13 @@ P = _smith_normal_form(M) is a projection operator onto the nullspace of M</p>
 
 <span class="target" id="module-BondGraphTools.sim_tools"></span><dl class="exception">
 <dt id="BondGraphTools.sim_tools.SolverException">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.sim_tools.</code><code class="descname">SolverException</code><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#SolverException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.SolverException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">SolverException</code><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#SolverException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.SolverException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.sim_tools.simulate">
-<code class="descclassname">BondGraphTools.sim_tools.</code><code class="descname">simulate</code><span class="sig-paren">(</span><em>system</em>, <em>timespan</em>, <em>x0</em>, <em>dx0=None</em>, <em>dt=0.1</em>, <em>control_vars=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#simulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.simulate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">simulate</code><span class="sig-paren">(</span><em>system</em>, <em>timespan</em>, <em>x0</em>, <em>dx0=None</em>, <em>dt=0.1</em>, <em>control_vars=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#simulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.simulate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate the system dynamics.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -925,7 +1046,7 @@ P = _smith_normal_form(M) is a projection operator onto the nullspace of M</p>
 
 <dl class="function">
 <dt id="BondGraphTools.sim_tools.to_julia_function_string">
-<code class="descclassname">BondGraphTools.sim_tools.</code><code class="descname">to_julia_function_string</code><span class="sig-paren">(</span><em>model</em>, <em>control_vars=None</em>, <em>in_place=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#to_julia_function_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.to_julia_function_string" title="Permalink to this definition">¶</a></dt>
+<code class="descname">to_julia_function_string</code><span class="sig-paren">(</span><em>model</em>, <em>control_vars=None</em>, <em>in_place=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/sim_tools.html#to_julia_function_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.sim_tools.to_julia_function_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produces a Julia function string from the given model.</p>
 <p>We expect that that control_vars is a dict with the same keys,
 or list of the same size, as the model.control_vars</p>
@@ -976,7 +1097,7 @@ The structure must be:</p>
 </div>
 <dl class="function">
 <dt id="BondGraphTools.component_manager.find">
-<code class="descclassname">BondGraphTools.component_manager.</code><code class="descname">find</code><span class="sig-paren">(</span><em>component</em>, <em>restrict_to=None</em>, <em>find_all=False</em>, <em>ensure_unique=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.find" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find</code><span class="sig-paren">(</span><em>component</em>, <em>restrict_to=None</em>, <em>find_all=False</em>, <em>ensure_unique=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds the specified component.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1017,7 +1138,7 @@ assumption is violated.</li>
 
 <dl class="function">
 <dt id="BondGraphTools.component_manager.get_component">
-<code class="descclassname">BondGraphTools.component_manager.</code><code class="descname">get_component</code><span class="sig-paren">(</span><em>component</em>, <em>library='base'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_component" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_component</code><span class="sig-paren">(</span><em>component</em>, <em>library='base'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches the component data for the specified component
 :param component: The id of the specific component
 :param library: The id of the library to which the component belongs</p>
@@ -1033,7 +1154,7 @@ assumption is violated.</li>
 
 <dl class="function">
 <dt id="BondGraphTools.component_manager.get_components_list">
-<code class="descclassname">BondGraphTools.component_manager.</code><code class="descname">get_components_list</code><span class="sig-paren">(</span><em>library</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_components_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_components_list" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_components_list</code><span class="sig-paren">(</span><em>library</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_components_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_components_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches a list of components available in the given library.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1049,7 +1170,7 @@ assumption is violated.</li>
 
 <dl class="function">
 <dt id="BondGraphTools.component_manager.get_library_list">
-<code class="descclassname">BondGraphTools.component_manager.</code><code class="descname">get_library_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_library_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_library_list" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_library_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#get_library_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.get_library_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches a list of the libraries available for use.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1063,7 +1184,7 @@ assumption is violated.</li>
 
 <dl class="function">
 <dt id="BondGraphTools.component_manager.load_library">
-<code class="descclassname">BondGraphTools.component_manager.</code><code class="descname">load_library</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#load_library"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.load_library" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load_library</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/component_manager.html#load_library"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.component_manager.load_library" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the library specified by the filename and makes it available for use.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1085,7 +1206,7 @@ assumption is violated.</li>
 to file.</p>
 <dl class="function">
 <dt id="BondGraphTools.fileio.load">
-<code class="descclassname">BondGraphTools.fileio.</code><code class="descname">load</code><span class="sig-paren">(</span><em>file_name</em>, <em>model=None</em>, <em>as_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/fileio.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.fileio.load" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load</code><span class="sig-paren">(</span><em>file_name</em>, <em>model=None</em>, <em>as_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/fileio.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.fileio.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a model from file</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1100,7 +1221,7 @@ to file.</p>
 
 <dl class="function">
 <dt id="BondGraphTools.fileio.save">
-<code class="descclassname">BondGraphTools.fileio.</code><code class="descname">save</code><span class="sig-paren">(</span><em>model</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/fileio.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.fileio.save" title="Permalink to this definition">¶</a></dt>
+<code class="descname">save</code><span class="sig-paren">(</span><em>model</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/fileio.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.fileio.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves the model to the specified path</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1118,7 +1239,7 @@ to file.</p>
 
 <span class="target" id="module-BondGraphTools.config"></span><dl class="class">
 <dt id="BondGraphTools.config.Config">
-<em class="property">class </em><code class="descclassname">BondGraphTools.config.</code><code class="descname">Config</code><span class="sig-paren">(</span><em>julia_executable=None</em>, <em>python_executable=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.Config" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Config</code><span class="sig-paren">(</span><em>julia_executable=None</em>, <em>python_executable=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.Config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="BondGraphTools.config.Config.base">
@@ -1174,47 +1295,47 @@ to file.</p>
 
 <dl class="class">
 <dt id="BondGraphTools.config.WinConfig">
-<em class="property">class </em><code class="descclassname">BondGraphTools.config.</code><code class="descname">WinConfig</code><span class="sig-paren">(</span><em>julia_executable=None</em>, <em>python_executable=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#WinConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.WinConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">WinConfig</code><span class="sig-paren">(</span><em>julia_executable=None</em>, <em>python_executable=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#WinConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.WinConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.config.Config" title="BondGraphTools.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.config.Config</span></code></a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.config.as_str">
-<code class="descclassname">BondGraphTools.config.</code><code class="descname">as_str</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#as_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.as_str" title="Permalink to this definition">¶</a></dt>
+<code class="descname">as_str</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#as_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.as_str" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.config.check_julia">
-<code class="descclassname">BondGraphTools.config.</code><code class="descname">check_julia</code><span class="sig-paren">(</span><em>command</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#check_julia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.check_julia" title="Permalink to this definition">¶</a></dt>
+<code class="descname">check_julia</code><span class="sig-paren">(</span><em>command</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/config.html#check_julia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.config.check_julia" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <span class="target" id="module-BondGraphTools.exceptions"></span><dl class="exception">
 <dt id="BondGraphTools.exceptions.InvalidComponentException">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.exceptions.</code><code class="descname">InvalidComponentException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#InvalidComponentException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.InvalidComponentException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">InvalidComponentException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#InvalidComponentException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.InvalidComponentException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="BondGraphTools.exceptions.InvalidPortException">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.exceptions.</code><code class="descname">InvalidPortException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#InvalidPortException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.InvalidPortException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">InvalidPortException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#InvalidPortException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.InvalidPortException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="BondGraphTools.exceptions.ModelException">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.exceptions.</code><code class="descname">ModelException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#ModelException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.ModelException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">ModelException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#ModelException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.ModelException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="BondGraphTools.exceptions.ModelParsingError">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.exceptions.</code><code class="descname">ModelParsingError</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#ModelParsingError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.ModelParsingError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">ModelParsingError</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#ModelParsingError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.ModelParsingError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="BondGraphTools.exceptions.SymbolicException">
-<em class="property">exception </em><code class="descclassname">BondGraphTools.exceptions.</code><code class="descname">SymbolicException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#SymbolicException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.SymbolicException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descname">SymbolicException</code><a class="reference internal" href="_modules/BondGraphTools/exceptions.html#SymbolicException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.exceptions.SymbolicException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
@@ -1223,7 +1344,7 @@ to file.</p>
 <span id="addons"></span><h2>Addons<a class="headerlink" href="#module-BondGraphTools.reaction_builder" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="BondGraphTools.reaction_builder.Reaction_Network">
-<em class="property">class </em><code class="descclassname">BondGraphTools.reaction_builder.</code><code class="descname">Reaction_Network</code><span class="sig-paren">(</span><em>reactions=None</em>, <em>name=None</em>, <em>temperature=300</em>, <em>volume=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/reaction_builder.html#Reaction_Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.reaction_builder.Reaction_Network" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Reaction_Network</code><span class="sig-paren">(</span><em>reactions=None</em>, <em>name=None</em>, <em>temperature=300</em>, <em>volume=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/reaction_builder.html#Reaction_Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.reaction_builder.Reaction_Network" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="BondGraphTools.reaction_builder.Reaction_Network.add_chemostat">
@@ -1316,7 +1437,7 @@ added/removed. Left as a free paramter if None</li>
 <span class="target" id="module-BondGraphTools.view"></span><p>Todo: Remove except statement from matplotlib in Glyph.view</p>
 <dl class="class">
 <dt id="BondGraphTools.view.BondView">
-<em class="property">class </em><code class="descclassname">BondGraphTools.view.</code><code class="descname">BondView</code><span class="sig-paren">(</span><em>port_1</em>, <em>port_2</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#BondView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.BondView" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">BondView</code><span class="sig-paren">(</span><em>port_1</em>, <em>port_2</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#BondView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.BondView" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.lines.Line2D</span></code></p>
 <dl class="attribute">
 <dt id="BondGraphTools.view.BondView.R">
@@ -1342,7 +1463,7 @@ added/removed. Left as a free paramter if None</li>
 
 <dl class="class">
 <dt id="BondGraphTools.view.Glyph">
-<em class="property">class </em><code class="descclassname">BondGraphTools.view.</code><code class="descname">Glyph</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#Glyph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.Glyph" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Glyph</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#Glyph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.Glyph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="BondGraphTools.view.Glyph.add_port">
@@ -1363,7 +1484,7 @@ added/removed. Left as a free paramter if None</li>
 
 <dl class="class">
 <dt id="BondGraphTools.view.GraphLayout">
-<em class="property">class </em><code class="descclassname">BondGraphTools.view.</code><code class="descname">GraphLayout</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#GraphLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.GraphLayout" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">GraphLayout</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#GraphLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.GraphLayout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#BondGraphTools.view.Glyph" title="BondGraphTools.view.Glyph"><code class="xref py py-class docutils literal notranslate"><span class="pre">BondGraphTools.view.Glyph</span></code></a></p>
 <dl class="method">
 <dt id="BondGraphTools.view.GraphLayout.draw">
@@ -1374,7 +1495,7 @@ added/removed. Left as a free paramter if None</li>
 
 <dl class="class">
 <dt id="BondGraphTools.view.PortGlyph">
-<em class="property">class </em><code class="descclassname">BondGraphTools.view.</code><code class="descname">PortGlyph</code><span class="sig-paren">(</span><em>ax</em>, <em>string</em>, <em>pos</em>, <em>dir</em>, <em>text_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#PortGlyph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.PortGlyph" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">PortGlyph</code><span class="sig-paren">(</span><em>ax</em>, <em>string</em>, <em>pos</em>, <em>dir</em>, <em>text_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#PortGlyph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.PortGlyph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="attribute">
 <dt id="BondGraphTools.view.PortGlyph.pos">
@@ -1385,82 +1506,82 @@ added/removed. Left as a free paramter if None</li>
 
 <dl class="function">
 <dt id="BondGraphTools.view.draw">
-<code class="descclassname">BondGraphTools.view.</code><code class="descname">draw</code><span class="sig-paren">(</span><em>system</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.draw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">draw</code><span class="sig-paren">(</span><em>system</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.draw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="BondGraphTools.view.find_renderer">
-<code class="descclassname">BondGraphTools.view.</code><code class="descname">find_renderer</code><span class="sig-paren">(</span><em>fig</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#find_renderer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.find_renderer" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find_renderer</code><span class="sig-paren">(</span><em>fig</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BondGraphTools/view.html#find_renderer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BondGraphTools.view.find_renderer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">API reference</a><ul>
-<li><a class="reference internal" href="#module-BondGraphTools">Module contents</a></li>
-<li><a class="reference internal" href="#module-BondGraphTools.actions">Core Functionality</a></li>
-<li><a class="reference internal" href="#module-BondGraphTools.algebra">Analysis and Simulation</a></li>
-<li><a class="reference internal" href="#module-BondGraphTools.component_manager">File IO and Helper Functions</a><ul>
-<li><a class="reference internal" href="#component-library-manager">Component Library Manager</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-BondGraphTools.reaction_builder">Addons</a></li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="discussion.html" class="btn btn-neutral" title="Discussion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="discussion.html"
-                        title="previous chapter">Discussion</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/api.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Peter Cudmore
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="discussion.html" title="Discussion"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">BondGraphTools 0.3.3 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Peter Cudmore.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.3.3',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

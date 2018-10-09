@@ -12,7 +12,7 @@ setuptools.setup(
     description="Bond Graph Modelling Toolkit",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/peter-cudmore/BondGraph",
+    url="https://github.com/BondGraphTools/BondGraphTools",
     classifiers=(
         "Intended Audience :: Science/Research",
         "Intended Audience :: End Users/Desktop",
@@ -27,5 +27,9 @@ setuptools.setup(
     keywords="modelling control engineering",
     packages=['BondGraphTools'],
     package_dir={'BondGraphTools': 'BondGraphTools'},
-    package_data={'BondGraphTools': ['components/*.json']}
+    package_data={'BondGraphTools': ['components/*.json']},
+    extras_require={
+        'docs': [
+            'sphinx >= 1.7',
+            'sphinx_rtd_theme']}
 )

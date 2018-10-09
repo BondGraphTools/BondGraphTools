@@ -15,12 +15,12 @@ from .atomic import EqualFlow
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "disconnect",
-    "connect",
-    "swap",
     "new",
-    "expose",
     "add",
+    "swap",
+    "connect",
+    "disconnect",
+    "expose",
     "remove",
     "set_param"
 ]
