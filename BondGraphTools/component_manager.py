@@ -1,4 +1,5 @@
-"""
+"""Handles the component library interface
+
 Component Library Manager
 =========================
 

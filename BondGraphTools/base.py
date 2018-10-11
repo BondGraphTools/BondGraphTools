@@ -1,6 +1,4 @@
-"""
-Bond Graph Model base files.
-"""
+"""Base class interface definitions"""
 
 import logging
 from collections import namedtuple

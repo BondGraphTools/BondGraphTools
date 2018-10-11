@@ -27,9 +27,18 @@ __all__ = [
 
 def disconnect(target, other):
     """
+    Disconnects the flow of energy between the two components or ports.
+    If there is no connection, this method does nothing.
+
     Args:
-        target: Port or BondGraphBase
-        other: BondGraphComponent or (Port or tuple)
+        target (Port, BondGraphBase):
+        other (Port, BondGraphBase):
+
+    Raises:
+        InvalidComponentException
+
+    See Also:
+        :func:`BondGraphTools.connect`
     """
     if isinstance(target, BondGraphBase):
         model = target.parent
@@ -69,7 +78,7 @@ def disconnect(target, other):
 
 def connect(source, destination):
     """
-    Connects two components or ports with a bond.
+    Connects two components or ports..
     We assume that either the source and/or destination is or has a free
     port.
 
@@ -79,6 +88,9 @@ def connect(source, destination):
 
     Raises:
         InvalidPortException, InvalidComponentException
+
+    See Also:
+        :func:`BondGraphTools.disconnect`
     """
 
     tail = _find_port(source, is_tail=True)
@@ -134,6 +146,9 @@ def swap(old_component, new_component):
          model.
         new_component: The substitute component which must not be in the
          model
+
+    Raises:
+        InvalidPortException, InvalidComponentException
     """
 
     # TODO: More validation required

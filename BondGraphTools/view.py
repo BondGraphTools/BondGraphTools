@@ -1,20 +1,18 @@
-"""
-Todo: Remove except statement from matplotlib in Glyph.view
+"""Tools for visualising bond graph.
+
+This module contains temporary tools for producing visualizations of
+bond graph network topologies.
 
 """
 
 import logging
-from itertools import permutations
 
 import numpy as np
-#from matplotlib.offsetbox import AnchoredText
 from matplotlib.text import Text, Annotation
 from matplotlib.lines import Line2D
-#from matplotlib.patches import Circle, Rectangle
 import matplotlib.pyplot as plt
 
 from scipy.sparse import dok_matrix
-from scipy.sparse.csgraph import floyd_warshall
 
 import networkx as nx
 
@@ -24,8 +22,19 @@ logger = logging.getLogger(__name__)
 FONT = 14
 FONT_SM = 10
 
+__all__ = ["draw"]
+
 
 def draw(system):
+    """
+    Produces a network layout of the system.
+
+    Args:
+        system: The system to visualise
+
+    Returns:
+        :obj:`matplotlib.Plot`
+    """
     fig = plt.figure(
         figsize=(12, 9), dpi=80
     )
@@ -51,108 +60,15 @@ def _build_graph(system):
         ) from ex
 
     return graph.tocsr(copy=False)
-#
-#
-# def _metro_layout(graph):
-#
-#     n, _ = graph.shape
-#
-#     D = floyd_warshall(graph, directed=False)
-#
-#     ecen = D.max(1)
-#     eta_0 = int(ecen.min())
-#     level_struct = {int(eta): np.where(ecen == eta)[0].tolist() for eta in
-#                     np.unique(ecen)}
-#     z = np.zeros((n, 1), dtype=np.complex_)
-#     z, R, N = _initialise(z, eta_0, level_struct[eta_0], D)
-#
-#     for k, eta in enumerate(range(eta_0, max(level_struct.keys()))):
-#         R += 1
-#         z, N = _optimise_layer(z, N, R, eta, level_struct, graph, D)
-#
-#     Z = z - z.T
-#     zmin = np.abs(Z[Z != 0]).min()
-#
-#     return [(round(zp.real / zmin), round(zp.imag / zmin)) for zp in z.flatten()]
-#
+
 
 def _networkx_layout(graph):
-
     nx_graph = nx.Graph(graph)
     #layout = nx.spring_layout(nx_graph, k=1)
     layout = nx.kamada_kawai_layout(nx_graph, scale=20)
     pos = [(pair[0],pair[1]) for pair in list(layout.values())]
 
     return pos
-
-#
-#
-# def _permute(z, N, r, indicies):
-#     i_len = len(indicies)
-#     for idx in permutations(range(N), i_len):
-#         zp = z.copy()
-#         zp[indicies, 0] = [r * np.exp(w * 2 * np.pi * np.complex(0, 1) / N) for
-#                            w in idx]
-#         yield zp
-#
-#
-# def _initialise(z, eta_0, level_set, d):
-#     if len(level_set) == 1:
-#         return z, 0, 0
-#     elif len(level_set) < 4:
-#         R_0 = 0.5
-#     else:
-#         R_0 = 1
-#
-#     N_0 = int(2 * np.ceil(len(level_set) / 2))
-#     f = lambda x: _init_obj(x, level_set, d, eta_0)
-#
-#     for zp in _permute(z, N_0, R_0, level_set):
-#         phi = f(zp)
-#         try:
-#             if phi_min > phi:
-#                 phi_min = phi
-#                 z_min = zp
-#         except NameError:
-#             z_min = zp
-#             phi_min = phi
-#
-#     return z_min, R_0, N_0
-#
-#
-# def _init_obj(z, level_set, d, eta_0):
-#     phi = sum(
-#         [(np.abs(z[i] - z[j]) / d[i, j] - 1) ** 2 for i in level_set for j in
-#          level_set if i != j])
-#     return phi
-#
-#
-# def _optimise_layer(z, N_eta, R, eta, level_struct, adj, dist):
-#     N = int(max(N_eta, 2 * np.ceil(len(level_struct[eta + 1]) / 2)))
-#
-#     # f = lambda x: objective(x, eta, level_struct, adj)
-#     f = lambda x: _objective_f(x, eta, level_struct, dist)
-#     z_min = z
-#     for zp in _permute(z, N, R, level_struct[eta + 1]):
-#         phi = f(zp)
-#         try:
-#             if phi_min > phi:
-#                 z_min = zp
-#                 phi_min = phi
-#         except NameError:
-#             z_min = zp
-#             phi_min = phi
-#
-#     return z_min, N
-#
-#
-# def _objective_f(z, eta, level_struct, d):
-#     target_set = [i for i in level_struct[eta] + level_struct[eta + 1]]
-#
-#     phi = sum(
-#         [(np.abs(z[i] - z[j]) / d[i, j] - 1) ** 2 for i in level_struct[eta + 1]
-#          for j in target_set if i != j])
-#     return phi
 
 
 class PortGlyph:
@@ -271,10 +187,6 @@ class Glyph:
         self.ports[dir] = port
 
         return port
-
-#
-# class ZeroGlyph(Glyph):
-#     pass
 
 
 class BondView(Line2D):

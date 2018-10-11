@@ -1,3 +1,8 @@
+"""Class definition and helper functions for BondGraph model
+
+"""
+
+
 import logging
 import sympy as sp
 

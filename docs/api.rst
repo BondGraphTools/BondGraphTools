@@ -59,11 +59,6 @@ File IO and Helper Functions
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: BondGraphTools.config
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: BondGraphTools.exceptions
     :members:
     :undoc-members:

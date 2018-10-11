@@ -1,3 +1,6 @@
+"""Tools for running mdoel simulations"""
+
+
 import logging
 
 import numpy as np
@@ -5,7 +8,7 @@ import sympy as sp
 from sympy.core import SympifyError
 
 from .config import config
-from .exceptions import ModelException
+from .exceptions import ModelException, SolverException
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,8 @@ def simulate(system,
         initial list(float):
         control_vars (str,list(str), dict(str)):
 
-    Returns: t, X
+    Returns:
+        t, X
 
     """
 
@@ -62,20 +66,6 @@ def simulate(system,
     t = np.transpose(sol.t)
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
-
-
-# class Simulation(object):
-#     def __init__(self, model,
-#                  timespan=None,
-#                  x0=None,
-#                  dx_0=None,
-#                  control_vars=None):
-#
-#         self.sol = None
-#
-#     def run(self, x0, timespan):
-#         pass
-
 
 def to_julia_function_string(model, control_vars=None, in_place=False):
     """
@@ -192,7 +182,3 @@ def _generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
             dcv_strings.append(None)
 
     return cv_strings, dcv_strings
-
-
-class SolverException(Exception):
-    pass

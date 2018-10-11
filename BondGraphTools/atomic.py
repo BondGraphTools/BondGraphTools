@@ -1,3 +1,5 @@
+"""Base classes for the basic components used to build models"""
+
 
 from .base import *
 from .exceptions import *

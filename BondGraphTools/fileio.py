@@ -2,13 +2,10 @@
 
 This module provides the basic IO functionality such as saving and loading
 to file.
-
 """
 # todo:
 #    As the file format matures, we probably want to move to a object
 #    oriented loader that tracks the (as yet undefined) schema.
-
-
 
 
 import logging
@@ -134,8 +131,11 @@ def load(file_name, model=None, as_name=None):
     Args:
         file_name (str or Path): The file to load.
 
-    Returns: An instance of `BondGraph`
+    Returns:
+        An instance of `BondGraph`
 
+    Raises:
+        `NotImplementedError` for incorrect file version.
     """
     if isinstance(file_name, pathlib.Path):
         file_name = str(file_name)
