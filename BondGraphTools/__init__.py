@@ -52,7 +52,6 @@ Bugs
 Please report any bugs `here <https://github.com/BondGraphTools/BondGraphTools/issues>`_,
 or fork the repository and submit a pull request.
 
-
 License
 -------
 Released under the Apache 2.0 License::

@@ -8,12 +8,9 @@ bond graph network topologies.
 import logging
 
 import numpy as np
-from matplotlib.text import Text, Annotation
-from matplotlib.lines import Line2D
-import matplotlib.pyplot as plt
 
 from scipy.sparse import dok_matrix
-
+from matplotlib.lines import Line2D
 import networkx as nx
 
 from .exceptions import InvalidComponentException
@@ -35,6 +32,8 @@ def draw(system):
     Returns:
         :obj:`matplotlib.Plot`
     """
+    import matplotlib.pyplot as plt
+
     fig = plt.figure(
         figsize=(12, 9), dpi=80
     )
@@ -74,6 +73,7 @@ def _networkx_layout(graph):
 class PortGlyph:
     def __init__(self, ax, string, pos, dir, text_dict):
 
+        from matplotlib.text import Annotation
         self.width = 0.1
         self.height = 0.1
 
@@ -129,6 +129,7 @@ class Glyph:
     @axes.setter
     def axes(self, ax):
         self._axes = ax
+        from matplotlib.text import Text
         self._text = Text(
             self.x,
             self.y,
