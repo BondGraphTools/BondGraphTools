@@ -53,7 +53,10 @@ class Config:
         rebuild = False
 
         if not julia_executable:
-            self.julia_executable = self.find_julia()
+            try:
+                self.julia_executable = self.find_julia()
+            except FileNotFoundError:
+                self.julia_executable = None # hack for rtd build
             new_config = True
         else:
             self.julia_executable = pathlib.Path(julia_executable)
