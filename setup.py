@@ -1,12 +1,12 @@
 import setuptools
-from BondGraphTools.config import VERSION
+from BondGraphTools.version import __version__ as version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="BondGraphTools",
-    version=VERSION,
+    version=version,
     author="Pete Cudmore",
     author_email="peter.cudmore@uqconnect.edu.au",
     description="Bond Graph Modelling Toolkit",

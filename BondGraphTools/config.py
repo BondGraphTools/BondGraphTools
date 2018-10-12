@@ -14,10 +14,9 @@ import sys
 import os
 import logging
 from subprocess import Popen, PIPE, run
+
+from .version import __version__ as VERSION
 logger = logging.getLogger(__name__)
-
-VERSION = "0.3.3"
-
 
 
 def _as_str(path):
@@ -53,10 +52,7 @@ class Config:
         rebuild = False
 
         if not julia_executable:
-            try:
-                self.julia_executable = self.find_julia()
-            except FileNotFoundError:
-                self.julia_executable = None # hack for rtd build
+            self.julia_executable = self.find_julia()
             new_config = True
         else:
             self.julia_executable = pathlib.Path(julia_executable)
