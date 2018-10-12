@@ -7,7 +7,6 @@ import numpy as np
 import sympy as sp
 from sympy.core import SympifyError
 
-from .config import config
 from .exceptions import ModelException, SolverException
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ def simulate(system,
         t, X
 
     """
-
+    from .config import config
     de = config.de
     j = config.julia
     if system.ports:
