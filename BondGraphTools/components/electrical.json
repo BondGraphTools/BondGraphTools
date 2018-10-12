@@ -4,7 +4,7 @@
   "components": {
     "Di": {
       "description":"Diode",
-      "metaclass":"R",
+      "metamodel":"R",
       "class": "Component",
       "ports":{
         "0":null
@@ -29,7 +29,7 @@
     "BJT":{
       "description": "Bipolar Junction Transistor",
       "class": "Component",
-      "metaclass":"R",
+      "metamodel":"R",
       "ports":{
         "0": {"description": "Collector"},
         "1": {"description": "Base"},

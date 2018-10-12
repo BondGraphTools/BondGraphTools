@@ -255,20 +255,20 @@ class GraphLayout(Glyph):
             y_max = max(y, y_max)
 
             component.view.pos = (x,y)
-            if component.metaclass not in {'0','1'}:
+            if component.metamodel not in {'0','1'}:
                 try:
                     component.view.string = "\mathbf{{{t}}}: {n}".format(
-                        t=component.metaclass, n=component.name)
+                        t=component.metamodel, n=component.name)
                 except:
                     component.view.string = "{t}: {n}".format(
-                        t=component.metaclass, n=component.name)
+                        t=component.metamodel, n=component.name)
             else:
                 try:
                     component.view.string = "\mathbf{{{t}}}".format(
-                        t=component.metaclass)
+                        t=component.metamodel)
                 except:
                     component.view.string = "{t}".format(
-                        t=component.metaclass, n=component.name)
+                        t=component.metamodel, n=component.name)
             component.view.axes = ax
 
         for tail, head in self._node.bonds:

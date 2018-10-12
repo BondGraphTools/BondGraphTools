@@ -1,7 +1,6 @@
-""" Methods for manipulating models.
-
-This module provides functions for the actions one wishes to perform on
-models bond graph models.
+"""This module provides functions for the actions one wishes to perform on
+models bond graph models such as creating new models and components,
+connecting parts together, and setting parameters.
 """
 
 import copy
@@ -9,7 +8,7 @@ import logging
 
 from .component_manager import get_component, base_id
 from .exceptions import *
-from .base import BondGraphBase, Bond, Port, FixedPort
+from .base import BondGraphBase, Bond, Port, PortManager
 from .atomic import EqualFlow
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,7 @@ def disconnect(target, other):
         InvalidComponentException
 
     See Also:
-        :func:`BondGraphTools.connect`
+        :func:`connect`
     """
     if isinstance(target, BondGraphBase):
         model = target.parent
@@ -90,7 +89,7 @@ def connect(source, destination):
         InvalidPortException, InvalidComponentException
 
     See Also:
-        :func:`BondGraphTools.disconnect`
+        :func:`disconnect`
     """
 
     tail = _find_port(source, is_tail=True)
@@ -161,7 +160,7 @@ def swap(old_component, new_component):
         num_bonds = len({b for b in old_comp.parent.bonds if old_comp is
                          b.head.component or old_comp is b.tail.component})
 
-        if isinstance(new_comp, FixedPort) and len(new_comp.ports) < num_bonds:
+        if isinstance(new_comp, PortManager) and len(new_comp.ports) < num_bonds:
             return False
 
         return True
@@ -221,6 +220,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
 
     Returns: instance of :obj:`BondGraph`
 
+    Raises: NotImplementedError
     """
 
     if not component:
@@ -295,21 +295,22 @@ def expose(component, label=None):
     Exposes the component as port on the parent.
 
     If the target component is not a SS component, it is replaced with a new
-    ss component.
-    A new external port is added to the parent model, and
+    SS component.
+    A new external port is added to the parent model, and connected to the
+    SS component.
 
     Args:
-        component:
-        label:
+        component: The component to expose.
+        label: The label to assign to the external port
 
-    Raises: `InvalidComponent Exception`
+    Raises: InvalidComponentException
     """
     model = component.parent
     if not model:
         raise InvalidComponentException(
             f"Component {component} is not inside anything"
         )
-    # fix me with metaclasses or something trickier
+    # fix me with metamodeles or something trickier
     if component.__component__ is not "SS":
         ss = new("SS",  name=component.name)
         try:
@@ -330,21 +331,13 @@ def expose(component, label=None):
 
 def add(model, *args):
     """
-    Add the specified components to the model
-
-    Args:
-        model (`BondGraph`): The working model
-        *args: A component, or a list of components
+    Add the specified component(s) to the model
     """
     model.add(*args)
 
 
 def remove(model, component):
-    """
-    Removes the specified components from the Bond Graph model.
-    Args:
-        model (`BondGraph`):
-        component:
+    """Removes the specified components from the Bond Graph model.
     """
     model.remove(component)
 

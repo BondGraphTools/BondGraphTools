@@ -5,7 +5,7 @@
     "Ce":{
       "description":"Concentration of Chemical Species",
       "class": "Component",
-      "metaclass":"C",
+      "metamodel":"C",
       "ports":{
         "0":null
       },
@@ -25,7 +25,7 @@
     "Re":{
       "description": "Biochemical Reaction",
       "class": "SymmetricComponent",
-      "metaclass":"R",
+      "metamodel":"R",
       "ports":{
         "0":null,
         "1":null
@@ -43,7 +43,7 @@
   "Y":{
     "description": "Stoichiometry",
     "class": "MixedPort",
-    "metaclass": "TF",
+    "metamodel": "TF",
     "ports":{
       "0": {
         "description":"Affinity",

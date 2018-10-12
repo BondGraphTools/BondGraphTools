@@ -1,8 +1,4 @@
-"""Handles the component library interface
-
-Component Library Manager
-=========================
-
+"""
 This module takes care of the loading and management of component libraries.
 This library will automatically load all factory libraries upon import.
 Additionally libraries can be added via :func:`load_library`.

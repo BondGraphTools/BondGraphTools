@@ -8,7 +8,7 @@ def test_make_diode():
 
     d = bgt.new("Di", library="elec", value={"Is": 5*10**-6})
     # todo: fix this
-    # assert d.metaclass == "Di"
+    # assert d.metamodel == "Di"
     assert len(d.ports) == 1
     assert d.params["Is"]["value"] == 5*10**-6
 

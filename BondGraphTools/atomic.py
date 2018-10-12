@@ -1,4 +1,6 @@
-"""Base classes for the basic components used to build models"""
+"""This module contains class definitions for atomic components; those which
+cannot be decomposed into other components.
+"""
 
 
 from .base import *
@@ -7,18 +9,18 @@ from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
-class Component(BondGraphBase, FixedPort):
+class Component(BondGraphBase, PortManager):
     """
     Atomic bond graph components are those defined by constitutive relations.
     """
 
-    def __init__(self, metaclass, constitutive_relations,
+    def __init__(self, metamodel, constitutive_relations,
                  state_vars=None, params=None, **kwargs):
 
-        self._metaclass = metaclass
+        self._metamodel = metamodel
         ports = kwargs.pop("ports")
         super().__init__(**kwargs)
-        FixedPort.__init__(self, ports)
+        PortManager.__init__(self, ports)
         self._state_vars = state_vars
 
         self._params = params
@@ -34,8 +36,8 @@ class Component(BondGraphBase, FixedPort):
         return f"{self.__library__}/{self.__component__}"
 
     @property
-    def metaclass(self):
-        return self._metaclass
+    def metamodel(self):
+        return self._metamodel
 
     @property
     def control_vars(self):
@@ -99,7 +101,7 @@ class Component(BondGraphBase, FixedPort):
         #         raise ModelParsingError(
         #             "Error parsing model %s: "
         #             "state variable %s must be either p or q",
-        #             self.metaclass, var
+        #             self.metamodel, var
         #         )
         #
         #     models.append(sp.sympify(f"d{var} - {ef_var}"))
@@ -257,14 +259,14 @@ class EqualEffort(BondGraphBase, PortExpander):
     @property
     def constitutive_relations(self):
 
-        vars = list(self._port_vectors())
-        e_0, f_0 = vars.pop()
+        vects = list(self._port_vectors())
+        e_0, f_0 = vects.pop()
         partial_sum = f_0
 
         relations = []
 
-        while vars:
-            e_i, f_i = vars.pop()
+        while vects:
+            e_i, f_i = vects.pop()
             relations.append(
                 e_i - e_0
             )
@@ -273,6 +275,7 @@ class EqualEffort(BondGraphBase, PortExpander):
         relations.append(partial_sum)
 
         return relations
+
 
 class EqualFlow(BondGraphBase, PortExpander):
 

@@ -10,23 +10,25 @@ from math import log
 from .actions import connect, disconnect, new
 logger = logging.getLogger(__name__)
 
+__all__ = ["Reaction_Network"]
+
 R = 8.3144598
 """Gas constant, J/Mo/K """
-
 
 LIBRARY = "BioChem"
 """Component Library ID"""
 
-class Reaction_Network(object):
-    def __init__(self, reactions=None, name=None, temperature=300, volume=1):
-        """
-        Args:
-            reactions:
-            name:
-            temperature: Temperature in Kelvin (Default 300K, or approx 27c)
-            volume:
 
-        """
+class Reaction_Network(object):
+    """
+
+    Args:
+        reactions:
+        name:
+        temperature: Temperature in Kelvin (Default 300K, or approx 27c)
+        volume:
+    """
+    def __init__(self, reactions=None, name=None, temperature=300, volume=1):
 
         self._reactions = {}
         self._flowstats = {}

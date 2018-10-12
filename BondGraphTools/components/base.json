@@ -4,18 +4,18 @@
   "components": {
     "0": {
       "description": "Equal Effort Node",
-      "metaclass": "0",
+      "metamodel": "0",
       "class": "EqualEffort"
     },
     "1": {
       "description": "Equal Flow Node",
       "class": "EqualFlow",
-      "metaclass":"1"
+      "metamodel":"1"
     },
     "R": {
       "description": "Generalised Linear Resistor",
       "class": "Component",
-      "metaclass":"R",
+      "metamodel":"R",
       "ports": {
         "0": null
       },
@@ -36,7 +36,7 @@
     "C": {
       "description": "Generalised Linear Capacitor",
       "class": "Component",
-      "metaclass":"C",
+      "metamodel":"C",
       "ports": {
         "0": null
       },
@@ -61,7 +61,7 @@
     "I": {
       "description": "Generalised Linear Inductor",
       "class": "Component",
-      "metaclass": "I",
+      "metamodel": "I",
       "ports": {
         "0": null
       },
@@ -86,7 +86,7 @@
     "Se": {
       "description": "Effort Source",
       "class": "Component",
-      "metaclass":"SS",
+      "metamodel":"SS",
       "ports": {
         "0": null
       },
@@ -100,7 +100,7 @@
     "Sf": {
       "description": "Flow Source",
       "class": "Component",
-      "metaclass":"SS",
+      "metamodel":"SS",
       "ports": {
         "0": null
       },
@@ -114,7 +114,7 @@
     "TF": {
       "description": "Linear Transformer",
       "class": "Component",
-      "metaclass":"TF",
+      "metamodel":"TF",
       "ports": {
         "0": {
           "description": "Primary"
@@ -137,7 +137,7 @@
     "GY": {
       "description": "Linear Gyrator",
       "class": "Component",
-      "metaclass":"GY",
+      "metamodel":"GY",
       "ports": {
         "0": {
           "description": "Primary"
@@ -160,7 +160,7 @@
     "SS":{
       "description": "Source Sensor",
       "class": "Component",
-      "metaclass":"SS",
+      "metamodel":"SS",
       "ports": {
         "0": null
       },

@@ -1,7 +1,6 @@
 """
 BondGraphTools
 ==============
-
 BondGraphTools is a python library for systems modelling and control using
 bond graphs.
 

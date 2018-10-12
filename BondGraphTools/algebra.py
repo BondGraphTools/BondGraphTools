@@ -1,4 +1,6 @@
-"""Algebraic Manipulations and model reduction"""
+"""
+This module contains methods for performing symbolic model reduction.
+"""
 
 
 import logging
@@ -8,10 +10,13 @@ from .exceptions import SymbolicException
 
 logger = logging.getLogger(__name__)
 
-
-class NotInvertible(Exception):
-    pass
-
+__all__ = [
+    "extract_coefficients",
+    "reduce_model",
+    "flatten",
+    "smith_normal_form",
+    "augmented_rref"
+]
 
 def extract_coefficients(equation: sympy.Expr,
                          local_map: dict,

@@ -77,6 +77,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
     Args:
         model:
         control_vars:
+        in_place:
 
     Returns:
         (string, list)

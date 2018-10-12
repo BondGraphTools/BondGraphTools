@@ -27,4 +27,3 @@ class SymbolicException(Exception):
 
 class SolverException(Exception):
     """Exception for issues running numerical solving."""
-

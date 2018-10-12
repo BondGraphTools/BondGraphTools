@@ -1,4 +1,6 @@
-"""Base class interface definitions"""
+"""This module contains the base classes for bond graph models, and the
+interfaces for connecting models together.
+"""
 
 import logging
 from collections import namedtuple
@@ -8,29 +10,39 @@ from .exceptions import *
 logger = logging.getLogger(__name__)
 
 
-
 class BondGraphBase:
+    """
+    Base class definition for all bond graphs.
+
+    Attributes:
+        parent:
+        name:
+        metamodel:
+        template:
+        uri:
+        root:
+        basis_vectors:
+
+    Args:
+        name: Assumed to be unique
+        parent:
+        metadata (dict):
+    """
+
     def __init__(self,
                  name=None,
                  parent=None,
-                 metaclass=None, **kwargs):
-        """
-        Base class definition for all bond graphs.
-
-        Args:
-            name: Assumed to be unique
-            metadata (dict):
-        """
-
+                 metamodel=None,
+                 **kwargs):
         # TODO: This is a dirty hack
         # Job for meta classes maybe?
-        if not metaclass:
-            self.__metaclass = "BG"
+        if not metamodel:
+            self.__metamodel = "BG"
         else:
-            self.__metaclass = metaclass
+            self.__metamodel = metamodel
 
         if not name:
-            self.name = f"{self.metaclass}" \
+            self.name = f"{self.metamodel}" \
                         f"{self.__class__.instances}"
         else:
             self.name = name
@@ -39,7 +51,7 @@ class BondGraphBase:
         self.view = None
 
     def __repr__(self):
-        return f"{self.metaclass}: {self.name}"
+        return f"{self.metamodel}: {self.name}"
 
     def __new__(cls, *args, **kwargs):
         if "instances" not in cls.__dict__:
@@ -53,8 +65,8 @@ class BondGraphBase:
         self.instances -= 1
 
     @property
-    def metaclass(self):
-        return self.__metaclass
+    def metamodel(self):
+        return self.__metamodel
 
     @property
     def template(self):
@@ -100,7 +112,7 @@ class Port(object):
 
     def __init__(self, component, index):
         self.component = component
-        """(`FixedPort`) The component that this port is attached to"""
+        """(`PortManager`) The component that this port is attached to"""
         self.index = index
         """(int) The numberical index of this port"""
         self.is_connected = False
@@ -144,7 +156,7 @@ class Port(object):
                 pass
         return False
 
-class FixedPort:
+class PortManager:
     """
     This class provides methods for interfacing with static ports on
     components.
@@ -203,7 +215,7 @@ class FixedPort:
         """A dictionary of the active ports"""
         return self._ports
 
-class PortExpander(FixedPort):
+class PortExpander(PortManager):
     """
     Class for handling templated virtual ports; for example summing junctions.
     Additionally, attributes can be attached to the generated ports by via a
@@ -214,7 +226,7 @@ class PortExpander(FixedPort):
          dictionary of attributes and values (maybe be None)
 
     Keyword Args:
-        static_ports: Ports to be created as per `FixedPort`
+        static_ports: Ports to be created as per `PortManager`
 
     See Also: `PortTemplate`
     """
@@ -358,7 +370,7 @@ class LabeledPort(Port):
         else:
             return super().__eq__(self, other)
 
-class LabeledPortManager(FixedPort):
+class LabeledPortManager(PortManager):
 
     def __init__(self, ports=None):
         if ports:
