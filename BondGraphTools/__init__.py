@@ -61,12 +61,6 @@ Released under the Apache 2.0 License::
     Peter Cudmore <peter.cudmore@uqconnect.edu.au>
 """
 
-
-# Release Information
-from .config import VERSION
-__version__ = VERSION
-
-
 from .actions import *
 from .fileio import save, load
 from .compound import BondGraph
