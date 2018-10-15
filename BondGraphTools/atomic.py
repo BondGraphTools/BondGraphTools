@@ -128,7 +128,7 @@ class Component(BondGraphBase, PortManager):
             except KeyError:
                 pass
             except ValueError as ex:
-                raise ValueError(f"{self}.{oaram}: {ex.args}")
+                raise ValueError(f"({self}, {param}): {ex.args}")
 
         return [model.subs(subs) for model in models]
 
