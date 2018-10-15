@@ -1,3 +1,14 @@
+v0.3.4 Changelog 15.10.2018
+
+Changes
+^^^^^^^
+- Components and Bonds are now order aware
+
+Fixes
+^^^^^
+- Bug fixed in the handling of invalid parameters
+
+
 v0.3.3 Changelog 25.09.2018
 ===========================
 
@@ -21,7 +32,7 @@ Changes
 - 'input' and 'output' ports on the 1 junction changed to 'non-inverting and
 'inverting' respectively
 
-Fixed
+Fixes
 ^^^^^
 - 1 junction now corresponds to the existing literature
 - Drawing algorithm now has half-arrow heads
