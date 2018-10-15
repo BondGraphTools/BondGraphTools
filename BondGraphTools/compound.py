@@ -1,12 +1,9 @@
 """Class definition and helper functions for BondGraph model
 
 """
-
-
 import logging
 
 from orderedset import OrderedSet
-import sympy as sp
 
 
 from .base import *
