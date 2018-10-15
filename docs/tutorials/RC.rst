@@ -37,15 +37,13 @@ Draw the model to make sure everything is wired up::
     bgt.draw(model)
 
 which produces a sketch of the network topology.
-.. image:: images/RC_1.svg
-    align: center
 
-In order to know
-
-
+.. figure:: images/RC_1.svg
+    :scale: 50 %
+    :align: center
 
 
-
+In order to know::
 
     timespan = [0, 5]
     x0 = [1]
@@ -53,7 +51,9 @@ In order to know
     from matplotlib.pyplot import plot
     fig = plot(t,x)
 
-
+.. figure:: images/RC_2.svg
+    :scale: 50 %
+    :align: center
 
 Part 2: Control
 ---------------
@@ -64,22 +64,53 @@ Add Current source::
     add(model, Sf)
     connect(Sf, KCL)
     draw(model)
+
+.. figure:: images/RC_3.svg
+    :scale: 50 %
+    :align: center
+
+Equations:
     model.control_vars
     model.constitutive_relations
+
+Simulating with constant effort::
+
     t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':2})
     plot(t,x)
+
+.. figure:: images/RC_4.svg
+    :scale: 50 %
+    :align: center
+
+
+Simulating with time varying forcing::
+
     t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':'sin(2*t)'})
     plot(t,x)
+
+
+.. figure:: images/RC_5.svg
+    :scale: 50 %
+    :align: center
+
+With a step function::
+
     step_fn = 't < 1 ? 1 : 0' # if t < 0 then 1 else 0
     t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':step_fn})
     plot(t,x)
 
+.. figure:: images/RC_6.svg
+    :scale: 50 %
+    :align: center
+
+Inside a loop for different harmonics::
 
     fig = plt.figure()
-
     for i in range(4):
         func_text = "cos({i}t)".format(i=i)
         t_i, x_i = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':func_text})
         plot(t_i,x_i)
 
-
+.. figure:: images/RC_7.svg
+    :scale: 50 %
+    :align: center

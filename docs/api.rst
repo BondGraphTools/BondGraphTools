@@ -19,12 +19,6 @@ API Reference
 .. autofunction:: BondGraphTools.simulate
 .. autofunction:: BondGraphTools.draw
 
-:mod:`BondGraphTools.algebra`
------------------------------
-.. automodule:: BondGraphTools.algebra
-    :members:
-    :show-inheritance:
-
 :mod:`BondGraphTools.atomic`
 ----------------------------
 .. automodule:: BondGraphTools.atomic
