@@ -4,14 +4,16 @@
 
 
 import logging
+
+from orderedset import OrderedSet
 import sympy as sp
+
 
 from .base import *
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
-
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -26,7 +28,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         BondGraphBase.__init__(self, name, **kwargs)
         LabeledPortManager.__init__(self)
-        self.components = set()
+        self.components = OrderedSet()
         """The components, instances of :obj:`BondGraphBase`, 
         that make up this model"""
 
@@ -54,11 +56,22 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     def __truediv__(self, other):
         """See Also: `BondGraph.uri`"""
         try:
-            test_uri = f"{self.uri}/{other}"
-            c, = (c for c in self.components if c.uri == test_uri)
+            try:
+                c_type, name = other.split(":")
+            except ValueError:
+                c_type = None
+                name = other
+
+            name = name.strip(" ")
+            test_uri = f"{self.uri}/{name}"
+            c, = (c for c in self.components if c.uri == test_uri
+                  and (not c_type or c_type == c.metamodel)
+                  )
             return c
-        except (ValueError, TypeError):
+        except TypeError:
             raise ValueError(f"Cannot find {other}")
+        except ValueError:
+            raise ValueError(f"Cannot find a unique {other}")
 
     @property
     def metamodel(self):
@@ -426,7 +439,7 @@ def _is_label_invalid(label):
 
     return False
 
-class BondSet(set):
+class BondSet(OrderedSet):
     """
     Container class for internal bonds.
     """
