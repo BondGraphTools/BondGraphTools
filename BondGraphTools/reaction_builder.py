@@ -1,3 +1,8 @@
+"""A set of common tools for building and manipulating chemical reactions, and
+for producing bond graph models from a reaction network.
+"""
+
+
 from sympy import SparseMatrix, symbols, Pow, Matrix
 from collections import defaultdict
 import logging
@@ -5,31 +10,37 @@ from math import log
 from .actions import connect, disconnect, new
 logger = logging.getLogger(__name__)
 
-# Gas constant, J/Mo/K
-R = 8.3144598
+__all__ = ["Reaction_Network"]
 
-# Component Library
+R = 8.3144598
+"""Gas constant, J/Mo/K """
+
 LIBRARY = "BioChem"
+"""Component Library ID"""
 
 
 class Reaction_Network(object):
+    """
+
+    Args:
+        reactions:
+        name:
+        temperature: Temperature in Kelvin (Default 300K, or approx 27c)
+        volume:
+    """
     def __init__(self, reactions=None, name=None, temperature=300, volume=1):
-        """
-        Args:
-            reactions:
-            name:
-            T: Temperature in Kelvin (Default 300K, or approx 27c)
-        """
+
         self._reactions = {}
         self._flowstats = {}
         self._chemostats = {}
         self._species = defaultdict(int)
         self._T = temperature
         self._V = volume
+        self.name = "New Reaction Network"
+        """The name of this reaction network"""
+
         if name:
             self.name = name
-        else:
-            self.name = "New Reaction"
         if isinstance(reactions, str):
             self.add_reaction(reactions)
         elif isinstance(reactions, list):
@@ -38,15 +49,17 @@ class Reaction_Network(object):
 
     @property
     def species(self):
+        """A list of the chemical species invoved in this reaction network"""
         return list(self._species.keys())
 
     @property
     def stoichiometry(self):
-
+        """The stoichiometric matrix"""
         return self.reverse_stoichiometry - self.forward_stoichiometry
 
     @property
     def reverse_stoichiometry(self):
+        """The reverse stoichiometric matrix"""
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (_, forward_species, _, _) in enumerate(
                 self._reactions.values()):
@@ -57,6 +70,7 @@ class Reaction_Network(object):
 
     @property
     def forward_stoichiometry(self):
+        """The forward stoichiometric matrix"""
         matrix = SparseMatrix(len(self._species), len(self._reactions),{})
         for col, (back_species,_, _, _) in enumerate(
                 self._reactions.values()):
@@ -65,7 +79,20 @@ class Reaction_Network(object):
 
         return matrix
 
+    @property
     def fluxes(self):
+        """
+        The reaction fluxes.
+
+        A tuple (V,x) contain the vector :math:`V(x)` and the coordinates
+        :math:'x_{i}` such that for the the stoichiometric matrix :math:`N`
+        and the reation rates :math:`\kappa = \text{diag}(\kappa_1, kappa_2,
+        \ldots)`, the mass action description of the system is
+        math::
+
+            \dot{x} = N\kappa V(x)
+
+        """
         coords = symbols(",".join([f"x_{{{s}}}" for s in self.species]))
         fluxes = []
         for col, (back_species, forward_species, _, _) in enumerate(
@@ -81,11 +108,19 @@ class Reaction_Network(object):
                             symbols(f"x_{{{s}}}"), qty)
             eqn = prod - subst
             fluxes.append(eqn)
-        matrix = Matrix(len(fluxes),1, fluxes )
+        matrix = Matrix(len(fluxes),1, fluxes)
         return matrix, coords
 
-    def as_network_model(self, normalised=False):
+    def as_network_model(self, normalised: bool=False):
+        """Produces a bond graph :obj:`BondGraph.BondGraph` model of the system
 
+        Args:
+            normalised: If true, sets pressure and temperature to 1
+
+        Returns:
+             A new instance of :obj:`BondGraphTools.BondGraph` representing this
+             reaction system.
+        """
         system = new(name=self.name)
         species_anchor = self._build_species(system, normalised)
         self._build_reactions(system, species_anchor, normalised)
@@ -111,13 +146,13 @@ class Reaction_Network(object):
             )
             if len(bck_sto) == 1 and list(bck_sto.values())[0] == 1:
                 species = list(bck_sto.keys()).pop()
-                connect(reaction, species_anchors[species])
+                connect(species_anchors[species], reaction)
             else:
                 reverse_complex = new("1", name=bck_name)
                 system.add(reverse_complex)
-                connect(reaction, reverse_complex.inverting)
+                connect(reverse_complex.inverting, reaction)
                 self._connect_complex(
-                    system, species_anchors, reverse_complex, bck_sto
+                    system, species_anchors, reverse_complex, bck_sto, is_reversed=True
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
@@ -129,19 +164,27 @@ class Reaction_Network(object):
                 connect(reaction, forward_complex.inverting)
 
                 self._connect_complex(
-                    system, species_anchors, forward_complex, fwd_sto
+                    system, species_anchors, forward_complex, fwd_sto, is_reversed=False
                 )
 
-    def _connect_complex(self, system, species_anchors, junct, stoichiometry):
+    def _connect_complex(self, system, species_anchors, junct, stoichiometry,
+                         is_reversed=False):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
             if qty == 1:
-                connect(junct.non_inverting, species_anchors[species])
+                if is_reversed:
+                    connect(species_anchors[species],junct.non_inverting)
+                else:
+                    connect(junct.non_inverting,species_anchors[species])
             else:
-                tf = new("TR", value=qty)
+                tf = new("TF", value=qty)
                 system.add(tf)
-                connect((tf, 1), junct.non_inverting)
-                connect(species_anchors, (tf,0))
+                if is_reversed:
+                    connect((tf, 1), junct.non_inverting)
+                    connect(species_anchors[species], (tf,0))
+                else:
+                    connect(junct.non_inverting, (tf, 1))
+                    connect((tf,0), species_anchors[species])
 
     def _build_species(self, system, normalised):
         if normalised:
@@ -168,7 +211,7 @@ class Reaction_Network(object):
             else:
                 anchor = new("0", name=species)
                 system.add(anchor)
-                connect(this_species, anchor)
+                connect(anchor, this_species)
                 species_anchors[species] = anchor
 
             if species in self._flowstats:
@@ -188,6 +231,27 @@ class Reaction_Network(object):
 
     def add_reaction(self, reaction,
                      forward_rates=None, reverse_rates=None, name=""):
+        """
+        Adds a new reaction to the network.
+
+        Args:
+            reaction (str): A sequence of reactions to be added.
+            forward_rates (list): The forward rates of these reactions.
+            reverse_rates (list): The reverse rates of these reactions.
+            name: The name of this set of reactions.
+
+
+        Reactions are assumed to be of the form::
+
+            "A + B = C + D = E + F"
+
+        Where the "math:`i`th equals sign denotes a reversible reaction, with
+        forward and reverse rates (if they exist) denoted by `forward_rate[i]`
+        and `reverse_rate[i]` respectively.
+
+        Warnings:
+            Rate functionality is not yet implemented!
+        """
 
         reaction_step = []
         remaining_reactions = reaction

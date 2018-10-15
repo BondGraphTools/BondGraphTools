@@ -2,12 +2,11 @@
 
 This module provides the basic IO functionality such as saving and loading
 to file.
-
-todo:
-    As the file format matures, we probably want to move to a object
-    oriented loader that tracks the (as yet undefined) schema.
-
 """
+# todo:
+#    As the file format matures, we probably want to move to a object
+#    oriented loader that tracks the (as yet undefined) schema.
+
 
 import logging
 import pathlib
@@ -28,7 +27,6 @@ def save(model, filename):
     Args:
         model: The model to be saved
         filename: The file to save to
-
     """
 
     model_directory = _build_model_directory(model)
@@ -53,7 +51,13 @@ def save(model, filename):
 def _build_model_directory(model):
 
     try:
-        directory = {model.uri:model}
+        if not model.parent:
+            uri = "/"
+        else:
+            _, uri = model.uri.split(":")
+
+        directory = {uri: model}
+
         for c in model.components:
             directory.update(_build_model_directory(c))
         return directory
@@ -66,8 +70,9 @@ def _build_model_data(model, templates):
     out = {}
     for c in model.components:
         if isinstance(c, BondGraph):
+            _, uri = c.uri.split(":")
             components.append(
-                f"{c.name} {c.uri}"
+                f"{c.name} {uri}"
             )
         else:
             components.append(
@@ -126,8 +131,11 @@ def load(file_name, model=None, as_name=None):
     Args:
         file_name (str or Path): The file to load.
 
-    Returns: An instance of `BondGraph`
+    Returns:
+        An instance of `BondGraph`
 
+    Raises:
+        `NotImplementedError` for incorrect file version.
     """
     if isinstance(file_name, pathlib.Path):
         file_name = str(file_name)

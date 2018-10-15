@@ -30,7 +30,7 @@ def test_build_and_drive(rlc):
     rlc.add(se)
 
     for comp in rlc.components:
-        if comp.metaclass == "0":
+        if comp.metamodel == "0":
             bgt.connect(se, comp)
             break
 

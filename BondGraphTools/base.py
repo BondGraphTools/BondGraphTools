@@ -1,11 +1,9 @@
-"""
-Bond Graph Model base files.
+"""This module contains the base classes for bond graph models, and the
+interfaces for connecting models together.
 """
 
 import logging
-
 from collections import namedtuple
-
 import sympy as sp
 from .exceptions import *
 
@@ -13,45 +11,47 @@ logger = logging.getLogger(__name__)
 
 
 class BondGraphBase:
-    def __init__(self, name=None, parent=None,
-                 ports=None, description=None, params=None, metaclass=None):
-        """
-        Base class definition for all bond graphs.
+    """
+    Base class definition for all bond graphs.
 
-        Args:
-            name: Assumed to be unique
-            metadata (dict):
-        """
+    Attributes:
+        parent:
+        name:
+        metamodel:
+        template:
+        uri:
+        root:
+        basis_vectors:
 
+    Args:
+        name: Assumed to be unique
+        parent:
+        metadata (dict):
+    """
+
+    def __init__(self,
+                 name=None,
+                 parent=None,
+                 metamodel=None,
+                 **kwargs):
         # TODO: This is a dirty hack
         # Job for meta classes maybe?
-        if not metaclass:
-            self.__metaclass = "BondGraph"
+        if not metamodel:
+            self.__metamodel = "BG"
         else:
-            self.__metaclass = metaclass
+            self.__metamodel = metamodel
+
         if not name:
-            self.name = f"{self.metaclass}" \
+            self.name = f"{self.metamodel}" \
                         f"{self.__class__.instances}"
         else:
             self.name = name
+
         self.parent = parent
-
-        self.description = description
-        # if ports:
-        #     self._ports = {
-        #         (int(p) if p.isnumeric() else p):v for p,v in ports.items()
-        #     }
-        # else:
-        #     self._ports = {}
-        """ List of exposed Power ports"""
-
-        """ Dictionary of internal parameter and their values. The key is 
-        the internal parameter, the value may be an exposed control value,
-        a function of time, or a constant."""
         self.view = None
 
     def __repr__(self):
-        return f"{self.metaclass}: {self.name}"
+        return f"{self.metamodel}: {self.name}"
 
     def __new__(cls, *args, **kwargs):
         if "instances" not in cls.__dict__:
@@ -65,8 +65,8 @@ class BondGraphBase:
         self.instances -= 1
 
     @property
-    def metaclass(self):
-        return self.__metaclass
+    def metamodel(self):
+        return self.__metamodel
 
     @property
     def template(self):
@@ -79,13 +79,9 @@ class BondGraphBase:
     @property
     def uri(self):
         if not self.parent:
-            return "/"
+            return f"{self.name}:"
         else:
-            parent_uri = self.parent.uri
-            if parent_uri == "/":
-                return f"{self.parent.uri}{self.name}"
-            else:
-                return f"{self.parent.uri}/{self.name}"
+            return f"{self.parent.uri}/{self.name}"
 
     @property
     def root(self):
@@ -116,7 +112,7 @@ class Port(object):
 
     def __init__(self, component, index):
         self.component = component
-        """(`FixedPort`) The component that this port is attached to"""
+        """(`PortManager`) The component that this port is attached to"""
         self.index = index
         """(int) The numberical index of this port"""
         self.is_connected = False
@@ -160,7 +156,7 @@ class Port(object):
                 pass
         return False
 
-class FixedPort:
+class PortManager:
     """
     This class provides methods for interfacing with static ports on
     components.
@@ -219,7 +215,7 @@ class FixedPort:
         """A dictionary of the active ports"""
         return self._ports
 
-class PortExpander(FixedPort):
+class PortExpander(PortManager):
     """
     Class for handling templated virtual ports; for example summing junctions.
     Additionally, attributes can be attached to the generated ports by via a
@@ -230,7 +226,7 @@ class PortExpander(FixedPort):
          dictionary of attributes and values (maybe be None)
 
     Keyword Args:
-        static_ports: Ports to be created as per `FixedPort`
+        static_ports: Ports to be created as per `PortManager`
 
     See Also: `PortTemplate`
     """
@@ -315,13 +311,13 @@ class PortTemplate(object):
           index (srt): The label or identifier
 
     """
-    def __new__(cls, parent, index, data=None):
-        self = object.__new__(cls)
+
+    def __init__(self, parent, index, data=None):
         self.parent = parent
         self.index = index
         self.ports = []
         self.data = data if data else {}
-        return self
+
 
     def __hash__(self):
         return id(self)
@@ -374,7 +370,7 @@ class LabeledPort(Port):
         else:
             return super().__eq__(self, other)
 
-class LabeledPortManager(FixedPort):
+class LabeledPortManager(PortManager):
 
     def __init__(self, ports=None):
         if ports:

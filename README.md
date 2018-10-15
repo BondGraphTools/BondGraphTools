@@ -7,6 +7,10 @@
 This toolkit is for rapid modelling and design of networked thermodynamic systems.
 It is conceptually based upon the Bond Graph modelling methodology.
 
+## Full Documentation:
+
+https://bondgraphtools.readthedocs.io/
+
 ## Installation
 
 ### Dependencies
@@ -33,10 +37,6 @@ Julia dependencies:
  system. _Julia 0.7 and 1.0 are not yet supported_
 3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
 4. Install using PyPI; `pip install BondGraphTools`
-
-## Usage
-
-Coming Soon
 
 ## v0.3.3 Changelog 25.09.2018
 

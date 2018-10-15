@@ -1,20 +1,36 @@
+"""Class definition and helper functions for BondGraph model
+
+"""
+
+
 import logging
+
+from orderedset import OrderedSet
 import sympy as sp
+
 
 from .base import *
 from .exceptions import *
 from .view import GraphLayout
-from .algebra import smith_normal_form, adjacency_to_dict, \
+from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
-
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "BondGraph"
+]
+
+
 class BondGraph(BondGraphBase, LabeledPortManager):
+    """Representation of a bond graph model.
+    """
     def __init__(self, name, components=None, **kwargs):
 
         BondGraphBase.__init__(self, name, **kwargs)
         LabeledPortManager.__init__(self)
-        self.components = set()
+        self.components = OrderedSet()
+        """The components, instances of :obj:`BondGraphBase`, 
+        that make up this model"""
 
         if components:
             for component in components:
@@ -34,22 +50,31 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def bonds(self):
+        """The list of connections between internal components"""
         return list(self._bonds)
 
     def __truediv__(self, other):
+        """See Also: `BondGraph.uri`"""
         try:
-            if not self.parent:
-                test_uri = f"/{other}"
-            else:
-                test_uri = f"{self.uri}/{other}"
-            c, = (c for c in self.components if c.uri == test_uri)
-            return c
-        except (ValueError, TypeError):
+            try:
+                c_type, name = other.split(":")
+            except ValueError:
+                c_type = None
+                name = other
 
+            name = name.strip(" ")
+            test_uri = f"{self.uri}/{name}"
+            c, = (c for c in self.components if c.uri == test_uri
+                  and (not c_type or c_type == c.metamodel)
+                  )
+            return c
+        except TypeError:
             raise ValueError(f"Cannot find {other}")
+        except ValueError:
+            raise ValueError(f"Cannot find a unique {other}")
 
     @property
-    def metaclass(self):
+    def metamodel(self):
         return "BG"
 
     @bonds.setter
@@ -72,28 +97,15 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def internal_ports(self):
+        """A list of the ports internal to this model"""
         return [p for c in self.components for p in c.ports]
 
     def map_port(self, label, e, f):
-        """
-
-        Args:
-            label:
-            e:
-            f:
-
-        Returns:
-
-        """
-
         port = self.get_port(label)
         self._port_map[port] = (e,f)
 
     def add(self, *args):
-        """
-        Warning: Scheduled to be deprecated
-        """
-
+        # Warning: Scheduled to be deprecated
         def validate(component):
             if not isinstance(component, BondGraphBase):
                 raise InvalidComponentException("Invalid component class")
@@ -121,9 +133,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
 
     def remove(self, component):
-        """
-        Warning: Scheduled to be deprecated
-        """
+        # Warning: Scheduled to be deprecated
         if [b for b in self._bonds if b.head.component is component or
                 b.tail.component is component]:
             raise InvalidComponentException("Component is still connected")
@@ -134,14 +144,16 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         self.components.remove(component)
 
     def set_param(self, param, value):
-        """
-        Warning: Scheduled to be deprecated
-        """
+        # Warning: Scheduled to be deprecated
         c, p = self.params[param]
         c.set_param(p, value)
 
     @property
     def params(self):
+        """
+        A dictionary of parameters for this model in the form::
+            i: (component, param_name)
+        """
         j = 0
         out = dict()
 
@@ -163,6 +175,16 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def state_vars(self):
+        """
+        A `dict` of all state variables in the form::
+
+             {
+                "x_0": (component, state_var)
+             }
+
+        Where `"x_0"` is the model state variable, and `state_var` is the
+        corresponding state variable of `component`
+        """
         j = 0
         out = dict()
         for v in self.components:
@@ -179,6 +201,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def control_vars(self):
+        """
+        A `dict` of all control variables in the form::
+
+            {
+                "u_0": (component, control_var)
+            }
+
+        """
         j = 0
         out = dict()
         excluded = {
@@ -202,30 +232,32 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         Basis vectors for the state space (X), port space (J),
         and control space (U) from an external point of view.
 
-        For the state space dictionaries are of the form
-        ```
+        For the state space dictionaries are of the form::
+
             X = {
                 sympy.Symbol('x_i'): (object, var)
             }
-        ```
+
+
         We assume the object is a subclass of BondGraphBase
         and the var refers to the variable name in the objects local
         co-ordinate system and may be a string or a sympy.Symbol
 
-        For the port space, dictionaries are of the form
-        ```
+        For the port space, dictionaries are of the form::
+
             J = {
                 (sympy.Symbol(e_i), sympy.Symbol(f_i)): Port(obj, idx)
             }
-        ```
-        where Port is an instance of `Port`.
 
-        Finally for the cotrol variables we have
-        ```
+
+        where Port is an instance of `Port`.
+        Finally for the control variables we have::
+
             U = {
-            sympy.Symbol(u_i):(object, var)
+                sympy.Symbol(u_i):(object, var)
             }
-        ```
+
+
         Where object and var are specified as per the state space.
         """
 
@@ -276,6 +308,40 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         return [r.subs(subs).simplify().nsimplify() for r in relations if r]
 
     def system_model(self, control_vars=None):
+        """Produces a symbolic model of the system in reduced form.
+
+        In many cases it is useful to have a full description of the system in
+        symbolic form, and not just a list of constitutive relations.
+
+        Returns:
+            (coordinates, mappings, linear_op, nonlinear_op, constraints)
+
+        This method generates:
+
+            * The model coordinate system (`list`) :math:`x`
+            * A mapping (`dict`) between the model coordinates and the component coordinates
+            * A linear operator (`sympy.Matrix`) :math:`L`
+            * A nonlinear operator (`sympy.Matrix`) :math:`F`
+            * A list of constraints (`sympy.Matrix`) :math:`G`
+
+        The coordinates are of the form
+
+        .. math::
+
+            x = (dx_0,  dx_1,  \ldots,  e_0,  f_0, e_1, f_1, \ldots, x_0,
+            x_1, \ldots, u_0, u_1, \ldots)
+
+        So that the system obeys the differential-algebraic equation
+
+        .. math::
+
+            Lx + F(x) = 0 \\qquad G(x) =0
+
+
+        See Also:
+            :attr:`BondGraph.basis_vectors`
+
+        """
         mappings, coordinates = inverse_coord_maps(
             *self._build_internal_basis_vectors()
         )
@@ -373,7 +439,7 @@ def _is_label_invalid(label):
 
     return False
 
-class BondSet(set):
+class BondSet(OrderedSet):
     """
     Container class for internal bonds.
     """

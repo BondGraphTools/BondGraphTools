@@ -1,14 +1,39 @@
+"""Tools for running mdoel simulations"""
+
+
 import logging
 
 import numpy as np
 import sympy as sp
 from sympy.core import SympifyError
 
-from .config import config
-from .exceptions import ModelException
+from .exceptions import ModelException, SolverException
 
 logger = logging.getLogger(__name__)
 
+def _fetch_ic(x0, dx0, system):
+    if isinstance(x0, list):
+        assert len(x0) == len(system.state_vars)
+        X0 = np.array(x0, dtype=np.float64)
+    elif isinstance(x0, dict):
+        X0 = np.array(
+            [np.NaN for _ in system.state_vars], dtype=np.float64
+        )
+        for k, v in x0.items():
+            *_ , idx = str(k).split('_')
+            idx = int(idx)
+            X0[idx] = v
+
+    elif isinstance(x0, (int, float, complex)) and len(system.state_vars) == 1:
+        X0 = np.array([x0], dtype=np.float64)
+    else:
+        raise ModelException("Invalid Initial Conditions")
+    if dx0:
+        DX0 = np.array(dx0, dtype=np.float64)
+    else:
+        DX0 = np.zeros(X0.shape, dtype=np.float64)
+
+    return X0, DX0
 
 def simulate(system,
              timespan,
@@ -25,10 +50,11 @@ def simulate(system,
         initial list(float):
         control_vars (str,list(str), dict(str)):
 
-    Returns: t, X
+    Returns:
+        t, X
 
     """
-
+    from .config import config
     de = config.de
     j = config.julia
     if system.ports:
@@ -40,15 +66,9 @@ def simulate(system,
         raise ModelException("Control variable not specified")
 
     tspan = tuple(float(t) for t in timespan)
-    X0 = np.array(x0, dtype=np.float64)
-    assert len(X0) == len(system.state_vars)
+    X0, DX0 = _fetch_ic(x0, dx0, system)
 
     func_str, diffs = to_julia_function_string(system, control_vars)
-
-    if dx0:
-        DX0 = np.array(dx0, dtype=np.float64)
-    else:
-        DX0 = np.zeros(X0.shape, dtype=np.float64)
 
     func = j.eval(func_str)
     problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
@@ -63,20 +83,6 @@ def simulate(system,
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
-
-class Simulation(object):
-    def __init__(self, model,
-                 timespan=None,
-                 x0=None,
-                 dx_0=None,
-                 control_vars=None):
-
-        self.sol = None
-
-    def run(self, x0, timespan):
-        pass
-
-
 def to_julia_function_string(model, control_vars=None, in_place=False):
     """
     Produces a Julia function string from the given model.
@@ -87,6 +93,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
     Args:
         model:
         control_vars:
+        in_place:
 
     Returns:
         (string, list)
@@ -104,7 +111,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
 
 
-    cv_strings, dcv_strings = generate_control_strings(
+    cv_strings, dcv_strings = _generate_control_strings(
         list(model.control_vars.keys()),
         control_vars,
         x_subs,
@@ -154,7 +161,7 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
             differential_vars)
 
 
-def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
+def _generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
 
     if isinstance(cv_substitutions, dict):
         pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
@@ -165,7 +172,9 @@ def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
     elif not cv and not cv_substitutions:
         return [], []
     else:
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"Could not substitute {cv_substitutions} into {cv}"
+        )
 
     cv_strings = []
     dcv_strings = []
@@ -190,7 +199,3 @@ def generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
             dcv_strings.append(None)
 
     return cv_strings, dcv_strings
-
-
-class SolverException(Exception):
-    pass

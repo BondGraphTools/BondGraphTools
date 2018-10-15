@@ -1,25 +1,26 @@
-import logging
-import sympy as sp
+"""This module contains class definitions for atomic components; those which
+cannot be decomposed into other components.
+"""
+
 
 from .base import *
 from .exceptions import *
-from .compound import BondGraph
 from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
-class BaseComponent(BondGraphBase, FixedPort):
+class Component(BondGraphBase, PortManager):
     """
     Atomic bond graph components are those defined by constitutive relations.
     """
 
-    def __init__(self, metaclass, constitutive_relations,
+    def __init__(self, metamodel, constitutive_relations,
                  state_vars=None, params=None, **kwargs):
 
-        self._metaclass = metaclass
+        self._metamodel = metamodel
         ports = kwargs.pop("ports")
         super().__init__(**kwargs)
-        FixedPort.__init__(self, ports)
+        PortManager.__init__(self, ports)
         self._state_vars = state_vars
 
         self._params = params
@@ -35,8 +36,8 @@ class BaseComponent(BondGraphBase, FixedPort):
         return f"{self.__library__}/{self.__component__}"
 
     @property
-    def metaclass(self):
-        return self._metaclass
+    def metamodel(self):
+        return self._metamodel
 
     @property
     def control_vars(self):
@@ -100,7 +101,7 @@ class BaseComponent(BondGraphBase, FixedPort):
         #         raise ModelParsingError(
         #             "Error parsing model %s: "
         #             "state variable %s must be either p or q",
-        #             self.metaclass, var
+        #             self.metamodel, var
         #         )
         #
         #     models.append(sp.sympify(f"d{var} - {ef_var}"))
@@ -127,7 +128,7 @@ class BaseComponent(BondGraphBase, FixedPort):
             except KeyError:
                 pass
             except ValueError as ex:
-                raise ValueError(f"{self}.{oaram}: {ex.args}")
+                raise ValueError(f"({self}, {param}): {ex.args}")
 
         return [model.subs(subs) for model in models]
 
@@ -211,15 +212,15 @@ class BaseComponent(BondGraphBase, FixedPort):
         return super().__hash__()
 
 
-class BaseComponentSymmetric(BaseComponent):
+class SymmetricComponent(Component):
     """
-    Refer to `BaseComponent`.
+    Refer to `Component`.
 
     Instances of this class are multi-port components which are able to have
     connections made without specifying ports.
     """
     def get_port(self, port=None):
-        """See `BaseComponent`"""
+        """See `Component`"""
         if not port and not isinstance(port, int):
             p = [port for port in self.ports if not port.is_connected]
 
@@ -258,14 +259,14 @@ class EqualEffort(BondGraphBase, PortExpander):
     @property
     def constitutive_relations(self):
 
-        vars = list(self._port_vectors())
-        e_0, f_0 = vars.pop()
+        vects = list(self._port_vectors())
+        e_0, f_0 = vects.pop()
         partial_sum = f_0
 
         relations = []
 
-        while vars:
-            e_i, f_i = vars.pop()
+        while vects:
+            e_i, f_i = vects.pop()
             relations.append(
                 e_i - e_0
             )
@@ -274,6 +275,7 @@ class EqualEffort(BondGraphBase, PortExpander):
         relations.append(partial_sum)
 
         return relations
+
 
 class EqualFlow(BondGraphBase, PortExpander):
 

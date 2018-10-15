@@ -1,5 +1,5 @@
 import pytest
-from BondGraphTools import new
+from BondGraphTools import new, add, remove
 from BondGraphTools.exceptions import InvalidComponentException
 
 
@@ -17,12 +17,12 @@ def test_uri_tree():
 
     model.add(internal_model)
 
-    assert internal_model.uri == "/Model"
+    assert internal_model.uri == "Model:/Model"
 
     c_o = new("C", name="C_1")
     model.add(c_o)
 
-    assert c_o.uri == "/C_1"
+    assert c_o.uri == "Model:/C_1"
 
 
     assert internal_model in model.components
@@ -30,7 +30,7 @@ def test_uri_tree():
     assert r_i not in model.components
 
 
-    assert r_i.uri == "/Model/" + r_i.name
+    assert r_i.uri == "Model:/Model/" + r_i.name
 
 
     c_i = new("C", name="C_1")
@@ -38,13 +38,13 @@ def test_uri_tree():
         c_i
     )
 
-    assert c_i.uri == "/Model/C_1"
+    assert c_i.uri == "Model:/Model/C_1"
 
     model.remove(internal_model)
 
     assert internal_model not in model.components
     assert internal_model.uri == model.uri
 
-    assert c_i.uri == "/C_1"
-    assert c_o.uri == "/C_1"
+    assert c_i.uri == "Model:/C_1"
+    assert c_o.uri == "Model:/C_1"
 

@@ -4,7 +4,7 @@ import sympy as sp
 import os
 import yaml
 from BondGraphTools import load, save, new, connect
-import BondGraphTools.datamodel as dm
+import BondGraphTools.fileio as dm
 import logging
 
 file_path = pathlib.Path(__file__).parent / 'files'
@@ -15,11 +15,11 @@ def test_load_rlc():
     path = str(file_path / 'rlc.bg')
 
     model = load(path)
-    uris = ["/C1",
-            "/R1",
-            "/L1",
-            "/kcl",
-            "/Sf"]
+    uris = ["RLC:/C1",
+            "RLC:/R1",
+            "RLC:/L1",
+            "RLC:/kcl",
+            "RLC:/Sf"]
 
     c, r, l, kcl, sf =  (comp for uri in uris for comp in model.components if
                       comp.uri == uri)
@@ -63,7 +63,7 @@ def test_load_rlc_parallel():
 
     model = load(path)
 
-    one, = (comp for comp in model.components if comp.metaclass == "1")
+    one, = (comp for comp in model.components if comp.metamodel == "1")
 
     assert one
 
@@ -85,7 +85,7 @@ def test_load_modular():
 
     model_1 = load(file_path / "modular.bg")
 
-    assert model_1.uri == "/"
+    assert model_1.uri == "system:"
     assert model_1.name == "system"
 
     tree = set()
@@ -102,18 +102,18 @@ def test_load_modular():
     uri_tree(model_1)
 
     assert tree == {
-        "/",
-        "/Vs",
-        "/Z",
-        "/kvl",
-        "/Vs/Sf",
-        "/Vs/pout",
-        "/Vs/kvl",
-        "/Z/R1",
-        "/Z/pin",
-        "/Z/kvl",
-        "/Z/L1",
-        "/Z/C1"
+        "system:",
+        "system:/Vs",
+        "system:/Z",
+        "system:/kvl",
+        "system:/Vs/Sf",
+        "system:/Vs/pout",
+        "system:/Vs/kvl",
+        "system:/Z/R1",
+        "system:/Z/pin",
+        "system:/Z/kvl",
+        "system:/Z/L1",
+        "system:/Z/C1"
     }
 
 
@@ -129,8 +129,8 @@ def test_load_model_from_modular():
 @pytest.mark.usefixture("rlc")
 def test_save_build_component(rlc):
 
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
     r.params["r"] = 10
     c.params["C"] = None
 
@@ -141,10 +141,10 @@ def test_save_build_component(rlc):
 
 @pytest.mark.usefixture("rlc")
 def test_save_build_model(rlc):
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
-    l, = (c for c in rlc.components if c.metaclass == "I")
-    kvl, =  (c for c in rlc.components if c.metaclass == "0")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
+    l, = (c for c in rlc.components if c.metamodel == "I")
+    kvl, =  (c for c in rlc.components if c.metamodel == "0")
     model_dict = dm._build_model_data(rlc, {})
 
     test_strings = {f"{r.name} base/R r=1",
@@ -197,10 +197,10 @@ def test_build_templated_model():
 def test_rlc_save(rlc):
     filename = str(file_path / "test_rlc.bg")
     rlc.name = "RLC"
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
-    l, = (c for c in rlc.components if c.metaclass == "I")
-    kvl, =  (c for c in rlc.components if c.metaclass == "0")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
+    l, = (c for c in rlc.components if c.metamodel == "I")
+    kvl, =  (c for c in rlc.components if c.metamodel == "0")
 
     r.name= "R1"
     c.name= "C1"
