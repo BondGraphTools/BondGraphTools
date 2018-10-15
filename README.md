@@ -38,6 +38,16 @@ Julia dependencies:
 3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
 4. Install using PyPI; `pip install BondGraphTools`
 
+## v0.3.4 Changelog 15.10.2018
+### Changes
+
+- Components and Bonds are now order aware
+
+### Fixes
+
+- Bug fixed in the handling of invalid parameters
+
+
 ## v0.3.3 Changelog 25.09.2018
 
 ### New
@@ -62,7 +72,7 @@ Julia dependencies:
 `remove`, `connect`, `disconnect`)
 - `Find` has been removed; users can now use `uri`
 
-### Fixed
+### Fixes
 - 1 junction now corresponds to the existing literature
 - Drawing algorithm now has half-arrow heads
 - Updated to sympy v1.2
