@@ -1,22 +1,32 @@
+"""Manages system configuration
+
+This file handles the system configuration, and in particular the bridge between
+python and julia.
+
+To access the julia interpreter use::
+    julia = config.julia
+
+"""
+
 import pathlib
 import json
 import sys
 import os
 import logging
 from subprocess import Popen, PIPE, run
+
+from .version import __version__ as VERSION
 logger = logging.getLogger(__name__)
 
-VERSION = "0.3.3"
 
-
-def as_str(path):
+def _as_str(path):
     if isinstance(path, str):
         return path
     else:
         return str(path.as_posix())
 
 
-def check_julia(command):
+def _check_julia(command):
     # Check to see if Julia is already in the path
 
     p = Popen([command, "-v"], stdout=PIPE, stderr=None)
@@ -62,7 +72,7 @@ class Config:
             self.save()
 
     def find_julia(self):
-        if check_julia('julia'):
+        if _check_julia('julia'):
             p = Popen([self._which, 'julia'], stdout=PIPE, stderr=None)
             out, err = p.communicate()
             julia_dir = out.decode('utf8').strip()
@@ -83,11 +93,11 @@ class Config:
         # we assume julia and python are already in the path
         logger.debug('Installing Julia dependencies; this may take some time')
         env = os.environ
-        env.update({"PYTHON": as_str(self.python_executable),
-                    "JULIA": as_str(self.julia_executable)})
+        env.update({"PYTHON": _as_str(self.python_executable),
+                    "JULIA": _as_str(self.julia_executable)})
         conda = self.find_conda()
         if conda:
-            env.update({"CONDA": as_str(conda)})
+            env.update({"CONDA": _as_str(conda)})
 
         julia_code = [
             "Pkg.init()\n",
@@ -103,9 +113,9 @@ class Config:
 
         temp = self.base / 'deps.jl'
         temp.touch()
-        with open(as_str(temp), 'w') as fs:
+        with open(_as_str(temp), 'w') as fs:
             fs.writelines(julia_code)
-        run([as_str(self.julia_executable), as_str(temp)], env=env)
+        run([_as_str(self.julia_executable), _as_str(temp)], env=env)
         os.remove(temp)
         logger.debug("Complete")
 
@@ -133,7 +143,7 @@ class Config:
     @staticmethod
     def load():
         try:
-            with open(as_str(Config.file), 'r') as f:
+            with open(_as_str(Config.file), 'r') as f:
                 kwargs = json.load(f)
         except (json.JSONDecodeError, FileNotFoundError) as ex:
             kwargs = {}
@@ -146,19 +156,21 @@ class Config:
     def save(self):
 
         config_dict = {
-            'julia_executable': as_str(self.julia_executable),
-            'python_executable': as_str(self.python_executable),
+            'julia_executable': _as_str(self.julia_executable),
+            'python_executable': _as_str(self.python_executable),
             'version': VERSION
         }
-        with open(as_str(Config.file), 'w') as f:
+        with open(_as_str(Config.file), 'w') as f:
             json.dump(config_dict, f)
 
 
 class WinConfig(Config):
+    """
+    Extra configuration functionality for windows setup.
+    """
     _which = 'where'
 
 
 config = Config.load()
 
-
-
+__all__ = ["config"]

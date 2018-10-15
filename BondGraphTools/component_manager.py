@@ -1,13 +1,11 @@
 """
-Component Library Manager
-=========================
-
 This module takes care of the loading and management of component libraries.
 This library will automatically load all factory libraries upon import.
 Additionally libraries can be added via :func:`load_library`.
 
 Component Libraries are expected to be in json format.
 The structure must be::
+
     {
         "id": The unique library id (str),
         "description": The description of this library
@@ -18,6 +16,7 @@ The structure must be::
     }
 
 Each Component dictionary must be of the form::
+
     {
 
     }

@@ -1,18 +1,18 @@
 import setuptools
-from BondGraphTools.config import VERSION
+from BondGraphTools.version import __version__ as version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="BondGraphTools",
-    version=VERSION,
+    version=version,
     author="Pete Cudmore",
     author_email="peter.cudmore@uqconnect.edu.au",
     description="Bond Graph Modelling Toolkit",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/peter-cudmore/BondGraph",
+    url="https://github.com/BondGraphTools/BondGraphTools",
     classifiers=(
         "Intended Audience :: Science/Research",
         "Intended Audience :: End Users/Desktop",
@@ -27,5 +27,9 @@ setuptools.setup(
     keywords="modelling control engineering",
     packages=['BondGraphTools'],
     package_dir={'BondGraphTools': 'BondGraphTools'},
-    package_data={'BondGraphTools': ['components/*.json']}
+    package_data={'BondGraphTools': ['components/*.json']},
+    extras_require={
+        'docs': [
+            'sphinx >= 1.7',
+            'sphinx_rtd_theme']}
 )

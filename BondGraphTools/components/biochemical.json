@@ -4,8 +4,8 @@
   "components":{
     "Ce":{
       "description":"Concentration of Chemical Species",
-      "class": "BaseComponent",
-      "metaclass":"C",
+      "class": "Component",
+      "metamodel":"C",
       "ports":{
         "0":null
       },
@@ -24,8 +24,8 @@
     },
     "Re":{
       "description": "Biochemical Reaction",
-      "class": "BaseComponentSymmetric",
-      "metaclass":"R",
+      "class": "SymmetricComponent",
+      "metamodel":"R",
       "ports":{
         "0":null,
         "1":null
@@ -43,7 +43,7 @@
   "Y":{
     "description": "Stoichiometry",
     "class": "MixedPort",
-    "metaclass": "TF",
+    "metamodel": "TF",
     "ports":{
       "0": {
         "description":"Affinity",

@@ -4,7 +4,7 @@ import sympy as sp
 import os
 import yaml
 from BondGraphTools import load, save, new, connect
-import BondGraphTools.datamodel as dm
+import BondGraphTools.fileio as dm
 import logging
 
 file_path = pathlib.Path(__file__).parent / 'files'
@@ -63,7 +63,7 @@ def test_load_rlc_parallel():
 
     model = load(path)
 
-    one, = (comp for comp in model.components if comp.metaclass == "1")
+    one, = (comp for comp in model.components if comp.metamodel == "1")
 
     assert one
 
@@ -129,8 +129,8 @@ def test_load_model_from_modular():
 @pytest.mark.usefixture("rlc")
 def test_save_build_component(rlc):
 
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
     r.params["r"] = 10
     c.params["C"] = None
 
@@ -141,10 +141,10 @@ def test_save_build_component(rlc):
 
 @pytest.mark.usefixture("rlc")
 def test_save_build_model(rlc):
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
-    l, = (c for c in rlc.components if c.metaclass == "I")
-    kvl, =  (c for c in rlc.components if c.metaclass == "0")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
+    l, = (c for c in rlc.components if c.metamodel == "I")
+    kvl, =  (c for c in rlc.components if c.metamodel == "0")
     model_dict = dm._build_model_data(rlc, {})
 
     test_strings = {f"{r.name} base/R r=1",
@@ -197,10 +197,10 @@ def test_build_templated_model():
 def test_rlc_save(rlc):
     filename = str(file_path / "test_rlc.bg")
     rlc.name = "RLC"
-    r, = (c for c in rlc.components if c.metaclass == "R")
-    c, = (c for c in rlc.components if c.metaclass == "C")
-    l, = (c for c in rlc.components if c.metaclass == "I")
-    kvl, =  (c for c in rlc.components if c.metaclass == "0")
+    r, = (c for c in rlc.components if c.metamodel == "R")
+    c, = (c for c in rlc.components if c.metamodel == "C")
+    l, = (c for c in rlc.components if c.metamodel == "I")
+    kvl, =  (c for c in rlc.components if c.metamodel == "0")
 
     r.name= "R1"
     c.name= "C1"

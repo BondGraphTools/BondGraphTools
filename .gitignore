@@ -1,5 +1,8 @@
 .idea/
+doctrees/
+.buildinfo
 *.pyc
 \.ipynb_checkpoints/
-docs/doctrees/
-.buildinfo
+*.ipynb
+build/
+BondGraphTools.egg-info/

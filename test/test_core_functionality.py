@@ -9,7 +9,7 @@ from BondGraphTools.atomic import *
 def test_new():
     c = bgt.new("C")
 
-    assert isinstance(c, BaseComponent)
+    assert isinstance(c, Component)
     assert len(c.ports) == 1
     assert len(c.state_vars) == 1
     assert len(c.params) == 1
@@ -66,8 +66,8 @@ def test_connect_components():
 
     connect(c, se)
     bond = list(bg.bonds)[0]
-    assert isinstance(bond.tail.component, BaseComponent)
-    assert isinstance(bond.head.component, BaseComponent)
+    assert isinstance(bond.tail.component, Component)
+    assert isinstance(bond.head.component, Component)
     assert bond.head.component in (c, se)
     assert bond.tail.component in (c, se)
 
@@ -84,8 +84,8 @@ def test_connect():
     connect(k1, k2)
 
     (c1, p1), (c2, p2) = list(bg.bonds)[0]
-    assert isinstance(c1, BaseComponent)
-    assert isinstance(c2, BaseComponent)
+    assert isinstance(c1, Component)
+    assert isinstance(c2, Component)
     assert c1 in (c, se)
     assert c2 in (c, se)
 
@@ -122,8 +122,8 @@ def test_connect_ports():
     connect(k1, k2)
 
     (c1, p1), (c2, p2) = list(bg.bonds)[0]
-    assert isinstance(c1, BaseComponent)
-    assert isinstance(c2, BaseComponent)
+    assert isinstance(c1, Component)
+    assert isinstance(c2, Component)
     assert c1 in (c, se)
     assert c2 in (c, se)
 
