@@ -37,7 +37,7 @@
       },
       "constitutive_relations":[
         "f_0 + f_1",
-        "r*f_0 - (exp(e_0/R/T) - exp(e_1/R/T))"
+        "f_0 - r*(exp(e_0/R/T) - exp(e_1/R/T))"
       ]
     },
   "Y":{

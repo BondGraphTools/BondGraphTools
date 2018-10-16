@@ -61,7 +61,7 @@ def test_re_con_rel():
 
     for r in get_relations_iterator(Re, mappings, coords):
         assert r in [
-            ({1:1, 3:1}, 0), ({}, sympy.sympify("f_0*r-exp(e_0) + exp(e_1)"))
+            ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
         ]
 
 def test_a_to_b_model():
