@@ -368,7 +368,7 @@ class LabeledPort(Port):
         if isinstance(other, str) and other == self.name:
             return True
         else:
-            return super().__eq__(self, other)
+            return super().__eq__(other)
 
 class LabeledPortManager(PortManager):
 
