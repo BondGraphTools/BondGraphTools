@@ -6,12 +6,14 @@ import logging
 import numpy as np
 import sympy as sp
 from sympy.core import SympifyError
+from scipy.optimize import broyden1
 
 from .exceptions import ModelException, SolverException
 
 logger = logging.getLogger(__name__)
 
-def _fetch_ic(x0, dx0, system):
+
+def _fetch_ic(x0, dx0, system, func, eps=0.001):
     if isinstance(x0, list):
         assert len(x0) == len(system.state_vars)
         X0 = np.array(x0, dtype=np.float64)
@@ -23,15 +25,28 @@ def _fetch_ic(x0, dx0, system):
             *_ , idx = str(k).split('_')
             idx = int(idx)
             X0[idx] = v
-
     elif isinstance(x0, (int, float, complex)) and len(system.state_vars) == 1:
         X0 = np.array([x0], dtype=np.float64)
+    elif isinstance(x0, np.ndarray) and x0.shape == (len(system.state_vars), ):
+        X0 = x0
     else:
-        raise ModelException("Invalid Initial Conditions")
+        raise ModelException(f"Invalid Initial Conditions: {x0}")
+
     if dx0:
         DX0 = np.array(dx0, dtype=np.float64)
     else:
         DX0 = np.zeros(X0.shape, dtype=np.float64)
+
+    # if we don't have consistent initial conditions; find them if we can
+    # fail if we can't
+    f = lambda y: func(y, X0, 0, 0)
+    if np.linalg.norm(f(DX0)) > eps:
+
+        DX0 = broyden1(f, DX0)
+        if np.linalg.norm(f(DX0)) > 0.001:
+            raise ModelException(
+                f"Inconsistent initial conditions: "
+                f"Could not find dx0 for the given x0 {x0}")
 
     return X0, DX0
 
@@ -41,18 +56,50 @@ def simulate(system,
              dx0=None,
              dt=0.1,
              control_vars=None):
-    """
-    Simulate the system dynamics.
+    """Simulate the system dynamics.
+
+    This method integrates the dynamics of the system over the specified
+    interval of time, starting at the specified initial state.
+
+    The solver used is a differential-algebraic integrator which respects
+    conservation laws and algebraic constraints. It is expected that the
+    initial state satisfies the systems inherent algebraic constrains;
+    inconsistent initial conditions will raise exceptions.
+
+    The initial values of derivatives can be specified and the solver will
+    ensure they are consistent with the initial state, or change them if they
+    are not.
+
+    Currently, control variables can take the form of numbers or a strings
+    and are assigned via a dictionary or list.
+
+    Permissible strings:
+
+        * numerical constants such as `1.0`, `pi`
+        * time `t`
+        * state variables; for example `x_0`
+        * arithmetic operators such as `+`,`-`, `*`, `/`, as well as `^`
+          (power operator), `%` (remainder)
+        * elementary math functions such as `sin`, `exp`, `log`
+        * ternary if; for example `t < 0 ? 0 : 1` which implements the Heaviside
 
     Args:
-        system obj:`BondGraph`:
-        timespan tuple(float):
-        initial list(float):
-        control_vars (str,list(str), dict(str)):
-
+        system :obj:`BondGraph`: The system to simulate
+        timespan: A pair (`list` or `tuple`) containing the start and end points
+                  of the simulation.
+        x0: The initial conditions of the system.
+        dx0 (Optional): The initial rates of change of the system. The default
+                        value (`None`) indicates that the system should be
+                        initialised from the state variable initial conditions.
+        dt: The time step between reported (not integrated) values.
+        control_vars: A `dict`, `list` or `tuple` specifing the values of the
+                      control variables.
     Returns:
-        t, X
+        t: numpy array of timesteps
+        x: numpy array of state values
 
+    Raises:
+        ModelException, SolverException
     """
     from .config import config
     de = config.de
@@ -66,11 +113,13 @@ def simulate(system,
         raise ModelException("Control variable not specified")
 
     tspan = tuple(float(t) for t in timespan)
-    X0, DX0 = _fetch_ic(x0, dx0, system)
+
 
     func_str, diffs = to_julia_function_string(system, control_vars)
-
     func = j.eval(func_str)
+    X0, DX0 = _fetch_ic(x0, dx0, system, func)
+
+
     problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
 
     sol = de.solve(problem, dense=True, saveat=float(dt))

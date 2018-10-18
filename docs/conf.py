@@ -23,10 +23,10 @@ project = 'BondGraphTools'
 copyright = '2018, Peter Cudmore'
 author = 'Peter Cudmore'
 
-# The short X.Y version
-version = '0.3.3'
+from BondGraphTools.version import __version__ as version
+
 # The full version, including alpha/beta/rc tags
-release = '0.3.3'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
