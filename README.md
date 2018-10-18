@@ -7,7 +7,7 @@
 This toolkit is for rapid modelling and design of networked thermodynamic systems.
 It is conceptually based upon the Bond Graph modelling methodology.
 
-## Full Documentation:
+## Documentation
 
 https://bondgraphtools.readthedocs.io/
 

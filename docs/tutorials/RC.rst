@@ -1,11 +1,18 @@
 Tutorial: Driven Filter Circuit
 ===============================
 
+Goal: build a simple passive filter using basic bond graph modelling
+techniques.
+
+Difficulty: Beginner
+
+Requirement: BondGraphTools, jupyter.
+
+How to follow: Enter each block of code in consecutive cells in a jupyter
+notebook.
+
 Part 1: Basic Use
 -----------------
-
-We are going to build a simple passive filter using basic bond graph modelling
-techniques.
 
 First, import `BondGraphTools` and create a new model with the name "RC"::
 
