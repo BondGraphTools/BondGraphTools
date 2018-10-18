@@ -386,7 +386,7 @@ class LabeledPortManager(PortManager):
                 return p
             except ValueError:
                 idx = self.max_index
-                self.max_index = + 1
+                self.max_index += 1
                 new_port = LabeledPort(self, idx, name=port)
                 self._ports[new_port] = None
                 return new_port
