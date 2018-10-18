@@ -45,7 +45,8 @@ def _fetch_ic(x0, dx0, system, func, eps=0.001):
         DX0 = broyden1(f, DX0)
         if np.linalg.norm(f(DX0)) > 0.001:
             raise ModelException(
-                f"Invalid initial conditions: Could not find dx0 for the given x0 {x0}")
+                f"Inconsistent initial conditions: "
+                f"Could not find dx0 for the given x0 {x0}")
 
     return X0, DX0
 
@@ -55,18 +56,50 @@ def simulate(system,
              dx0=None,
              dt=0.1,
              control_vars=None):
-    """
-    Simulate the system dynamics.
+    """Simulate the system dynamics.
+
+    This method integrates the dynamics of the system over the specified
+    interval of time, starting at the specified initial state.
+
+    The solver used is a differential-algebraic integrator which respects
+    conservation laws and algebraic constraints. It is expected that the
+    initial state satisfies the systems inherent algebraic constrains;
+    inconsistent initial conditions will raise exceptions.
+
+    The initial values of derivatives can be specified and the solver will
+    ensure they are consistent with the initial state, or change them if they
+    are not.
+
+    Currently, control variables can take the form of numbers or a strings
+    and are assigned via a dictionary or list.
+
+    Permissible strings:
+
+        * numerical constants such as `1.0`, `pi`
+        * time `t`
+        * state variables; for example `x_0`
+        * arithmetic operators such as `+`,`-`, `*`, `/`, as well as `^`
+          (power operator), `%` (remainder)
+        * elementary math functions such as `sin`, `exp`, `log`
+        * ternary if; for example `t < 0 ? 0 : 1` which implements the Heaviside
 
     Args:
-        system obj:`BondGraph`:
-        timespan tuple(float):
-        initial list(float):
-        control_vars (str,list(str), dict(str)):
-
+        system :obj:`BondGraph`: The system to simulate
+        timespan: A pair (`list` or `tuple`) containing the start and end points
+                  of the simulation.
+        x0: The initial conditions of the system.
+        dx0 (Optional): The initial rates of change of the system. The default
+                        value (`None`) indicates that the system should be
+                        initialised from the state variable initial conditions.
+        dt: The time step between reported (not integrated) values.
+        control_vars: A `dict`, `list` or `tuple` specifing the values of the
+                      control variables.
     Returns:
-        t, X
+        t: numpy array of timesteps
+        x: numpy array of state values
 
+    Raises:
+        ModelException, SolverException
     """
     from .config import config
     de = config.de
