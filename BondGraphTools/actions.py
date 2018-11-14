@@ -10,6 +10,7 @@ from .component_manager import get_component, base_id
 from .exceptions import *
 from .base import BondGraphBase, Bond, Port, PortManager
 from .atomic import EqualFlow
+from .port_hamiltonian import PortHamiltonian
 
 logger = logging.getLogger(__name__)
 
@@ -228,16 +229,20 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
         return cls(name=name)
     elif isinstance(component, str):
         build_args = get_component(component, library)
-
+        args = ()
         if name:
             build_args.update({"name": name})
         if value or isinstance(value, (int, float, complex)):
-            _update_build_params(build_args, value, **kwargs)
+            args, build_args = _update_build_params(args,
+                                                    build_args,
+                                                    value,
+                                                    **kwargs)
         cls = _find_subclass(
             build_args["class"], BondGraphBase
         )
         del build_args["class"]
-        comp = cls(**build_args)
+
+        comp = cls(*args, **build_args)
         comp.__component__ = component
         comp.__library__ = library
         return comp
@@ -257,7 +262,7 @@ def new(component=None, name=None, library=base_id, value=None, **kwargs):
         )
 
 
-def _update_build_params(build_args, value, **kwargs):
+def _update_build_params(args, build_args, value, **kwargs):
 
     if isinstance(value, (list, tuple)):
         assignments = zip(build_args["params"].keys(), value)
@@ -270,13 +275,23 @@ def _update_build_params(build_args, value, **kwargs):
 
     elif isinstance(value, dict):
         for param, v in value.items():
-            if isinstance(build_args["params"][param], dict):
-                build_args["params"][param]["value"] = v
-            else:
-                build_args["params"][param] = v
+            try:
+                if isinstance(build_args["params"][param], dict):
+                    build_args["params"][param]["value"] = v
+                else:
+                    build_args["params"][param] = v
+            except KeyError:
+                build_args[param] = v
+
+    elif isinstance(value, str):
+        args = (*args, value)
     else:
+        # Todo: fix me! Dirty Hacks to make PH load
+
         p = next(iter(build_args["params"]))
         build_args["params"][p] = value
+
+    return args, build_args
 
 
 def _find_subclass(name, base_class):
