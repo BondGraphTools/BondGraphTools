@@ -21,7 +21,7 @@ before_install:
 
 install:
   - python -m pip install -r requirements.txt
-  - python -m pip install pytest coverage mock pytest-cov
+  - python -m pip install pytest>=3.6 coverage mock pytest-cov
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
   - export LD_LIBRARY_PATH
 
