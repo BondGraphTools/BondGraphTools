@@ -6,3 +6,4 @@ doctrees/
 *.ipynb
 build/
 BondGraphTools.egg-info/
+docs/html
