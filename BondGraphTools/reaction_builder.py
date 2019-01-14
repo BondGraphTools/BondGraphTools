@@ -86,11 +86,11 @@ class Reaction_Network(object):
 
         A tuple (V,x) contain the vector :math:`V(x)` and the coordinates
         :math:'x_{i}` such that for the the stoichiometric matrix :math:`N`
-        and the reation rates :math:`\kappa = \text{diag}(\kappa_1, kappa_2,
-        \ldots)`, the mass action description of the system is
+        and the reation rates :math:`\\kappa = \text{diag}(\\kappa_1, \\kappa_2,
+        \\ldots)`, the mass action description of the system is
         math::
 
-            \dot{x} = N\kappa V(x)
+            \\dot{x} = N\\kappa V(x)
 
         """
         coords = symbols(",".join([f"x_{{{s}}}" for s in self.species]))

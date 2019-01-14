@@ -14,8 +14,8 @@ class PortHamiltonian(Component):
         $x, y, z$ or indexed notations thereof.
 
     Variables in the reserved list are taken to be stateful.
-    $x$,$y$,$z$ are taken to be in some sense cannonical co-ordiantes
-    of some differntiable manifold. Where $p$ is taken to be in the
+    $x$,$y$,$z$ are taken to be in some sense canonical co-ordinates
+    of some differentiable manifold. Where $p$ is taken to be in the
     co-tangent space in the usual manner.
 
 
@@ -78,8 +78,7 @@ class PortHamiltonian(Component):
             relations.append(str(Hx.diff(q).simplify() - sp.S(f"e_{i}")))
             relations.append(f"d{q} - f_{i}")
 
-
-        ports = {i:None for i in range(len(state_vars))}
+        ports = {i: None for i in range(len(state_vars))}
 
         return relations, state_vars, params, ports
 
