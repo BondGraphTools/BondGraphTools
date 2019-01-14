@@ -44,6 +44,16 @@ Step 3: Install BondGraphTools
 
 `BondGraphTools` is now installed.
 
+Step 4: Julia dependencies.
+---------------------------
+`BondGraphTools` will automatically download and install Julia dependencies the first time
+a user attempts to run a simulation.
+
+This can be manually triggered via the following command::
+
+    from bondgraphtools.config import config
+    config.install_dependencies()
+
 .. _Homebrew: https://brew.sh/
 
 
