@@ -36,7 +36,7 @@ class PortHamiltonian(Component):
         kwargs["state_vars"] = x
 
         if "params" not in kwargs:
-            kwargs["params"] = p
+            kwargs["params"] = {}
         else:
             for p in params:
                 if p not in kwargs["params"] and str(p) not in kwargs["params"]:
