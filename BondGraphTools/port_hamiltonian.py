@@ -27,9 +27,10 @@ class PortHamiltonian(Component):
                           "params": {'w': 2}
             ph = new("PH", value=build_args)
 
-        creates a new port hamiltonian component `ph`, which has one port define by the
-        relation $$\dot{x}_i = f_i, \qquad e_i = \frac{\partial H}{\partial x_i}
-
+        creates a new port hamiltonian component `ph`, which has one port
+        defined by the relation
+        $$\dot{x}_i = f_i, \qquad e_i = \frac{\partial H}{\partial x_i}$$
+        where $H = w*x^2$,.
 
     See Also: Component
     """
