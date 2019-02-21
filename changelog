@@ -1,3 +1,16 @@
+v0.3.7 Changelog 21.02.2019
+==========================
+
+New
+^^^
+- Added prelimaery support for port-Hamiltonians
+- Added addtional tutorials
+
+Fixes
+^^^^^
+- Fixed an indexing bug when exposing port 
+
+
 v0.3.6 Changelog 18.10.2018
 ===========================
 

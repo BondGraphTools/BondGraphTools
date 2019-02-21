@@ -68,7 +68,6 @@ def load_library(filename):
     return True
 
 
-
 def get_library_list():
     """
     Fetches a list of the libraries available for use.

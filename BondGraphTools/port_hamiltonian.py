@@ -14,14 +14,21 @@ class PortHamiltonian(Component):
         $x, y, z$ or indexed notations thereof.
 
     Variables in the reserved list are taken to be stateful.
-    $x$,$y$,$z$ are taken to be in some sense canonical co-ordinates
-    of some differentiable manifold. Where $p$ is taken to be in the
-    co-tangent space in the usual manner.
-
 
     Args:
         hamiltonian (str): The Hamiltonian storage function from which to
                            generate the component.
+
+    Usage:
+        Port Hamiltonians can be created using the `new` command.
+        For example::
+
+            build_args = {"hamiltonian": "w*x^2/2",
+                          "params": {'w': 2}
+            ph = new("PH", value=build_args)
+
+        creates a new port hamiltonian component `ph`, which has one port define by the
+        relation $$\dot{x}_i = f_i, \qquad e_i = \frac{\partial H}{\partial x_i}
 
 
     See Also: Component
@@ -39,7 +46,8 @@ class PortHamiltonian(Component):
             kwargs["params"] = {}
         else:
             for p in params:
-                if p not in kwargs["params"] and str(p) not in kwargs["params"]:
+                if p not in kwargs["params"] \
+                        and str(p) not in kwargs["params"]:
                     kwargs["params"][str(p)] = None
         kwargs["ports"] = ports
         # for each state variable, assign
@@ -81,6 +89,3 @@ class PortHamiltonian(Component):
         ports = {i: None for i in range(len(state_vars))}
 
         return relations, state_vars, params, ports
-
-
-

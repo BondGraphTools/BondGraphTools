@@ -2,7 +2,7 @@ Tutorial: Building Modular Enzymatic Reactions
 ==============================================
 Overview
 --------
-Goal:To build and simulate a simple reaction A = B, and exploit modularity to
+Goal: To build and simulate a simple reaction A = B, and exploit modularity to
 substitute in different reactions structures.
 
 Difficulty: Intermediate
