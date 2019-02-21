@@ -27,6 +27,7 @@ Python dependencies:
 - julia>=0.1.5
 - diffeqpy>=0.4
 - requests>=2.19
+
 Julia dependencies:
  - PyCall
  - DifferentialEquations.jl

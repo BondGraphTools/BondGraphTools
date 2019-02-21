@@ -58,7 +58,7 @@ class Config:
             self.julia_executable = pathlib.Path(julia_executable)
 
         if python_executable and python_executable is not sys.executable:
-            rebuild=True
+            rebuild = True
         elif python_executable:
             self.python_executable = pathlib.Path(python_executable)
         else:
@@ -78,7 +78,8 @@ class Config:
             julia_dir = out.decode('utf8').strip()
             return pathlib.Path(julia_dir).resolve()
         else:
-            raise NotImplementedError("Could not find Julia 0.6.4: please install and add to path")
+            raise NotImplementedError("Could not find Julia 0.6.4: "
+                                      "please install and add to path")
 
     def find_conda(self):
         p = Popen([self._which, 'conda'], stdout=PIPE, stderr=None)
@@ -91,7 +92,8 @@ class Config:
 
     def install_dependencies(self, rebuild=False):
         # we assume julia and python are already in the path
-        logger.debug('Installing Julia dependencies; this may take some time')
+        logger.warning('Installing Julia dependencies; '
+                       'this may take some time')
         env = os.environ
         env.update({"PYTHON": _as_str(self.python_executable),
                     "JULIA": _as_str(self.julia_executable)})
@@ -106,7 +108,7 @@ class Config:
             """Pkg.add("DifferentialEquations")\n"""]
 
         if rebuild:
-            julia_code +=[
+            julia_code += [
                 """Pkg.build("PyCall")""",
                 "using PyCall\n",
                 "using DifferentialEquations\n"]
@@ -117,7 +119,7 @@ class Config:
             fs.writelines(julia_code)
         run([_as_str(self.julia_executable), _as_str(temp)], env=env)
         os.remove(temp)
-        logger.debug("Complete")
+        logger.warning("Complete")
 
     @property
     def julia(self):
@@ -136,7 +138,9 @@ class Config:
 
     @property
     def de(self):
-        if not self._julia: self.start_julia()
+        if not self._julia:
+            self.start_julia()
+
         return self._de
 
 

@@ -1,3 +1,16 @@
+v0.3.7 Changelog 21.02.2019
+==========================
+
+New
+^^^
+- Added prelimaery support for port-Hamiltonians
+- Added addtional tutorials
+
+Fixes
+^^^^^
+- Fixed an indexing bug when exposing port 
+
+
 v0.3.6 Changelog 18.10.2018
 ===========================
 
@@ -9,6 +22,7 @@ throws exceptions if it can't.
 Fixes
 ^^^^^
 - Fixed a bug when comparing labelled ports.
+- Fixed a bug limiting the number of exposed ports to two
 
 v0.3.5 Changelog 15.10.2018
 ===========================
