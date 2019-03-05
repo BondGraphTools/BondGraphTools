@@ -103,6 +103,7 @@ class BondGraphBase:
 
 Bond = namedtuple("Bond", ["tail", "head"])
 
+
 class Port(object):
     """
     Basic object for representing ports;
@@ -156,6 +157,7 @@ class Port(object):
                 pass
         return False
 
+
 class PortManager:
     """
     This class provides methods for interfacing with static ports on
@@ -178,7 +180,7 @@ class PortManager:
         Makes available a (or the) port for use.
 
         Args:
-            port: (optional) The index or referece to the requested port.
+            port: (optional) The index or reference to the requested port.
 
         Returns: An instance of `Port`
 
@@ -214,6 +216,7 @@ class PortManager:
     def ports(self):
         """A dictionary of the active ports"""
         return self._ports
+
 
 class PortExpander(PortManager):
     """
@@ -289,6 +292,7 @@ class PortExpander(PortManager):
             for port in self._ports if port.is_connected
         }
 
+
 class ExpandedPort(Port):
     def __init__(self, *args, port_class):
         super().__init__(*args)
@@ -317,7 +321,6 @@ class PortTemplate(object):
         self.index = index
         self.ports = []
         self.data = data if data else {}
-
 
     def __hash__(self):
         return id(self)
@@ -356,9 +359,12 @@ class PortTemplate(object):
         self.parent.max_index = max(index, self.parent.max_index) + 1
         return port
 
+
 class LabeledPort(Port):
-    def __init__(self,*args,name=None, **kwargs):
+    """See Also: `Port`, `LabeledPortManager`"""
+    def __init__(self, *args, name=None, **kwargs):
         self.name = name
+        """The name of this port"""
         Port.__init__(self, *args, **kwargs)
 
     def __hash__(self):
@@ -370,8 +376,13 @@ class LabeledPort(Port):
         else:
             return super().__eq__(other)
 
-class LabeledPortManager(PortManager):
 
+class LabeledPortManager(PortManager):
+    """Interface for labelled ports
+
+    See Also: `PortManager`
+
+    """
     def __init__(self, ports=None):
         if ports:
             super().__init__(ports)
@@ -386,7 +397,7 @@ class LabeledPortManager(PortManager):
                 return p
             except ValueError:
                 idx = self.max_index
-                self.max_index = + 1
+                self.max_index += 1
                 new_port = LabeledPort(self, idx, name=port)
                 self._ports[new_port] = None
                 return new_port

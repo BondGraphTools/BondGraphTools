@@ -132,6 +132,7 @@ def simulate(system,
 
     return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
 
+
 def to_julia_function_string(model, control_vars=None, in_place=False):
     """
     Produces a Julia function string from the given model.

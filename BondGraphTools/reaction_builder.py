@@ -86,11 +86,11 @@ class Reaction_Network(object):
 
         A tuple (V,x) contain the vector :math:`V(x)` and the coordinates
         :math:'x_{i}` such that for the the stoichiometric matrix :math:`N`
-        and the reation rates :math:`\kappa = \text{diag}(\kappa_1, kappa_2,
-        \ldots)`, the mass action description of the system is
+        and the reation rates :math:`\\kappa = \text{diag}(\\kappa_1,
+        \\kappa_2, \\ldots)`, the mass action description of the system is
         math::
 
-            \dot{x} = N\kappa V(x)
+            \\dot{x} = N\\kappa V(x)
 
         """
         coords = symbols(",".join([f"x_{{{s}}}" for s in self.species]))
@@ -152,7 +152,8 @@ class Reaction_Network(object):
                 system.add(reverse_complex)
                 connect(reverse_complex.inverting, reaction)
                 self._connect_complex(
-                    system, species_anchors, reverse_complex, bck_sto, is_reversed=True
+                    system, species_anchors, reverse_complex,
+                    bck_sto, is_reversed=True
                 )
             if len(fwd_sto) == 1 and list(fwd_sto.values())[0] == 1:
                 species = list(fwd_sto.keys()).pop()
@@ -164,7 +165,8 @@ class Reaction_Network(object):
                 connect(reaction, forward_complex.inverting)
 
                 self._connect_complex(
-                    system, species_anchors, forward_complex, fwd_sto, is_reversed=False
+                    system, species_anchors, forward_complex,
+                    fwd_sto, is_reversed=False
                 )
 
     def _connect_complex(self, system, species_anchors, junct, stoichiometry,

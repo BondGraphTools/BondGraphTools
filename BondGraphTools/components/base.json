@@ -169,6 +169,12 @@
           "e":null
       },
       "constitutive_relations": ["e_0 - e", "f_0+f"]
+    },
+  "PH":{
+    "class": "PortHamiltonian",
+    "metamodel":"PH",
+    "description":"Port Hamiltonian",
+    "params":{}
     }
   }
 }
