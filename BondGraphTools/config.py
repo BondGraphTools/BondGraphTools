@@ -94,6 +94,7 @@ class Config:
         # we assume julia and python are already in the path
         logger.warning('Installing Julia dependencies; '
                        'this may take some time')
+
         env = os.environ
         env.update({"PYTHON": _as_str(self.python_executable),
                     "JULIA": _as_str(self.julia_executable)})
@@ -142,7 +143,6 @@ class Config:
             self.start_julia()
 
         return self._de
-
 
     @staticmethod
     def load():
