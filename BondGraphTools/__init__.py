@@ -1,8 +1,8 @@
 """
 BondGraphTools
 ==============
-BondGraphTools is a python library for systems modelling and control using
-bond graphs.
+BondGraphTools is a python library for symbolic modelling
+of energetic systems.
 
 Package Documentation::
 

@@ -128,7 +128,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
             item.parent = self
             self.components.add(item)
 
-
     def remove(self, component):
         # Warning: Scheduled to be deprecated
         if [b for b in self._bonds if b.head.component is component or
@@ -425,7 +424,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         return tangent_space, port_space, control_space
 
 
-
 def _is_label_invalid(label):
     if not isinstance(label, str):
         return True
@@ -435,6 +433,7 @@ def _is_label_invalid(label):
             return True
 
     return False
+
 
 class BondSet(OrderedSet):
     """
