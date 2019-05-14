@@ -9,6 +9,7 @@ from .view import Glyph
 
 logger = logging.getLogger(__name__)
 
+
 class Component(BondGraphBase, PortManager):
     """
     Atomic bond graph components are those defined by constitutive relations.
