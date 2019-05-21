@@ -3,7 +3,7 @@
 """
 import logging
 
-from orderedset import OrderedSet
+from ordered_set import OrderedSet
 
 
 from .base import *
