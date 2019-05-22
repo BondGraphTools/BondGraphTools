@@ -187,3 +187,20 @@ def test_nlin_se():
     assert not solutions ^ relations
 
 
+class TestReactionNames(object):
+    def test_naming(self):
+        # see issue 79
+        from BondGraphTools.reaction_builder import Reaction_Network
+        from BondGraphTools.atomic import SymmetricComponent
+        rn = Reaction_Network(name="Reaction 1")
+        rn.add_reaction("A+B=C", name="E1")
+        model = rn.as_network_model()
+
+        assert model.name == "Reaction 1"
+
+        re = model / "E1"
+
+        assert isinstance(re, SymmetricComponent)
+        assert re.metamodel == 'R'
+
+
