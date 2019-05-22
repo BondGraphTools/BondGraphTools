@@ -11,6 +11,7 @@ from .exceptions import *
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -99,7 +100,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     def map_port(self, label, e, f):
         port = self.get_port(label)
-        self._port_map[port] = (e,f)
+        self._port_map[port] = (e, f)
 
     def add(self, *args):
         # Warning: Scheduled to be deprecated
@@ -166,7 +167,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
                 param = (v, p)
                 if param not in excluded:
                     out.update({j: param})
-                    j+=1
+                    j += 1
         return out
 
     @property
@@ -281,8 +282,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         coord_vect = sp.Matrix(coordinates)
         relations = [
-            sp.Add(l,r) for i, (l,r) in enumerate(zip(
-                lin_op*coord_vect,nlin_op))
+            sp.Add(l, r) for i, (l, r) in enumerate(zip(
+                lin_op*coord_vect, nlin_op))
             if not ss_size <= i < ss_size + 2*js_size - 2*len(out_ports)
         ]
         if isinstance(constraints, list):
@@ -343,8 +344,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         )
         inv_tm, inv_js, inv_cv = mappings
 
-        js_size = len(inv_js) # number of ports
-        ss_size = len(inv_tm) # number of state space coords
+        js_size = len(inv_js)  # number of ports
+        ss_size = len(inv_tm)  # number of state space coords
         cv_size = len(inv_cv)
         n = len(coordinates)
 
@@ -429,7 +430,7 @@ def _is_label_invalid(label):
         return True
 
     for token in [" ", ".", "/"]:
-        if len(label.split(token)) >1:
+        if len(label.split(token)) > 1:
             return True
 
     return False
@@ -457,5 +458,7 @@ class BondSet(OrderedSet):
         tail.is_connected = False
 
     def __contains__(self, item):
-        p1, p2 = item
-        return super().__contains__(item) or super().__contains__((p2,p1))
+        if isinstance(item, BondGraphBase):
+            return any({item in head or item in tail for tail, head in self})
+        else:
+            return super().__contains__(item)
