@@ -109,7 +109,6 @@ class Bond(namedtuple("Bond", ["tail", "head"])):
     def __contains__(self, item):
         if isinstance(item, BondGraphBase):
             return self.head[0] is item or self.tail[0] is item
-
         try:
             c, i = item
             return any(c == comp and i == idx for comp, idx in self)

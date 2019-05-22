@@ -73,8 +73,6 @@ class TestPort:
         assert one is not port_c
         assert one not in port_c
 
-
-
     def test_cmp(self):
         c = new("C")
         one = new("1")
@@ -84,7 +82,8 @@ class TestPort:
 
         assert port_c is not port_one
         assert port_c != port_one
-
+        assert port_c is not None
+        assert port_c != None
 
 class TestBond:
     def test_create(self):
