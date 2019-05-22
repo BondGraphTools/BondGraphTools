@@ -97,11 +97,23 @@ class BondGraphBase:
     def __hash__(self):
         return id(self)
 
-    # def __eq__(self, other):
-    #     return self.__dict__ == other.__dict__
 
+class Bond(namedtuple("Bond", ["tail", "head"])):
+    """A `namedtuple` that stores a connection between two ports.
+    Head and tail are specified to determine orientation
 
-Bond = namedtuple("Bond", ["tail", "head"])
+    Attributes:
+        head: The 'harpoon' end of the power bond and direction of positive $f$
+        tail: The non-harpoon end, and direction of negative $f$
+    """
+    def __contains__(self, item):
+        if isinstance(item, BondGraphBase):
+            return self.head[0] is item or self.tail[0] is item
+        try:
+            c, i = item
+            return any(c == comp and i == idx for comp, idx in self)
+        except TypeError:
+            return False
 
 
 class Port(object):
@@ -133,6 +145,9 @@ class Port(object):
         else:
             raise KeyError
 
+    def __contains__(self, item):
+        return item is self.component
+
     def __hash__(self):
         return id(self)
 
@@ -153,7 +168,7 @@ class Port(object):
             try:
                 c, p = other
                 return c is self.component and p == self.index
-            except AttributeError:
+            except (AttributeError, TypeError):
                 pass
         return False
 
@@ -239,7 +254,7 @@ class PortExpander(PortManager):
         else:
             super().__init__({})
 
-        self._templates = {PortTemplate(self, p, v) for p,v in ports.items()}
+        self._templates = {PortTemplate(self, p, v) for p, v in ports.items()}
 
         if len(self._templates) == 1:
             self._default_template, = self._templates
@@ -282,6 +297,7 @@ class PortExpander(PortManager):
         try:    # suppose we've got port or a port tuple that exists
             return super().get_port(port)
         except InvalidPortException as ex:
+            del ex
             pass
 
         raise InvalidPortException(f"Could not create new port:{port}")
@@ -353,7 +369,7 @@ class PortTemplate(object):
             raise InvalidPortException("Could not create port: index "
                                        "already exists")
         port = ExpandedPort(self.parent, index, port_class=self.index)
-        port.__dict__.update({k:v for k,v in self.data.items()})
+        port.__dict__.update({k: v for k, v in self.data.items()})
         self.parent._ports[port] = self.index
         self.ports.append(port)
         self.parent.max_index = max(index, self.parent.max_index) + 1
