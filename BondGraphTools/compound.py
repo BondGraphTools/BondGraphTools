@@ -273,10 +273,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def constitutive_relations(self):
+
+        if not self.components:
+            return []
+
         coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
-        logger.debug("Getting IO ports: %s",out_ports)
+        logger.debug("Getting IO ports: %s", out_ports)
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
