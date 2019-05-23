@@ -59,9 +59,6 @@ def test_equal():
 
 
 
-#    def test_get_exposed_port
-
-
 class TestBond:
     def test_create(self):
         from BondGraphTools.base import Bond
@@ -81,7 +78,6 @@ class TestBond:
     def test_compare(self):
         from BondGraphTools.base import Bond
         from BondGraphTools.actions import new
-
         c = new('C')
         one = new('1')
 
@@ -184,6 +180,31 @@ class TestConnect:
                     assert component not in bond
 
 
+
+    def test_component_in_bond(self):
+        # see issues 85
+        c = new('C')
+        se = new('Se')
+        r = new('R')
+        one = new('1')
+        bg = new()
+        bg.add(c, se, r, one)
+
+        bonds = [(c, one.non_inverting),
+                 (se, one),
+                 (one, r)]
+
+        for bond in bonds: connect(*bond)
+
+        comps = [{c, one}, {se, one}, {one ,r}]
+        all_comps = {c,se,r,one}
+
+        for i, bond in enumerate(bg.bonds):
+            for component in all_comps:
+                if component in comps[i]:
+                    assert component in bond
+                else:
+                    assert component not in bond
 
 def test_disconnect_ports():
 
@@ -327,10 +348,8 @@ class TestRemove:
         zero = bgt.new("0")
         r = bgt.new("R", value=1)
         c = bgt.new("C", value=1)
-
         bg = bgt.new()
         bg.add([zero, r, c])
-
         assert c in bg.components
         bg.remove(c)
         assert c not in bg.components
@@ -379,6 +398,7 @@ class TestSwap:
         assert c in bg.components
         r_p, = r.ports
         c_p, = c.ports
+
         z0, z1, = zero.ports
 
         assert bg.bonds == [
@@ -393,6 +413,7 @@ class TestSwap:
         assert len(bg.state_vars) == 0
         assert len(bg.control_vars) == 1
 
+
         assert bg.bonds == [
             (r_p, z0),
             (sf_port, z1)
@@ -402,6 +423,7 @@ class TestSwap:
         assert Sf in bg.components
 
         swap(Sf, c)
+
 
         assert bg.bonds == [
             (r_p, z0),
@@ -447,6 +469,3 @@ class TestSwap:
 
         with pytest.raises(InvalidPortException):
             swap(zero, l)
-
-
-

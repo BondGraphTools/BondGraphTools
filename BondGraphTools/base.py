@@ -112,20 +112,6 @@ class Bond(namedtuple("Bond", ["tail", "head"])):
         except TypeError:
             return False
 
-    # def __hash__(self):
-    #     return id(self)
-    #
-    # def __eq__(self, other):
-    #     if isinstance(other, tuple):
-    #         if (len(other) == 2
-    #                 and other[0] == self.tail
-    #                 and other[1] == self.head):
-    #             return True
-    #
-    #         return False
-    #     else:
-    #         return super().__eq__(other)
-
 
 class Port(object):
     """
