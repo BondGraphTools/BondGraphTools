@@ -464,3 +464,12 @@ def test_ported_parallel_rc():
         sympy.sympify("dx_0 + x_0/6 - f_0"),
         sympy.sympify("e_0 - x_0/3")
     ]
+
+class TestConstitutiveRelations:
+
+    def test_empty_failstate(self):
+        from BondGraphTools import new
+
+        model = new()
+
+        assert model.constitutive_relations == []
