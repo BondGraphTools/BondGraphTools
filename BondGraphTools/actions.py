@@ -354,7 +354,7 @@ def expose(component, label=None):
     if not label:
         label = str(len(model.ports))
 
-    model.map_port(label, effort_port, flow_port)
+    model.map_port(label, (effort_port, flow_port))
 
 
 def add(model, *args):

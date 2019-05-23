@@ -46,8 +46,9 @@ class PortManager(object):
         # If no port is specified, and there is only one port, grab it.
         target_port = None
         if port is None and len(self._ports) == 1:
-            if not self._ports[0].is_connected:
-                target_port = self._ports[0]
+            p = list(self._ports.keys())[0]
+            if not p.is_connected:
+                target_port = p
         # If it's a port object, then grab it
         elif port in self._ports and not port.is_connected:
             target_port = port
