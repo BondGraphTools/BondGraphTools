@@ -45,21 +45,25 @@ class PortManager(object):
         """
         # If no port is specified, and there is only one port, grab it.
         target_port = None
+
         if port is None and len(self._ports) == 1:
             p = list(self._ports.keys())[0]
-            if not p.is_connected:
-                target_port = p
+            target_port = p
         # If it's a port object, then grab it
-        elif port in self._ports and not port.is_connected:
+        elif port in self._ports:
             target_port = port
         elif isinstance(port, int):
-            target_port = next((pp for pp in self._ports if pp.index == port
-                                and not pp.is_connected), None)
+            target_port = next((pp for pp in self._ports if pp.index == port),
+                               None)
 
-        if target_port:
+        if target_port and not target_port.is_connected:
             return target_port
 
-        raise InvalidPortException(f"Could not find port: {self}.{port}")
+        elif target_port and target_port.is_connected:
+            raise InvalidPortException(f"Port is already connected: "
+                                       f"{self}.{port}")
+        else:
+            raise InvalidPortException(f"Could not find port: {self}.{port}")
 
     def _port_vectors(self):
         return {
