@@ -58,32 +58,6 @@ def test_equal():
     assert c_1 is not c_2
 
 
-class TestPort:
-    def test_in(self):
-        from BondGraphTools.base import Port
-        from BondGraphTools.actions import new
-
-        c = new("C")
-        one = new("1")
-
-        port_c = Port(c, 0)
-
-        assert c in port_c
-        assert c is not port_c
-        assert one is not port_c
-        assert one not in port_c
-
-    def test_cmp(self):
-        c = new("C")
-        one = new("1")
-
-        port_c = Port(c, 0)
-        port_one = Port(one, 0)
-
-        assert port_c is not port_one
-        assert port_c != port_one
-        assert port_c is not None
-        assert port_c != None
 
 class TestBond:
     def test_create(self):
@@ -100,6 +74,16 @@ class TestBond:
         assert (c, 0) in b_1
         assert (one, 0) in b_1
         assert (one, 1) not in b_1
+
+    def test_compare(self):
+        from BondGraphTools.base import Bond
+        from BondGraphTools.actions import new
+        c = new('C')
+        one = new('1')
+
+        b_1 = Bond(head=(c, 0), tail=(one, 0))
+
+        assert b_1 == ((one, 0), (c, 0))
 
 
 class TestConnect:
@@ -169,6 +153,33 @@ class TestConnect:
         assert isinstance(c2, Component)
         assert c1 in (c, se)
         assert c2 in (c, se)
+
+    def test_component_in_bond(self):
+        # see issues 85
+        c = new('C')
+        se = new('Se')
+        r = new('R')
+        one = new('1')
+        bg = new()
+        bg.add(c, se, r, one)
+
+        bonds = [(c, one.non_inverting),
+                 (se, one),
+                 (one, r)]
+
+        for bond in bonds: connect(*bond)
+
+        comps = [{c, one}, {se, one}, {one ,r}]
+        all_comps = {c,se,r,one}
+
+        for i, bond in enumerate(bg.bonds):
+            for component in all_comps:
+                if component in comps[i]:
+                    assert component in bond
+                else:
+                    assert component not in bond
+
+
 
     def test_component_in_bond(self):
         # see issues 85
@@ -337,10 +348,8 @@ class TestRemove:
         zero = bgt.new("0")
         r = bgt.new("R", value=1)
         c = bgt.new("C", value=1)
-
         bg = bgt.new()
         bg.add([zero, r, c])
-
         assert c in bg.components
         bg.remove(c)
         assert c not in bg.components
@@ -389,12 +398,13 @@ class TestSwap:
         assert c in bg.components
         r_p, = r.ports
         c_p, = c.ports
-        z0,z1, = zero.ports
 
-        assert set(bg.bonds) == {
+        z0, z1, = zero.ports
+
+        assert bg.bonds == [
             (r_p, z0),
             (c_p, z1)
-        }
+        ]
 
         assert len(bg.state_vars) == 1
         Sf = bgt.new('Sf')
@@ -403,20 +413,22 @@ class TestSwap:
         assert len(bg.state_vars) == 0
         assert len(bg.control_vars) == 1
 
-        assert set(bg.bonds) == {
+
+        assert bg.bonds == [
             (r_p, z0),
             (sf_port, z1)
-        }
+        ]
 
         assert c not in bg.components
         assert Sf in bg.components
 
         swap(Sf, c)
 
-        assert set(bg.bonds) == {
+
+        assert bg.bonds == [
             (r_p, z0),
             (c_p, z1)
-        }
+        ]
 
         assert c in bg.components
         assert Sf not in bg.components
@@ -455,7 +467,5 @@ class TestSwap:
         connect(r, zero)
         connect(c, zero)
 
-        with pytest.raises(InvalidComponentException):
+        with pytest.raises(InvalidPortException):
             swap(zero, l)
-
-

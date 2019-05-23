@@ -2,10 +2,12 @@
 cannot be decomposed into other components.
 """
 
-
-from .base import *
-from .exceptions import *
-from .view import Glyph
+import logging
+from BondGraphTools.base import BondGraphBase
+from BondGraphTools.exceptions import InvalidPortException
+from BondGraphTools.view import Glyph
+from BondGraphTools.port_managers import PortManager, PortExpander
+import sympy as sp
 
 logger = logging.getLogger(__name__)
 
