@@ -43,25 +43,22 @@ class PortManager(object):
 
         Raises: InvalidPortException
         """
-
         # If no port is specified, and there is only one port, grab it.
+        target_port = None
         if port is None and len(self._ports) == 1:
-            for p in self._ports:
-                if not p.is_connected:
-                    return p
+            if not self._ports[0].is_connected:
+                target_port = self._ports[0]
         # If it's a port object, then grab it
         elif port in self._ports and not port.is_connected:
-            return port
+            target_port = port
         elif isinstance(port, int):
-            p = next((pp for pp in self._ports if pp.index == port and
-                      not pp.is_connected), None)
-            if p:
-                return p
+            target_port = next((pp for pp in self._ports if pp.index == port
+                                and not pp.is_connected), None)
 
-        if port:
-            raise InvalidPortException(f"Could not find port: {self}.{port}")
-        else:
-            raise InvalidPortException(f"Could not find a free port: {self}")
+        if target_port:
+            return target_port
+
+        raise InvalidPortException(f"Could not find port: {self}.{port}")
 
     def _port_vectors(self):
         return {
