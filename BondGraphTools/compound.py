@@ -4,9 +4,10 @@
 import logging
 
 from ordered_set import OrderedSet
+import sympy as sp
 
-
-from .base import *
+from BondGraphTools.base import BondGraphBase, Bond
+from BondGraphTools.port_managers import LabeledPortManager
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
@@ -99,7 +100,11 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         return [p for c in self.components for p in c.ports]
 
     def map_port(self, label, e, f):
-        port = self.get_port(label)
+        try:
+            port = self.get_port(label)
+        except InvalidPortException:
+            port = self.new_port(label)
+            
         self._port_map[port] = (e, f)
 
     def add(self, *args):
