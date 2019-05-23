@@ -4,9 +4,10 @@
 import logging
 
 from ordered_set import OrderedSet
+import sympy as sp
 
-
-from .base import *
+from BondGraphTools.base import BondGraphBase, Bond
+from BondGraphTools.port_managers import LabeledPortManager
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
@@ -98,9 +99,18 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         """A list of the ports internal to this model"""
         return [p for c in self.components for p in c.ports]
 
-    def map_port(self, label, e, f):
-        port = self.get_port(label)
-        self._port_map[port] = (e, f)
+    def map_port(self, label, ef):
+        """Exposes a pair of effort and flow variables as an external port
+        Args:
+            label: The label to assign to this port.
+            ef: The internal effort and flow variables.
+        """
+        try:
+            port = self.get_port(label)
+        except InvalidPortException:
+            port = self.new_port(label)
+
+        self._port_map[port] = ef
 
     def add(self, *args):
         # Warning: Scheduled to be deprecated
@@ -215,7 +225,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         for v in self.components:
             try:
                 for i in v.control_vars:
-                    cv = (v,i)
+                    cv = (v, i)
                     if cv not in excluded:
                         out.update({f"u_{j}": cv})
                         j += 1

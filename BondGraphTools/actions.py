@@ -6,11 +6,15 @@ connecting parts together, and setting parameters.
 import copy
 import logging
 
-from .component_manager import get_component, base_id
-from .exceptions import *
-from .base import BondGraphBase, Bond, Port, PortManager
+from BondGraphTools.component_manager import get_component, base_id
+from BondGraphTools.exceptions import (
+    InvalidPortException, InvalidComponentException
+)
+from BondGraphTools.base import BondGraphBase, Bond, Port
+from BondGraphTools.port_managers import PortTemplate
+
 from .atomic import EqualFlow
-from .port_hamiltonian import PortHamiltonian
+# from .port_hamiltonian import PortHamiltonian
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +28,7 @@ __all__ = [
     "remove",
     "set_param"
 ]
+
 
 def disconnect(target, other):
     """
@@ -77,14 +82,16 @@ def disconnect(target, other):
 
 
 def connect(source, destination):
-    """
-    Connects two components or ports..
+    """Connects two components or ports.
+
+    Defines a power bond between the source and destination ports such that
+    the bond tail is at the source, and the bond head is at the destination.
     We assume that either the source and/or destination is or has a free
     port.
 
     Args:
-        source (Port or BondGraphBase):
-        destination (Port or BondGraphBase):
+        source (Port or BondGraphBase):      The tail of the power bond
+        destination (Port or BondGraphBase): The head of the power bond
 
     Raises:
         InvalidPortException, InvalidComponentException
@@ -93,8 +100,9 @@ def connect(source, destination):
         :func:`disconnect`
     """
 
-    tail = _find_port(source, is_tail=True)
-    head = _find_port(destination)
+
+    tail = _find_or_make_port(source, is_tail=True)
+    head = _find_or_make_port(destination)
 
     model = tail.component.parent
     if not model or head.component.parent is not model:
@@ -103,35 +111,40 @@ def connect(source, destination):
     model._bonds.add(bond)
 
 
-def _find_port(arg, is_tail=False):
-    # assume we're given a component:
-    try:
-        # Dirty hack to make the 1 port behave like PG wants.
-        if isinstance(arg, EqualFlow):
-            if is_tail:
-                return arg.get_port(arg.inverting)
-            else:
-                return arg.get_port(arg.non_inverting)
+def _unpack_port_arg(port):
+    # returns (component, idx)
+    if isinstance(port, (Port, tuple)):
+        c, idx = port
+        return c, idx
+
+    if isinstance(port, BondGraphBase):
+        return port, None
+
+    if isinstance(port, PortTemplate):
+        assert port.parent
+        return port.parent, port
+
+    raise InvalidPortException("Could not unpack port %s", port)
+
+
+def _find_or_make_port(arg, is_tail=False):
+    component, port = _unpack_port_arg(arg)
+
+    if isinstance(component, EqualFlow) and port is None:
+        if is_tail:
+            port = component.inverting
         else:
-            return arg.get_port()
-    except AttributeError as ex:
-        return _find_port_from_port_class(arg, is_tail=is_tail)
-
-
-def _find_port_from_port_class(arg, is_tail=False):
+            port = component.non_inverting
     try:
-        c = arg.component
-        p = arg
-    except AttributeError:
+        p = component.get_port(port)
+        if p is None:
+            raise InvalidPortException
+        return p
+    except InvalidPortException as ex:
         try:
-            c = arg.parent
-            p = arg
+            return component.new_port(port)
         except AttributeError:
-            c,p = arg
-    logger.debug("Trying to find port %s: %s",str(c),str(p))
-    port = c.get_port(p)
-    logger.debug("Got it")
-    return port
+            raise ex
 
 
 def swap(old_component, new_component):
@@ -161,8 +174,8 @@ def swap(old_component, new_component):
         num_bonds = len({b for b in old_comp.parent.bonds if old_comp is
                          b.head.component or old_comp is b.tail.component})
 
-        if isinstance(new_comp, PortManager) and len(new_comp.ports) < num_bonds:
-            return False
+        # if isinstance(new_comp, PortManager) and len(new_comp.ports) < num_bonds:
+        #     return False
 
         return True
 
@@ -341,7 +354,7 @@ def expose(component, label=None):
     if not label:
         label = str(len(model.ports))
 
-    model.map_port(label, effort_port, flow_port)
+    model.map_port(label, (effort_port, flow_port))
 
 
 def add(model, *args):
