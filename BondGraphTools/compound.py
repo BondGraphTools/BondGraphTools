@@ -3,14 +3,16 @@
 """
 import logging
 
-from orderedset import OrderedSet
+from ordered_set import OrderedSet
+import sympy as sp
 
-
-from .base import *
+from BondGraphTools.base import BondGraphBase, Bond
+from BondGraphTools.port_managers import LabeledPortManager
 from .exceptions import *
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -97,9 +99,18 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         """A list of the ports internal to this model"""
         return [p for c in self.components for p in c.ports]
 
-    def map_port(self, label, e, f):
-        port = self.get_port(label)
-        self._port_map[port] = (e,f)
+    def map_port(self, label, ef):
+        """Exposes a pair of effort and flow variables as an external port
+        Args:
+            label: The label to assign to this port.
+            ef: The internal effort and flow variables.
+        """
+        try:
+            port = self.get_port(label)
+        except InvalidPortException:
+            port = self.new_port(label)
+
+        self._port_map[port] = ef
 
     def add(self, *args):
         # Warning: Scheduled to be deprecated
@@ -127,7 +138,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         for item in work_list:
             item.parent = self
             self.components.add(item)
-
 
     def remove(self, component):
         # Warning: Scheduled to be deprecated
@@ -167,7 +177,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
                 param = (v, p)
                 if param not in excluded:
                     out.update({j: param})
-                    j+=1
+                    j += 1
         return out
 
     @property
@@ -215,7 +225,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         for v in self.components:
             try:
                 for i in v.control_vars:
-                    cv = (v,i)
+                    cv = (v, i)
                     if cv not in excluded:
                         out.update({f"u_{j}": cv})
                         j += 1
@@ -273,17 +283,21 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     @property
     def constitutive_relations(self):
+
+        if not self.components:
+            return []
+
         coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
-        logger.debug("Getting IO ports: %s",out_ports)
+        logger.debug("Getting IO ports: %s", out_ports)
         js_size = len(inv_js)  # number of ports
         ss_size = len(inv_tm)  # number of state space coords
 
         coord_vect = sp.Matrix(coordinates)
         relations = [
-            sp.Add(l,r) for i, (l,r) in enumerate(zip(
-                lin_op*coord_vect,nlin_op))
+            sp.Add(l, r) for i, (l, r) in enumerate(zip(
+                lin_op*coord_vect, nlin_op))
             if not ss_size <= i < ss_size + 2*js_size - 2*len(out_ports)
         ]
         if isinstance(constraints, list):
@@ -344,8 +358,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         )
         inv_tm, inv_js, inv_cv = mappings
 
-        js_size = len(inv_js) # number of ports
-        ss_size = len(inv_tm) # number of state space coords
+        js_size = len(inv_js)  # number of ports
+        ss_size = len(inv_tm)  # number of state space coords
         cv_size = len(inv_cv)
         n = len(coordinates)
 
@@ -425,16 +439,16 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         return tangent_space, port_space, control_space
 
 
-
 def _is_label_invalid(label):
     if not isinstance(label, str):
         return True
 
     for token in [" ", ".", "/"]:
-        if len(label.split(token)) >1:
+        if len(label.split(token)) > 1:
             return True
 
     return False
+
 
 class BondSet(OrderedSet):
     """
@@ -458,5 +472,7 @@ class BondSet(OrderedSet):
         tail.is_connected = False
 
     def __contains__(self, item):
-        p1, p2 = item
-        return super().__contains__(item) or super().__contains__((p2,p1))
+        if isinstance(item, BondGraphBase):
+            return any({item in head or item in tail for tail, head in self})
+        else:
+            return super().__contains__(item)

@@ -7,4 +7,4 @@ requests>=2.18.4
 julia==0.1.5
 diffeqpy==0.4
 pyYAML>=3.0
-orderedset>=2.0.0
+ordered-set>=3.0.0
