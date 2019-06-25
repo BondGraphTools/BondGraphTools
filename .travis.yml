@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 
 env:
   global:
@@ -8,11 +8,9 @@ language: python
 
 python:
   - "3.6"
+  - "3.7"
 
 before_install:
-  # This workaround is required to avoid libstdc++ errors while running "extended" hugo with SASS support.
-  - wget -q -O libstdc++6 http://security.ubuntu.com/ubuntu/pool/main/g/gcc-5/libstdc++6_5.4.0-6ubuntu1~16.04.10_amd64.deb
-  - sudo dpkg --force-all -i libstdc++6
   - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
   - tar xf julia-0.6.2-linux-x86_64.tar.gz
   - export PATH=$PATH:./julia-d386e40c17/bin/
