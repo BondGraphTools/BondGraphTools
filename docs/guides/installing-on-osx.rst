@@ -2,7 +2,7 @@ Installing BondGraphTools on Mac OSX
 ====================================
 
 A working installation of both Python and Julia is required to use all of BondGraphTools features.
-In this guide we walk step-by-step through the reccomended method of installation.
+In this guide we walk step-by-step through the recommended method of installation.
 
 Step 1: Instal Homebrew and Python
 ----------------------------------
