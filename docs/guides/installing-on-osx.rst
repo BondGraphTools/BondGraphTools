@@ -11,11 +11,11 @@ First we must install python 3. We recommend doing this via Homebrew_.
 1. Open a terminal instance.
 2. Paste the following command into the terminal instance::
 
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 3. Once Homebrew has finished, install python by typing the following command into the terminal::
 
-    brew install python
+    $ brew install python
 
 Python 3.7 is now installed.
 
@@ -29,18 +29,18 @@ We must now install Julia 0.6.
    can remove the downloaded file.
 3. Add julia to your profile path by typing the following command into the terminal::
 
-    echo 'export PATH=/Applications/Julia-0.6.app/Contents/Resources/julia/bin/:$PATH' >> ~/.bash_profile
+    $ echo 'export PATH=/Applications/Julia-0.6.app/Contents/Resources/julia/bin/:$PATH' >> ~/.bash_profile
 
 Step 3: Install BondGraphTools
 ------------------------------
 
 1. Install BondGraphTools from PyPI by typing the following command into the terminal::
 
-    pip3 install BondGraphTools
+    $ pip3 install BondGraphTools
 
 2. Install the recommended additional packages (jupyter) by typing the following command into the terminal::
 
-    pip3 install jupyter
+    $ pip3 install jupyter
 
 `BondGraphTools` is now installed.
 
@@ -51,8 +51,8 @@ a user attempts to run a simulation.
 
 This can be manually triggered via the following command::
 
-    from bondgraphtools.config import config
-    config.install_dependencies()
+    >>> from bondgraphtools.config import config
+    >>> config.install_dependencies()
 
 .. _Homebrew: https://brew.sh/
 
