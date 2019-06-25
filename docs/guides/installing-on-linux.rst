@@ -76,6 +76,10 @@ or alternatively::
 
     $ python3.6 -m pip install BondGraphTools
 
+It is optional but highly recommended to install the Jupyter packages via::
+
+    $ pip3 install Jupyter
+
 Step 4: Julia dependencies.
 ---------------------------
 `BondGraphTools` will automatically download and install Julia dependencies the first time
