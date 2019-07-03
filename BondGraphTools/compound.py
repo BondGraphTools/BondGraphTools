@@ -108,9 +108,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         try:
             port = self.get_port(label)
         except InvalidPortException:
-            port = self.new_port(label)
+            port = LabeledPortManager.new_port(self, label)
 
         self._port_map[port] = ef
+
+    def new_port(self, port=None):
+        msg = f"Could not create new port:{port}."
+        msg += "Ports must be created by exposing a component"
+        raise InvalidPortException(msg)
 
     def add(self, *args):
         # Warning: Scheduled to be deprecated
