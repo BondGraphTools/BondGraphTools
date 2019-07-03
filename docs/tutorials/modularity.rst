@@ -107,7 +107,7 @@ Define a factory function to produce models of enzyme catalysed reactions:::
         # Here we build the reaction, again with the rate as a control variable.
         # Again, we assume parameterised have be normalised with respect to
         # pressure and temperature.
-        cat_reaction = bgt.new("Re", name="Re", library="BioChem", value={'r':None 'R':1, 'T':1})
+        cat_reaction = bgt.new("Re", name="Re", library="BioChem", value={'r':None, 'R':1, 'T':1})
 
         # We choose 'k' to be 1 for demonstration.
         enzyme = bgt.new("Ce", name="E", library="BioChem", value={'k':1, 'R':1, 'T':1})

@@ -26,7 +26,6 @@ Python dependencies:
 - matplotlib>=2.2.2
 - julia>=0.1.5
 - diffeqpy>=0.4
-- requests>=2.19
 
 Julia dependencies:
  - PyCall
@@ -38,3 +37,4 @@ Julia dependencies:
  system. _Julia 0.7 and 1.0 are not yet supported_
 3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
 4. Install using PyPI; `pip install BondGraphTools`
+
