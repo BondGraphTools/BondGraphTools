@@ -242,7 +242,7 @@ class LabeledPortManager(PortManager):
     def new_port(self, port=None):
 
         if (isinstance(port, str)
-                and port not in {port.names for port in self._ports}):
+                and port not in {port.name for port in self._ports}):
             port_idx = self.max_index
             port_name = port
             self.max_index += 1
