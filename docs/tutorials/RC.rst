@@ -61,11 +61,11 @@ To demonstrate that the isolated system is behaving correctly, we simulate
 from the initial where the C component has $x_0=1$ and run the simulation over
 the  time interval $(0,5)$. This results in a vector $t$ of time of time points
 and a corresponding vector $x$ of data points which can then be plotted against
-eachother with `matplotlib` ::
+each other with `matplotlib` ::
 
     timespan = [0, 5]
     x0 = [1]
-    t, x = simulate(model, timespan=timespan, x0=x0)
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0)
     from matplotlib.pyplot import plot
     fig = plot(t,x)
 
