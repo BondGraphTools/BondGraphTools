@@ -6,14 +6,14 @@ Tutorial: Driven Filter Circuit
 +----------------+------------------------------------------------------------+
 | Difficulty:    | Beginner.                                                  |
 +----------------+------------------------------------------------------------+
-| Requirement:   | `BondGraphTools`, `jupyter`.                               |
+| Requirement:   | ``BondGraphTools``, Jupyter.                               |
 +----------------+------------------------------------------------------------+
-| How to follow: | Enter each block of code in consecutive cells in a jupyter |
+| How to follow: | Enter each block of code in consecutive cells in a Jupyter |
 |                | notebook.                                                  |
 +----------------+------------------------------------------------------------+
 
 In part 1 of this tutorial we will demonstrate how to build and connect models
-using `BondGraphTools` by constructing a simple passive filter.
+using ``BondGraphTools`` by constructing a simple passive filter.
 Part 2 introduces control sources, and provides examples of how one can perform
 parameter sweeps or input comparisons.
 
@@ -21,7 +21,7 @@ parameter sweeps or input comparisons.
 Part 1: Basic Use
 -----------------
 
-First, import `BondGraphTools` and create a new model with the name "RC"::
+First, import ``BondGraphTools`` and create a new model with the name "RC"::
 
     import BondGraphTools as bgt
     model = bgt.new(name="RC")
@@ -59,9 +59,9 @@ which produces a sketch of the network topology.
 
 To demonstrate that the isolated system is behaving correctly, we simulate
 from the initial where the C component has :math:`x_0=1` and run the simulation over
-the  time interval :math:`(0,5)`. This results in a vector :math:`t` of time of time points
+the  time interval :math:`(0,5)`. This results in a vector :math:`t` of time points
 and a corresponding vector :math:`x` of data points which can then be plotted against
-each other with `matplotlib` ::
+each other with ``matplotlib``::
 
     timespan = [0, 5]
     x0 = [1]
@@ -77,13 +77,13 @@ Part 2: Control
 ---------------
 We wish to see how this filter responds to input.
 Add flow source by creating a new Sf component, adding to the model, and
-connecting it to the common voltage law.::
+connecting it to the common voltage law::
 
     Sf = bgt.new('Sf')
     bgt.add(model, Sf)
     bgt.connect(Sf, zero_law)
 
-The model should now look something like this ::
+The model should now look something like this::
 
     draw(model)
 
@@ -91,21 +91,21 @@ The model should now look something like this ::
     :scale: 50 %
     :align: center
 
-The model also now has associated with it a control variable `u_0`.
-Control variables can be listed via the attribute `model.control_vars` and we
+The model also now has associated with it a control variable ``u_0``.
+Control variables can be listed via the attribute ``model.control_vars`` and we
 can observe the constitutive relations, which give the implicit equations of
 motion for the system in sympy form::
 
     model.constitutive_relations
     # returns [dx_0 - u_0 + x_0]
 
-where `x_0` and `dx_0` are the state variable and it's derivative. One can
+where ``x_0`` and ``dx_0`` are the state variable and it's derivative. One can
 identify where that state variable came from via::
 
     model.state_vars
     # returns {'x_0': (C: C1, 'q_0)}
 
-Here `C: C1` is a reference to the `C` object itself.
+Here ``C: C1`` is a reference to the ``C`` object itself.
 
 
 Part 3: Simulations
@@ -135,7 +135,7 @@ consider the response to a :math:`\pi^{-1}` Hz sine wave::
     :align: center
 
 One can also consider the impulse response of by applying a step function
-input ot the control law.::
+input ot the control law::
 
     step_fn = 't < 1 ? 1 : 0' # if t < 0 then 1 else 0
     t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':step_fn})
