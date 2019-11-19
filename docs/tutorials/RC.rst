@@ -58,9 +58,9 @@ which produces a sketch of the network topology.
 
 
 To demonstrate that the isolated system is behaving correctly, we simulate
-from the initial where the C component has $x_0=1$ and run the simulation over
-the  time interval $(0,5)$. This results in a vector $t$ of time of time points
-and a corresponding vector $x$ of data points which can then be plotted against
+from the initial where the C component has :math:`x_0=1` and run the simulation over
+the  time interval :math:`(0,5)`. This results in a vector :math:`t` of time of time points
+and a corresponding vector :math:`x` of data points which can then be plotted against
 each other with `matplotlib` ::
 
     timespan = [0, 5]
@@ -112,7 +112,7 @@ Part 3: Simulations
 -------------------
 We will now run various simulations.
 
-Firstly, we simulate with constant effort by passing the control law $u_0=2$
+Firstly, we simulate with constant effort by passing the control law :math:`u_0=2`
 to the solver and plotting the results::
 
     timespan = [0, 5]
@@ -125,11 +125,10 @@ to the solver and plotting the results::
     :align: center
 
 Time dependent control laws can be specified as string. In this case we
-consider the response to a $\pi^{-1}$Hz sine wave.::
+consider the response to a :math:`\pi^{-1}` Hz sine wave::
 
     t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':'sin(2*t)'})
     plot(t,x)
-
 
 .. figure:: images/RC_5.svg
     :scale: 50 %
@@ -147,7 +146,7 @@ input ot the control law.::
     :align: center
 
 Finally we run a sequence of simulations where a new control law is generated
-based on the loop iteration.
+based on the loop iteration::
 
     fig = plt.figure()
     for i in range(4):
