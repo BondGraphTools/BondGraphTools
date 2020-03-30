@@ -30,7 +30,11 @@ Python dependencies:
 Julia dependencies:
  - PyCall
  - DifferentialEquations.jl
-
+ 
+ LaTEX Dependencies (Used by matplotlib):
+ - case for Windows: You can install MiKTex (here https://miktex.org/2.9/setup)
+ when you star the draw() MikTex will automaticly try to install all required, if unsuccessfully try to use MiKTex console-->Packages-> and install required packages by searching.
+ - for other OS should be similar.
 ### Instructions:
 1. Install python > 3.6 for your operating system.
 2. Install Julia 0.6.4 (https://julialang.org/downloads/) for your operating
