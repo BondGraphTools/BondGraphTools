@@ -160,7 +160,6 @@ def to_julia_function_string(model, control_vars=None, in_place=False):
         x_subs.append((x, X[i+1]))
         dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
 
-
     cv_strings, dcv_strings = _generate_control_strings(
         list(model.control_vars.keys()),
         control_vars,

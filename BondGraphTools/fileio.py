@@ -141,7 +141,7 @@ def load(file_name, model=None, as_name=None):
         file_name = str(file_name)
 
     with open(file_name, 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f, Loader=yaml.SafeLoader)
 
     version = str(data['version'])
     if version == FILE_VERSION:

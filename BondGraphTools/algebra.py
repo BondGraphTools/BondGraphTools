@@ -18,6 +18,7 @@ __all__ = [
     "augmented_rref"
 ]
 
+
 def extract_coefficients(equation: sympy.Expr,
                          local_map: dict,
                          global_coords: list) -> tuple:
@@ -355,7 +356,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         nonlinear_constraint = nonlinear_op[row]
         F_args = set(coordinates[0:offset + ss_size]) & \
                  nonlinear_constraint.atoms()
-        if linear_op[row, offset:-1].is_zero and not nonlinear_constraint:
+        if linear_op[row, offset:-1].is_zero_matrix and not nonlinear_constraint:
             continue
 
         state_constraint = linear_op[row, offset: offset + ss_size]
@@ -364,7 +365,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         row = state_constraint.row_join(sympy.SparseMatrix(1, offset + cv_size, {}))
 
         cv_dict = {}
-        if not control_constraint.is_zero:
+        if not control_constraint.is_zero_matrix:
             logger.debug("Found higher order control constraint")
             for cv_col in range(control_constraint.cols):
                 const = control_constraint[cv_col]
@@ -407,22 +408,22 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             logger.warning("Second order constraint not implemented: %s",
                            jac_dx)
 
-        elif any(x!=0 for x in jac_junciton):
+        elif any(x != 0 for x in jac_junciton):
             logger.warning("First order junciton constraint not implemented: %s",
                            str(jac_junciton))
 
-        elif any(x!=0 for x in jac_cv):
+        elif any(x != 0 for x in jac_cv):
             logger.warning("First order control constraint not implemented: %s",
                            str(jac_cv))
 
-        elif any(x!=0 for x in jac_x):
+        elif any(x != 0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
             fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
             logger.debug(repr(fx))
             p, q = sympy.fraction(sympy.simplify(fx))
-            if row.is_zero:
+            if row.is_zero_matrix:
                 lin_dict, nlin = extract_coefficients(
-                    p, {c:i for i,c in enumerate(coordinates)},
+                    p, {c: i for i, c in enumerate(coordinates)},
                     coordinates)
 
                 for k, v in lin_dict.items():
@@ -433,7 +434,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             else:
                 nlin_row += fx
 
-        nonlinear_op = nonlinear_op.col_join(sympy.SparseMatrix(1,1,[nlin_row]))
+        nonlinear_op = nonlinear_op.col_join(sympy.SparseMatrix(1, 1, [nlin_row]))
 
         linear_op = linear_op.col_join(row)
         rows_added += 1
@@ -568,7 +569,7 @@ def smith_normal_form(matrix, augment=None):
                 leading_coeff = col
                 break
         if leading_coeff < 0:
-            if not M[row, n-k:].is_zero:
+            if not M[row, n-k:].is_zero_matrix:
                 constraints.append(sum(M[row,:]))
         else:
             Mp[leading_coeff, :] = M[row, :]

@@ -26,19 +26,6 @@ def _as_str(path):
         return str(path.as_posix())
 
 
-def _check_julia(command):
-    # Check to see if Julia is already in the path
-
-    p = Popen([command, "-v"], stdout=PIPE, stderr=None)
-
-    out, err = p.communicate()
-    text = out.decode('utf8').strip()
-    if text.startswith("julia version 0.6"):
-        return True
-    else:
-        return False
-
-
 class Config:
     _which = 'which'
     base = pathlib.Path.home().absolute() / '.BondGraphTools'
@@ -50,12 +37,6 @@ class Config:
         self._de = None
         new_config = False
         rebuild = False
-
-        if not julia_executable:
-            self.julia_executable = self.find_julia()
-            new_config = True
-        else:
-            self.julia_executable = pathlib.Path(julia_executable)
 
         if python_executable and python_executable is not sys.executable:
             rebuild = True
@@ -70,16 +51,6 @@ class Config:
                 self.file.touch()
             self.install_dependencies(rebuild)
             self.save()
-
-    def find_julia(self):
-        if _check_julia('julia'):
-            p = Popen([self._which, 'julia'], stdout=PIPE, stderr=None)
-            out, err = p.communicate()
-            julia_dir = out.decode('utf8').strip()
-            return pathlib.Path(julia_dir).resolve()
-        else:
-            raise NotImplementedError("Could not find Julia 0.6.4: "
-                                      "please install and add to path")
 
     def find_conda(self):
         p = Popen([self._which, 'conda'], stdout=PIPE, stderr=None)
@@ -96,8 +67,7 @@ class Config:
                        'this may take some time')
 
         env = os.environ
-        env.update({"PYTHON": _as_str(self.python_executable),
-                    "JULIA": _as_str(self.julia_executable)})
+        env.update({"PYTHON": _as_str(self.python_executable)})
         conda = self.find_conda()
         if conda:
             env.update({"CONDA": _as_str(conda)})
@@ -118,7 +88,7 @@ class Config:
         temp.touch()
         with open(_as_str(temp), 'w') as fs:
             fs.writelines(julia_code)
-        run([_as_str(self.julia_executable), _as_str(temp)], env=env)
+        # run([_as_str(self.julia_executable), _as_str(temp)], env=env)
         os.remove(temp)
         logger.warning("Complete")
 

@@ -48,7 +48,7 @@ def _build_graph(system):
 
     try:
         comp_map = {comp: i for i, comp in enumerate(system.components)}
-        graph = dok_matrix((len(comp_map), len(comp_map)), dtype=np.int)
+        graph = dok_matrix((len(comp_map), len(comp_map)), dtype=int)
         for (c1, _), (c2, _) in system.bonds:
             graph[(comp_map[c1], comp_map[c2])] = 1
             graph[(comp_map[c2], comp_map[c1])] = 1
@@ -258,14 +258,14 @@ class GraphLayout(Glyph):
             component.view.pos = (x,y)
             if component.metamodel not in {'0','1'}:
                 try:
-                    component.view.string = "\mathbf{{{t}}}: {n}".format(
+                    component.view.string = r"\mathbf{{{t}}}: {n}".format(
                         t=component.metamodel, n=component.name)
                 except:
                     component.view.string = "{t}: {n}".format(
                         t=component.metamodel, n=component.name)
             else:
                 try:
-                    component.view.string = "\mathbf{{{t}}}".format(
+                    component.view.string = r"\mathbf{{{t}}}".format(
                         t=component.metamodel)
                 except:
                     component.view.string = "{t}".format(

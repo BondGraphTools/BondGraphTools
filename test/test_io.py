@@ -126,7 +126,7 @@ def test_load_model_from_modular():
     assert len(Vs.components) == 3
     assert len(Vs2.components) == 3
 
-@pytest.mark.usefixture("rlc")
+
 def test_save_build_component(rlc):
 
     r, = (c for c in rlc.components if c.metamodel == "R")
@@ -139,7 +139,7 @@ def test_save_build_component(rlc):
     assert r_str == f"{r.name} base/R r=10"
     assert c_str == f"{c.name} base/C"
 
-@pytest.mark.usefixture("rlc")
+
 def test_save_build_model(rlc):
     r, = (c for c in rlc.components if c.metamodel == "R")
     c, = (c for c in rlc.components if c.metamodel == "C")
@@ -177,7 +177,7 @@ def test_build_templated_model():
         save(root, file)
 
         with open(file, 'r') as fs:
-            temp_data = yaml.load(fs)
+            temp_data = yaml.load(fs, Loader=yaml.SafeLoader)
 
     assert temp_data["root"] == root.name
     assert temp_data["models"].keys() == {
@@ -193,7 +193,7 @@ def test_build_templated_model():
     }
 
 
-@pytest.mark.usefixture("rlc")
+
 def test_rlc_save(rlc):
     filename = str(file_path / "test_rlc.bg")
     rlc.name = "RLC"
@@ -210,7 +210,7 @@ def test_rlc_save(rlc):
         save(rlc, filename)
 
         with open(filename, 'r') as fs:
-            test_data = yaml.load(fs)
+            test_data = yaml.load(fs, Loader=yaml.SafeLoader)
 
     assert test_data["version"] == dm.FILE_VERSION
     assert test_data["root"] == "RLC"

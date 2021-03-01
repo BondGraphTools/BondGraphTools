@@ -4,7 +4,7 @@ import BondGraphTools as bgt
 import BondGraphTools.sim_tools as sim
 
 
-@pytest.mark.use_fixture("rlc")
+
 def test_build(rlc):
     assert len(rlc.state_vars) == 2
     assert len(rlc.ports) == 0
@@ -23,7 +23,7 @@ def test_build_rlc():
     assert len(kvl.ports) == 3
 
 
-@pytest.mark.use_fixture("rlc")
+
 def test_build_and_drive(rlc):
     se = bgt.new("Se")
     assert len(se.control_vars) == 1
@@ -59,7 +59,7 @@ def test_symbolic_params():
     assert params & set(sympy.symbols('r, l, c'))
 
 
-@pytest.mark.use_fixture("rlc")
+
 def test_rlc_con_rel(rlc):
 
     rel = rlc.constitutive_relations
@@ -93,7 +93,7 @@ def test_tf():
     bgt.connect(c, (tf, 0))
 
     c,m,lp,nlp,const = tflc.system_model()
-    assert nlp.is_zero
+    assert nlp.is_zero_matrix
     assert const ==[]
 
 

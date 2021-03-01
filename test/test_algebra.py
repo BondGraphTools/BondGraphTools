@@ -8,6 +8,7 @@ from BondGraphTools.algebra import extract_coefficients, smith_normal_form, \
     adjacency_to_dict, augmented_rref,_generate_substitutions,\
     inverse_coord_maps, _generate_cv_substitutions, get_relations_iterator
 
+
 def test_extract_coeffs_lin():
     eqn = sympy.sympify("y -2*x -3")
     local_map = {
@@ -38,7 +39,7 @@ def test_extract_coeffs_nlin():
 
 def test_smith_normal_form():
 
-    m = sympy.SparseMatrix(2,3,{(0,2):2, (1,1):1})
+    m = sympy.SparseMatrix(2, 3, {(0, 2): 2, (1, 1): 1})
     mp,_,_ = smith_normal_form(m)
     assert mp.shape == (3, 3)
     assert mp[2, 2] != 0
@@ -56,11 +57,13 @@ def test_smith_normal_form_2():
 
 
 def test_smith_normal_form_3():
-    m = sympy.SparseMatrix(5,3,{(0,1):1, (1,0):1,
-                                (4,2):1})
-    mp,_,_ = smith_normal_form(m)
+    m = sympy.SparseMatrix(5, 3, {(0, 1): 1, (1, 0): 1,
+                                (4, 2): 1})
+    mp, _, _ = smith_normal_form(m)
     assert mp.shape == (3, 3)
-    assert (mp - sympy.eye(3)).is_zero
+
+
+    assert (mp - sympy.eye(3)).is_zero_matrix
 
 
 def test_aug_rref():
@@ -84,9 +87,9 @@ def test_aug_rref():
     assert m != matrix
     assert a != adj
 
-    assert (m - sympy.eye(4)).is_zero
+    assert (m - sympy.eye(4)).is_zero_matrix
 
-    assert (a * matrix - sympy.eye(4)).is_zero
+    assert (a * matrix - sympy.eye(4)).is_zero_matrix
 
 
 def test_augmented_rref():
@@ -162,7 +165,7 @@ def test_zero_junction_relations():
     assert sympy.sympify("f_0 + f_1 + f_2") in rels
 
 
-@pytest.mark.usefixture('rlc')
+
 def test_basis_vectors(rlc):
 
     model_basis_vects = set()
@@ -204,7 +207,7 @@ def test_build_model_fixed_cap():
     assert test_eqn2 in eqns
 
 
-@pytest.mark.usefixture("rlc")
+
 def test_rlc_basis_vectors(rlc):
 
     tangent, ports, cv = rlc.basis_vectors
@@ -243,7 +246,7 @@ def test_relation_iter_twoport():
         assert not nlin
 
 
-@pytest.mark.usefixture("rlc")
+
 def test_interal_basis_vectors(rlc):
     tangent, ports, cv = rlc._build_internal_basis_vectors()
 
@@ -393,7 +396,7 @@ def test_ported_cr():
     assert len(coords) == 15
 
     coords, mappings, lin_op, nl_op, conttr = model.system_model()
-    assert nl_op.is_zero
+    assert nl_op.is_zero_matrix
     assert not conttr
 
     assert model.constitutive_relations == [
