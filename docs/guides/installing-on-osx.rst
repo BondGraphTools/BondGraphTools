@@ -4,7 +4,7 @@ Installing BondGraphTools on Mac OSX
 A working installation of both Python and Julia is required to use all of BondGraphTools features.
 In this guide we walk step-by-step through the recommended method of installation.
 
-Step 1: Instal Homebrew and Python
+Step 1: Install Homebrew and Python
 ----------------------------------
 First we must install python 3. We recommend doing this via Homebrew_.
 
@@ -19,6 +19,11 @@ First we must install python 3. We recommend doing this via Homebrew_.
 
 Python 3.7 is now installed.
 
+Step 2: Install Sundials
+------------------------
+Next, install Sundials_ and other scikit.odes dependencies
+(see https://scikits-odes.readthedocs.io/en/latest/installation.html#requirements-before-install for details).
+
 Step 3: Install BondGraphTools
 ------------------------------
 
@@ -32,7 +37,8 @@ Step 3: Install BondGraphTools
 
 `BondGraphTools` is now installed.
 
-.. _Homebrew: https://brew.sh/
 
+.. _Homebrew: https://brew.sh/
+.. _Sundials: https://computing.llnl.gov/projects/sundials
 
 

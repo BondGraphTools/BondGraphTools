@@ -44,8 +44,9 @@ Update the package indices and install Python 3.6::
     $ sudo apt install python36 python36-pip
 
 Step 2: Install Sundials
----------------------
-
+------------------------
+Next, install Sundials_ and other scikit.odes dependencies
+(see https://scikits-odes.readthedocs.io/en/latest/installation.html#requirements-before-install for details).
 
 Step 3: Install BondGraphTools
 ------------------------------
@@ -60,3 +61,4 @@ or alternatively::
 It is optional but highly recommended to install the Jupyter packages via::
 
     $ pip3 install Jupyter
+

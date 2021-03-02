@@ -51,7 +51,7 @@ API Reference
 :mod:`BondGraphTools.sim_tools`
 -------------------------------
 .. automodule:: BondGraphTools.sim_tools
-    :members: to_julia_function_string
+    :members: simulate
     :show-inheritance:
 
 :mod:`BondGraphTools.reaction_builder`
