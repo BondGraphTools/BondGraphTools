@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 
 env:
   global:
@@ -13,8 +13,10 @@ python:
   - "3.9"
 
 install:
-  - sudo apt-get update
-  - sudo apt-get install sundials
+  - git clone https://github.com/LLNL/sundials.git
+  - mkdir sundials/build && cd sundials/build
+  - cmake .. && make && sudo make install
+  - cd .. && cd ..
   - python -m pip install -r requirements.txt
   - python -m pip install pytest==4.1.0 coverage==4.5.1 mock pytest-cov==2.6.1
   - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
