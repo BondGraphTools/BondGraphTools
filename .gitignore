@@ -7,3 +7,4 @@ doctrees/
 build/
 BondGraphTools.egg-info/
 docs/html
+dist
