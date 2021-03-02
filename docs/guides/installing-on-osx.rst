@@ -19,18 +19,6 @@ First we must install python 3. We recommend doing this via Homebrew_.
 
 Python 3.7 is now installed.
 
-Step 2: Install Julia
----------------------
-We must now install Julia 0.6.
-
-1. Download Julia 0.6.4 from https://julialang.org/downloads/oldreleases.html
-2. Once the download is complete open the file. It will contain a link to th Applications folder, and the Julia-0.6
-   package. Drag the julia package into the applications folder. Once this is done, julia has been installed and you
-   can remove the downloaded file.
-3. Add julia to your profile path by typing the following command into the terminal::
-
-    $ echo 'export PATH=/Applications/Julia-0.6.app/Contents/Resources/julia/bin/:$PATH' >> ~/.bash_profile
-
 Step 3: Install BondGraphTools
 ------------------------------
 
@@ -43,16 +31,6 @@ Step 3: Install BondGraphTools
     $ pip3 install jupyter
 
 `BondGraphTools` is now installed.
-
-Step 4: Julia dependencies.
----------------------------
-`BondGraphTools` will automatically download and install Julia dependencies the first time
-a user attempts to run a simulation.
-
-This can be manually triggered via the following command::
-
-    >>> from bondgraphtools.config import config
-    >>> config.install_dependencies()
 
 .. _Homebrew: https://brew.sh/
 

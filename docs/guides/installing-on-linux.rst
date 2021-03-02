@@ -43,28 +43,9 @@ Update the package indices and install Python 3.6::
     $ sudo apt update
     $ sudo apt install python36 python36-pip
 
-Step 2: Install Julia
+Step 2: Install Sundials
 ---------------------
-We must now install Julia 0.6.
-Our examples follow the Julia platform instructions https://julialang.org/downloads/platform.html#generic-binaries .
 
-1. Download Julia 0.6.4 generic binaries from https://julialang.org/downloads/oldreleases.html .
-   For example using curl to save the archive to your downloads::
-
-    $ curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz > ~/Downloads/julia-0.6.4-linux-x86_64.tar.gz
-2. Extract the archive `.tar.gz` to the desired directory. For example, here
-   we first create the target directory, then extract the tarball::
-
-    $ sudo mkdir /usr/local/opt/julia
-    $ sudo tar xf ~/Downloads/julia-0.6.4-linux-x86_64.tar.gz --directory /usr/local/opt/julia --strip-components=1
-
-3. Add julia to the PATH, for example by adding a symbolic link to the local bin
-   folder::
-
-    $ sudo ln -s /usr/local/opt/julia/bin/julia /usr/local/bin/julia
-
-4. Verify that this has worked by typing `julia -v', which should result in
-   `julia version 0.6.4`.
 
 Step 3: Install BondGraphTools
 ------------------------------
@@ -79,15 +60,3 @@ or alternatively::
 It is optional but highly recommended to install the Jupyter packages via::
 
     $ pip3 install Jupyter
-
-Step 4: Julia dependencies.
----------------------------
-`BondGraphTools` will automatically download and install Julia dependencies the first time
-a user attempts to run a simulation.
-
-This can be manually triggered via the following commands in the python
-interpreter::
-
-    >>> from bondgraphtools.config import config
-    >>> config.install_dependencies()
-
