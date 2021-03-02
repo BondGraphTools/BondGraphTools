@@ -16,29 +16,22 @@ https://bondgraphtools.readthedocs.io/
 ### Dependencies
 
 BondGraph requires:
-- python 3.6
-- julia 0.6.4
+- python 3.6 
+- sundials 5.*
 
 Python dependencies:
-- sympy>=1.1.1
+- sympy
 - numpy>=1.14
 - scipy>=1.0.1
 - matplotlib>=2.2.2
-- julia>=0.1.5
-- diffeqpy>=0.4
-
-Julia dependencies:
- - PyCall
- - DifferentialEquations.jl
  
  LaTEX Dependencies (Used by matplotlib):
  - case for Windows: You can install MiKTex (here https://miktex.org/2.9/setup)
  when you star the draw() MikTex will automaticly try to install all required, if unsuccessfully try to use MiKTex console-->Packages-> and install required packages by searching.
  - for other OS should be similar.
+
 ### Instructions:
-1. Install python > 3.6 for your operating system.
-2. Install Julia 0.6.4 (https://julialang.org/downloads/) for your operating
- system. _Julia 0.7 and 1.0 are not yet supported_
-3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
-4. Install using PyPI; `pip install BondGraphTools`
+1. Install python > 3.6 for your operating system. 
+2. Install sundials (either from https://computing.llnl.gov/projects/sundials/, or via Anaconda https://anaconda.org/conda-forge/sundials)
+3. Install BondGraphTools using PyPI; `pip install BondGraphTools`
 

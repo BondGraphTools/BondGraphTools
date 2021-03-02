@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Component(BondGraphBase, PortManager):
-    """
-    Atomic bond graph components are those defined by constitutive relations.
-    """
+    """Components defined by constitutive relations."""
 
     def __init__(self, metamodel, constitutive_relations,
                  state_vars=None, params=None, **kwargs):

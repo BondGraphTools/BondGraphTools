@@ -1,8 +1,9 @@
+numpy>=1.20
 sympy
-numpy
 scipy
 matplotlib
 networkx
 requests
 pyYAML
 ordered-set
+scikits.ode
