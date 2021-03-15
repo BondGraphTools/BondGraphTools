@@ -116,7 +116,7 @@ def simulate(system,
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
-    samples = int(1 / dt) + 1
+    samples = int((timespan[1]-timespan[0]) / dt) + 1
     t = np.linspace(*timespan, samples)
 
     res, X =_bondgraph_to_residuals(system, control_vars)
