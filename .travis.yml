@@ -7,23 +7,19 @@ env:
 language: python
 
 python:
-  - "3.6"
   - "3.7"
   - "3.8"
   - "3.9"
 
 before_install:
-  - sudo apt-get install -y gfortran
-  - curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > ./miniconda.sh
-  - bash miniconda.sh -b -p miniconda
-  - miniconda/bin/conda init
-  - miniconda/bin/conda install -y -c conda-forge blas liblapack sundials
+  - apt-get update && apt-get install -y gfortran libblas-dev liblapack-dev git build-essential cmake python3-dev
+  - git clone https://github.com/LLNL/sundials.git;
+  - mkdir /sundials/build && cd /sundials/build && cmake -DLAPACK_ENABLE=ON ..
+  - make && make install
 
 install:
   - python -m pip install -r requirements.txt
   - python -m pip install pytest==4.1.0 coverage==4.5.1 mock pytest-cov==2.6.1
-  - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
-  - export LD_LIBRARY_PATH
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
