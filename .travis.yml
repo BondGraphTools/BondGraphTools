@@ -12,10 +12,10 @@ python:
   - "3.9"
 
 before_install:
-  - apt-get update && apt-get install -y gfortran libblas-dev liblapack-dev git build-essential cmake python3-dev
+  - sudo apt-get update && sudo apt-get install -y gfortran libblas-dev liblapack-dev git build-essential cmake python3-dev
   - git clone https://github.com/LLNL/sundials.git;
   - mkdir /sundials/build && cd /sundials/build && cmake -DLAPACK_ENABLE=ON ..
-  - make && make install
+  - make && sudo make install
 
 install:
   - python -m pip install -r requirements.txt
