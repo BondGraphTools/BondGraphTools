@@ -174,11 +174,12 @@ def _bondgraph_to_residuals(model, control_vars=None):
         test_x = np.zeros(shape=(n,), dtype=np.float32)
         for idx, f in u_func_dict.items():
             try:
+                if isinstance(f, (float, int, sp.Number)):
+                    u_constants[idx] = f
+                    continue
                 if isinstance(f, str):
                     f = _to_function(f, X, dX, dx_subs + x_subs)
                     u_func_dict[idx] = f
-                if isinstance(f, (float, int, sp.Number)):
-                    u_constants[idx] = f
                 if n == 1:
                     r = f(0, 0, 0)
                 else:
@@ -186,9 +187,9 @@ def _bondgraph_to_residuals(model, control_vars=None):
                 assert isinstance(r, (float, int, sp.Number)
                                   ), "Invalid output from control"
             except Exception as ex:
-                message = f"Invalid control function for var: {idx}.\n " \
+                message = f"Invalid control function for var: u_{idx}.\n " \
                     "Control functions should be of the form:\n" \
-                    f"{idx} = f(t, x, dx/dt)"
+                    f"u_{idx} = f(t, x, dx/dt)"
 
                 raise ModelException(message)
 

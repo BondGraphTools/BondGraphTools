@@ -135,9 +135,11 @@ consider the response to a :math:`\pi^{-1}` Hz sine wave::
     :align: center
 
 One can also consider the impulse response of by applying a step function
-input ot the control law::
+input ot the control law, here $x$ and $dx$ refer to the state-space of the model::
 
-    step_fn = 't < 1 ? 1 : 0' # if t < 0 then 1 else 0
+    def step_fn(t,x,dx):
+        return 1 if t < 1 else 0
+
     t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':step_fn})
     plot(t,x)
 
@@ -150,7 +152,7 @@ based on the loop iteration::
 
     fig = plt.figure()
     for i in range(4):
-        func_text = "cos({i}t)".format(i=i)
+        func_text = "cos({i}*t)".format(i=i)
         t_i, x_i = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':func_text})
         plot(t_i,x_i)
 
