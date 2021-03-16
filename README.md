@@ -15,23 +15,23 @@ https://bondgraphtools.readthedocs.io/
 
 ### Dependencies
 
-BondGraph requires:
-- python 3.6 
-- sundials 5.*
+BondGraphTools requires:
+- python 3.7
+- LaTeX 
+- gFortran, BLAS, LAPACK and SUNDIALS (for the numerical solver)
 
 Python dependencies:
 - sympy
-- numpy>=1.14
-- scipy>=1.0.1
-- matplotlib>=2.2.2
- 
- LaTEX Dependencies (Used by matplotlib):
- - case for Windows: You can install MiKTex (here https://miktex.org/2.9/setup)
- when you star the draw() MikTex will automaticly try to install all required, if unsuccessfully try to use MiKTex console-->Packages-> and install required packages by searching.
- - for other OS should be similar.
+- numpy
+- scipy
+- matplotlib
+- scikits.odes 
 
-### Instructions:
-1. Install python > 3.6 for your operating system. 
-2. Install sundials (either from https://computing.llnl.gov/projects/sundials/, or via Anaconda https://anaconda.org/conda-forge/sundials)
-3. Install BondGraphTools using PyPI; `pip install BondGraphTools`
+## Instructions:
 
+#### Recommended installation using Conda
+1. Install [Anaconda](https://anaconda.org/) (or miniconda).
+2. Install dependencies from conda-forge: liblas, liblapack, sundials using
+   `conda install -c conda-forge libblas liblapack sundials fortran-compiler`
+3. Install LaTeX via `conda install -c conda-forge miktex` (windows) or `conda install -c conda-forge texlive-core` (osx/linux)
+4. Install the package using `pip install bondgraphtools`

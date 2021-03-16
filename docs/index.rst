@@ -3,7 +3,6 @@
    :maxdepth: 1
 
    tutorials
-   guides
    discussion
    api
 
@@ -19,9 +18,8 @@ BondGraphTools is intended to be used by:
    * engineers; to quickly build and simulate physical systems
    * mathematicians; to perform model reduction and analysis
 
-BondGraphTools is built upon the scientific python stack; numpy, scipy, sympy
-and matplotlib, and relies on Julia and DifferentialEquations.jl to handle
-numnerical simulation.
+BondGraphTools is built upon the scientific python stack; numpy, scipy, sympy,
+scikit.odes and matplotlib
 
 How to read the docs
 ^^^^^^^^^^^^^^^^^^^^
@@ -38,13 +36,13 @@ Getting Started
 Requirements
 ------------
 
-* Python 3.6 or above.
+* Python 3.7 or above.
 
 Installation
 ------------
 
-1. Install Python 3.6 or greater.
-2. Install Sundials and dependencies
+1. Install Python 3.7 or greater.
+2. Install Sundials and ``scikits.odes`` [dependencies](https://scikits-odes.readthedocs.io/en/stable/installation.html)
 3. Install BondGraphTools via pip: ``pip install BondGraphTools``
 
 BondGraphTools is now installed.

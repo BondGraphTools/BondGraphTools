@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 import sympy as sp
 from BondGraphTools import *
-from BondGraphTools.config import config
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _bondgraph_to_residuals
 from BondGraphTools.algebra import inverse_coord_maps
@@ -34,8 +33,6 @@ def test_c_se_build_ode():
 
     residual_func, diff_vars = _bondgraph_to_residuals(bg, control_vars=[u])
 
-    # func_str, diff_vars = to_julia_function_string(bg, control_vars=['-exp(-t)'], in_place=False)
-    # func = j.eval(func_str)
     r = [0]
     residual_func(0, [0], [0], r)
     assert r == [-1]
