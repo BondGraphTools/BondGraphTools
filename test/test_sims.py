@@ -105,7 +105,7 @@ def test_c_se_sum_switch():
         return 1.5 if x >= 1 else -2.0
 
     t, x = simulate(
-        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang]
+        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang])
 
     assert (x[0, -1] - 1) < 0.001
 
