@@ -106,21 +106,20 @@ def test_c_se_sum_switch():
 
     t, x = simulate(
         bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang]
-    )
 
     assert (x[0, -1] - 1) < 0.001
 
 
-@pytest.mark.skip
-@pytest.mark.slow
+@ pytest.mark.skip
+@ pytest.mark.slow
 def test_rlc():
-    c = new("C", value=1)
-    se = new("Se")
-    r = new("R", value=1)
-    l = new("I", value=1)
-    kvl = new("0")
+    c=new("C", value=1)
+    se=new("Se")
+    r=new("R", value=1)
+    l=new("I", value=1)
+    kvl=new("0")
 
-    bg = new()
+    bg=new()
     bg.add([c, se, kvl, r, l])
 
     connect(c, kvl)
@@ -128,6 +127,6 @@ def test_rlc():
     connect(se, kvl)
     connect(l, kvl)
 
-    t, x = simulate(
+    t, x=simulate(
         bg, timespan=[0, 10], x0=[1, 0], control_vars=[1]
     )
