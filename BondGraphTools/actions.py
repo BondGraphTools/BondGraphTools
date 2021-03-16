@@ -48,7 +48,7 @@ def disconnect(target, other):
     if isinstance(target, BondGraphBase):
         model = target.parent
     elif isinstance(target, Port):
-        model =  target.component.parent
+        model = target.component.parent
     else:
         model = target[0].parent
 
@@ -99,7 +99,6 @@ def connect(source, destination):
     See Also:
         :func:`disconnect`
     """
-
 
     tail = _find_or_make_port(source, is_tail=True)
     head = _find_or_make_port(destination)
@@ -339,8 +338,8 @@ def expose(component, label=None):
             f"Component {component} is not inside anything"
         )
     # fix me with metamodeles or something trickier
-    if component.__component__ is not "SS":
-        ss = new("SS",  name=component.name)
+    if component.__component__ != "SS":
+        ss = new("SS", name=component.name)
         try:
             swap(component, ss)
         except InvalidComponentException as ex:

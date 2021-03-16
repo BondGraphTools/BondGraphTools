@@ -37,7 +37,6 @@ def test_add():
     bg = bgt.new()
     bg.add([c, se])
 
-
     assert len(bg.internal_ports) == 2
     assert len(bg.state_vars) == 1
 
@@ -58,7 +57,6 @@ def test_equal():
     assert c_1 is not c_2
 
 
-
 class TestBond:
     def test_create(self):
         from BondGraphTools.base import Bond
@@ -67,7 +65,7 @@ class TestBond:
         c = new('C')
         one = new('1')
 
-        b_1 = Bond(head=(c,0), tail=(one, 0))
+        b_1 = Bond(head=(c, 0), tail=(one, 0))
 
         assert c in b_1
         assert one in b_1
@@ -124,13 +122,13 @@ class TestConnect:
         r = new('R')
         one = new('1')
         bg = new()
-        bg.add(c,se,r,one)
+        bg.add(c, se, r, one)
 
         connect(c, one.non_inverting)
         connect(se, one)
         connect(one, r)
 
-        p0,p1,p2 = tuple(one.ports)
+        p0, p1, p2 = tuple(one.ports)
 
         assert p0.weight == 1
         assert p1.weight == 1
@@ -167,10 +165,11 @@ class TestConnect:
                  (se, one),
                  (one, r)]
 
-        for bond in bonds: connect(*bond)
+        for bond in bonds:
+            connect(*bond)
 
-        comps = [{c, one}, {se, one}, {one ,r}]
-        all_comps = {c,se,r,one}
+        comps = [{c, one}, {se, one}, {one, r}]
+        all_comps = {c, se, r, one}
 
         for i, bond in enumerate(bg.bonds):
             for component in all_comps:
@@ -178,8 +177,6 @@ class TestConnect:
                     assert component in bond
                 else:
                     assert component not in bond
-
-
 
     def test_component_in_bond(self):
         # see issues 85
@@ -194,10 +191,11 @@ class TestConnect:
                  (se, one),
                  (one, r)]
 
-        for bond in bonds: connect(*bond)
+        for bond in bonds:
+            connect(*bond)
 
-        comps = [{c, one}, {se, one}, {one ,r}]
-        all_comps = {c,se,r,one}
+        comps = [{c, one}, {se, one}, {one, r}]
+        all_comps = {c, se, r, one}
 
         for i, bond in enumerate(bg.bonds):
             for component in all_comps:
@@ -205,6 +203,7 @@ class TestConnect:
                     assert component in bond
                 else:
                     assert component not in bond
+
 
 def test_disconnect_ports():
 
@@ -225,6 +224,7 @@ def test_disconnect_ports():
 
     disconnect(c, se)
     assert not bg.bonds
+
 
 def test_many_port():
 
@@ -257,7 +257,7 @@ def test_delete_one_from_many_port():
     connect(c, j)
     connect(se, j)
 
-    (p,q), (r,s) = bg.bonds[1]
+    (p, q), (r, s) = bg.bonds[1]
 
     assert p in (se, j)
     assert r in (se, j)
@@ -319,13 +319,13 @@ def test_disconnect_multiport():
     bg.add([zero, r, c, one])
 
     connect(zero, one.non_inverting)
-    connect(r,zero)
+    connect(r, zero)
     connect(c, one.inverting)
 
     assert len(bg.bonds) == 3
     disconnect(zero, one)
     assert len(bg.bonds) == 2
-    assert ((zero, 0), (one,0)) not in bg.bonds
+    assert ((zero, 0), (one, 0)) not in bg.bonds
 
 
 def test_disconnect_component():
@@ -360,7 +360,7 @@ class TestRemove:
         connect(c, zero)
         r_p, = r.ports
         c_p, = c.ports
-        z0,z1, = zero.ports
+        z0, z1, = zero.ports
         assert c in bg.components
         assert set(bg.bonds) == {
             (r_p, z0),
@@ -391,9 +391,9 @@ class TestSwap:
         c = bgt.new("C", value=1)
 
         bg = bgt.new()
-        bg.add([zero, r, c ])
+        bg.add([zero, r, c])
 
-        connect(r,zero)
+        connect(r, zero)
         connect(c, zero)
         assert c in bg.components
         r_p, = r.ports
@@ -413,7 +413,6 @@ class TestSwap:
         assert len(bg.state_vars) == 0
         assert len(bg.control_vars) == 1
 
-
         assert bg.bonds == [
             (r_p, z0),
             (sf_port, z1)
@@ -423,7 +422,6 @@ class TestSwap:
         assert Sf in bg.components
 
         swap(Sf, c)
-
 
         assert bg.bonds == [
             (r_p, z0),
@@ -440,9 +438,9 @@ class TestSwap:
         c = bgt.new("C")
 
         bg = bgt.new()
-        bg.add([zero, r, c ])
+        bg.add([zero, r, c])
 
-        connect(r,zero)
+        connect(r, zero)
         connect(c, zero)
 
         p1, = r.ports
@@ -463,7 +461,7 @@ class TestSwap:
         l = bgt.new("I")
 
         bg = bgt.new()
-        bg.add([zero, r, c ])
+        bg.add([zero, r, c])
         connect(r, zero)
         connect(c, zero)
 

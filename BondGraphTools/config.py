@@ -31,7 +31,8 @@ class Config:
     base = pathlib.Path.home().absolute() / '.BondGraphTools'
     file = base / 'config.json'
 
-    def __init__(self, julia_executable=None, python_executable=None, **kwargs):
+    def __init__(self, julia_executable=None,
+                 python_executable=None, **kwargs):
 
         self._julia = None
         self._de = None

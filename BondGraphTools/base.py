@@ -166,7 +166,7 @@ class Port(object):
 
     def __eq__(self, other):
         try:
-            return ((self.component is other.component) and # noqa
+            return ((self.component is other.component) and  # noqa
                     (self.index == other.index))
         except AttributeError:
             try:

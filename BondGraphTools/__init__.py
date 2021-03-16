@@ -32,19 +32,19 @@ Build and simulate a RLC driven RLC circuit::
     resistor = bgt.new("R", name="R1", value=1.0)
 
     # 1 Henry Inductor
-    inductor = bgt.new("L", name="L1", value=1.0)
+    inductor = bgt.new("I", name="L1", value=1.0)
     # 1 Farad Capacitor
     capacitor = bgt.new("C", name="C1", value=1.0)
     # Conservation Law
     law = bgt.new("0") # Common voltage conservation law
 
     # Connect the components
-    connect(law, resistor)
-    connect(law, capacitor)
-    connect(law, inductor)
+    bgt.connect(law, resistor)
+    bgt.connect(law, capacitor)
+    bgt.connect(law, inductor)
 
     # produce timeseries data
-    t, x = simulate(model, x0=[1,1], timespan=[0, 10])
+    t, x = bgt.simulate(model, x0=[1,1], timespan=[0, 10])
 
 Bugs
 ----

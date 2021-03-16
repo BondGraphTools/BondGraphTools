@@ -36,4 +36,3 @@ def rlc():
     bgt.connect(c, kvl)
 
     return rlc
-

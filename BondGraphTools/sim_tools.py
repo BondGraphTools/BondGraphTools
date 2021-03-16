@@ -119,7 +119,8 @@ def simulate(system,
     samples = int(1 / dt) + 1
     t = np.linspace(*timespan, samples)
 
-    res, X =_bondgraph_to_residuals(system, control_vars)
+    res, X = _bondgraph_to_residuals(system, control_vars)
+
     X0, DX0 = _fetch_ic(x0, dx0, system, res, t[0])
 
     solver_name = 'ida'
@@ -179,11 +180,13 @@ def _bondgraph_to_residuals(model, control_vars=None):
                     r = f(0, 0, 0)
                 else:
                     r = f(0, test_x, test_x)
-                assert isinstance(r, (float, int, sp.Number)), "Invalid output from control"
+                assert isinstance(r, (float, int, sp.Number)
+                                  ), "Invalid output from control"
             except Exception as ex:
                 message = f"Invalid control function for var: {idx}.\n " \
-                           "Control functions should be of the form:\n" \
-                           f"{idx} = f(t, x, dx/dt)"
+                    "Control functions should be of the form:\n" \
+                    f"{idx} = f(t, x, dx/dt)"
+
                 raise ModelException(message)
 
         for i, u in enumerate(model.control_vars):
@@ -200,7 +203,9 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for r in model.constitutive_relations]
 
     if len(rels) != n:
-        raise ModelException("Model simplification error: system is under-determined")
+
+        raise ModelException(
+            "Model simplification error: system is under-determined")
 
     Fsym = sp.symarray('F', shape=n)
     for i, r in enumerate(rels):
@@ -211,8 +216,8 @@ def _bondgraph_to_residuals(model, control_vars=None):
     if not u_func:
         F = sp.lambdify((t, X, dX), Fsym)
 
-        def residual(_t,_x,_dx,_res):
-            _r = F(_t,_x, _dx)
+        def residual(_t, _x, _dx, _res):
+            _r = F(_t, _x, _dx)
             for i in range(n):
                 _res[i] = _r[i]
     else:
@@ -225,4 +230,3 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for i in range(n):
                 _res[i] = _r[i]
     return residual, X
-

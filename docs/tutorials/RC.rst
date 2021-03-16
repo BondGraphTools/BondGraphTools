@@ -85,7 +85,7 @@ connecting it to the common voltage law::
 
 The model should now look something like this::
 
-    draw(model)
+    bgt.draw(model)
 
 .. figure:: images/RC_3.svg
     :scale: 50 %
@@ -117,7 +117,7 @@ to the solver and plotting the results::
 
     timespan = [0, 5]
     x0 = [1]
-    t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':2})
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':2})
     plot(t,x)
 
 .. figure:: images/RC_4.svg
@@ -127,7 +127,7 @@ to the solver and plotting the results::
 Time dependent control laws can be specified as string. In this case we
 consider the response to a :math:`\pi^{-1}` Hz sine wave::
 
-    t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':'sin(2*t)'})
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':'sin(2*t)'})
     plot(t,x)
 
 .. figure:: images/RC_5.svg
@@ -138,7 +138,7 @@ One can also consider the impulse response of by applying a step function
 input ot the control law::
 
     step_fn = 't < 1 ? 1 : 0' # if t < 0 then 1 else 0
-    t, x = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':step_fn})
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':step_fn})
     plot(t,x)
 
 .. figure:: images/RC_6.svg
@@ -151,7 +151,7 @@ based on the loop iteration::
     fig = plt.figure()
     for i in range(4):
         func_text = "cos({i}t)".format(i=i)
-        t_i, x_i = simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':func_text})
+        t_i, x_i = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0':func_text})
         plot(t_i,x_i)
 
 .. figure:: images/RC_7.svg
