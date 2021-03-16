@@ -8,3 +8,4 @@ build/
 BondGraphTools.egg-info/
 docs/html
 dist
+coverage.xml
