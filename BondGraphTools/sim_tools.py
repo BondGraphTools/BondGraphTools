@@ -5,10 +5,13 @@ import logging
 
 import numpy as np
 import sympy as sp
-from sympy.core import SympifyError
 from scipy.optimize import broyden1
-from scikits.odes.dae import dae
-from .exceptions import ModelException, SolverException
+from .exceptions import ModelException
+
+try:
+    from scikits.odes.dae import dae
+except ImportError:
+    print("Warning - sciket.odes not found. Simulations are disabled.")
 
 logger = logging.getLogger(__name__)
 
