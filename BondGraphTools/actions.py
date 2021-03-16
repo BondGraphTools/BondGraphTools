@@ -339,7 +339,7 @@ def expose(component, label=None):
             f"Component {component} is not inside anything"
         )
     # fix me with metamodeles or something trickier
-    if component.__component__ is not "SS":
+    if component.__component__ != "SS":
         ss = new("SS",  name=component.name)
         try:
             swap(component, ss)
