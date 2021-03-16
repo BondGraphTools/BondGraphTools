@@ -6,11 +6,13 @@ from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _bondgraph_to_residuals
 from BondGraphTools.algebra import inverse_coord_maps
 
+
 def test_c_sim_fail():
 
     c = new("C")
     with pytest.raises(ModelException):
-        t, x = simulate(c, timespan=[0, 1], x0=[1],dx0=[1])
+        t, x = simulate(c, timespan=[0, 1], x0=[1], dx0=[1])
+
 
 def test_c_se_build_ode():
 
@@ -21,7 +23,7 @@ def test_c_se_build_ode():
     bg = new()
     bg.add([c, se, kcl, r])
 
-    connect(c,(kcl, kcl.non_inverting))
+    connect(c, (kcl, kcl.non_inverting))
     connect(r, (kcl, kcl.non_inverting))
     connect(se, (kcl, kcl.non_inverting))
 
@@ -45,8 +47,9 @@ def test_c_se_build_ode():
     assert r == [0]
 
     t_test = np.log(4)
-    residual_func(t_test, [1/8], [1/8], r)
+    residual_func(t_test, [1 / 8], [1 / 8], r)
     assert r == [0]
+
 
 @pytest.mark.slow
 def test_c_se_sim():
@@ -79,10 +82,11 @@ def test_c_se_sim():
 
     assert (len(t), 1) == x.shape
     assert x[0, 0] == 0
-    solution = t*np.exp(-t)
+    solution = t * np.exp(-t)
 
     res = abs(x - solution)
     assert (res < 0.001).all()
+
 
 @pytest.mark.slow
 def test_c_se_sum_switch():
@@ -101,10 +105,11 @@ def test_c_se_sum_switch():
         return 1.5 if x >= 1 else -2.0
 
     t, x = simulate(
-        bg, timespan=[0, 10], x0=[0],dx0=[1], control_vars=[bang_bang]
+        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang]
     )
 
     assert (x[0, -1] - 1) < 0.001
+
 
 @pytest.mark.skip
 @pytest.mark.slow
@@ -118,13 +123,11 @@ def test_rlc():
     bg = new()
     bg.add([c, se, kvl, r, l])
 
-
     connect(c, kvl)
     connect(r, kvl)
     connect(se, kvl)
     connect(l, kvl)
 
     t, x = simulate(
-        bg, timespan=[0, 10], x0=[1,0], control_vars=[1]
+        bg, timespan=[0, 10], x0=[1, 0], control_vars=[1]
     )
-

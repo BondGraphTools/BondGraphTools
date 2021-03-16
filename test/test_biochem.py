@@ -5,7 +5,7 @@ import sympy
 import BondGraphTools as bgt
 from BondGraphTools import connect
 from BondGraphTools.exceptions import InvalidPortException
-from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps,get_relations_iterator
+from BondGraphTools.algebra import extract_coefficients, inverse_coord_maps, get_relations_iterator
 from BondGraphTools.reaction_builder import Reaction_Network
 
 import logging
@@ -61,8 +61,9 @@ def test_re_con_rel():
 
     for r in get_relations_iterator(Re, mappings, coords):
         assert r in [
-            ({1:1, 3:1}, 0), ({1:1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
+            ({1: 1, 3: 1}, 0), ({1: 1}, sympy.sympify("-r*exp(e_0) + r*exp(e_1)"))
         ]
+
 
 def test_a_to_b_model():
     A = bgt.new("Ce", library="BioChem", value=[1, 1, 1])
@@ -74,18 +75,19 @@ def test_a_to_b_model():
     Y_B = bgt.new('1')
 
     a_to_b = bgt.new()
-    a_to_b.add(A , Re, B,Y_A, Y_B)
+    a_to_b.add(A, Re, B, Y_A, Y_B)
 
     connect(A, Y_A.non_inverting)
     connect(B, Y_B.non_inverting)
-    connect((Re,0), Y_A.inverting)
-    connect((Re,1), Y_B.inverting)
+    connect((Re, 0), Y_A.inverting)
+    connect((Re, 1), Y_B.inverting)
 
-    eqns ={
+    eqns = {
         sympy.sympify("dx_0 + x_0 -x_1"), sympy.sympify("dx_1 + x_1 -x_0")
     }
     for relation in a_to_b.constitutive_relations:
         assert relation in eqns
+
 
 def test_ab_to_c_model():
 
@@ -104,14 +106,14 @@ def test_ab_to_c_model():
     connect(Re, Y_C)
     connect(Y_C, C)
 
-    state_basis ,_,_ = bg.basis_vectors
+    state_basis, _, _ = bg.basis_vectors
     (x_0, dx_0), = (k for k, (v, _) in state_basis.items() if v is A)
     (x_1, dx_1), = (k for k, (v, _) in state_basis.items() if v is B)
     (x_2, dx_2), = (k for k, (v, _) in state_basis.items() if v is C)
 
-    eqns = {dx_0 + x_0*x_1 - x_2,
-            dx_1 + x_0*x_1 - x_2,
-            dx_2 - x_0*x_1 + x_2}
+    eqns = {dx_0 + x_0 * x_1 - x_2,
+            dx_1 + x_0 * x_1 - x_2,
+            dx_2 - x_0 * x_1 + x_2}
 
     relations = set(bg.constitutive_relations)
     assert not relations ^ eqns
@@ -123,10 +125,10 @@ def test_new_reaction_network():
     rn.add_reaction(
         "A+B=C"
     )
-    assert rn.species ==["A","B","C"]
-    assert rn.forward_stoichiometry == sympy.Matrix([[1],[1],[0]])
+    assert rn.species == ["A", "B", "C"]
+    assert rn.forward_stoichiometry == sympy.Matrix([[1], [1], [0]])
     assert rn.reverse_stoichiometry == sympy.Matrix([[0], [0], [1]])
-    assert rn.stoichiometry == sympy.Matrix([[-1],[-1],[1]])
+    assert rn.stoichiometry == sympy.Matrix([[-1], [-1], [1]])
 
 
 def test_rn_to_bond_graph():
@@ -146,7 +148,7 @@ def test_cat_rn():
     assert len(rn._reactions) == 2
 
 
-#TODO: fix when we rework parameters
+# TODO: fix when we rework parameters
 def test_nlin_se():
     rn = Reaction_Network(name="A+B to C", reactions="A+B=C")
     system = rn.as_network_model(normalised=True)
@@ -154,7 +156,7 @@ def test_nlin_se():
     for param in system.params:
         system.set_param(param, 1)
 
-    Ce_A = system/ "A"
+    Ce_A = system / "A"
     Ce_B = system / "B"
     Ce_C = system / "C"
 
@@ -174,11 +176,11 @@ def test_nlin_se():
     connect(Se_A, J_A)
 
     assert len(system.state_vars) == 3
-    state_basis , _, _ = system.basis_vectors
+    state_basis, _, _ = system.basis_vectors
 
-    (x0, dx0), = (k for k, (v,_) in  state_basis.items() if v is Ce_A)
-    (x1, dx1), = (k for k, (v,_) in  state_basis.items() if v is Ce_B)
-    (x2, dx2), = (k for k, (v,_) in  state_basis.items() if v is Ce_C)
+    (x0, dx0), = (k for k, (v, _) in state_basis.items() if v is Ce_A)
+    (x1, dx1), = (k for k, (v, _) in state_basis.items() if v is Ce_B)
+    (x2, dx2), = (k for k, (v, _) in state_basis.items() if v is Ce_C)
     E = sympy.S("E")
     solutions = {dx1 + E * x1 - x2, dx2 - E * x1 + x2, x0 - E, dx0}
 
@@ -202,5 +204,3 @@ class TestReactionNames(object):
 
         assert isinstance(re, SymmetricComponent)
         assert re.metamodel == 'R'
-
-

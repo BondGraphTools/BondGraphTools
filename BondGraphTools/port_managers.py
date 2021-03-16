@@ -92,6 +92,7 @@ class PortExpander(PortManager):
 
     See Also: `PortTemplate`
     """
+
     def __init__(self, ports, static_ports=None):
         if static_ports:
             super().__init__(static_ports)
@@ -211,6 +212,7 @@ class PortTemplate(object):
 
 class LabeledPort(Port):
     """See Also: `Port`, `LabeledPortManager`"""
+
     def __init__(self, *args, name=None, **kwargs):
         self.name = name
         """The name of this port"""
@@ -232,6 +234,7 @@ class LabeledPortManager(PortManager):
     See Also: `PortManager`
 
     """
+
     def __init__(self, ports=None):
         if ports:
             super().__init__(ports)

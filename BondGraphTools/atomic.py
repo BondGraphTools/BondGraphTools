@@ -178,8 +178,8 @@ class Component(BondGraphBase, PortManager):
                 for port_id in self.ports:
                     if isinstance(port_id, int):
                         rels.append(
-                        sp.sympify(
-                            string.replace("_i", "_{}".format(port_id))))
+                            sp.sympify(
+                                string.replace("_i", "_{}".format(port_id))))
             else:
 
                 tiers = 0
@@ -201,7 +201,7 @@ class Component(BondGraphBase, PortManager):
                 terms = [substring.replace("_i", "_{}".format(p))
                          for p in self.ports if isinstance(p, int)]
                 symstr = string[0:sloc] + "(" + " + ".join(terms) + string[
-                                                                    eloc:]
+                    eloc:]
 
                 rels.append(
                     sp.sympify(symstr)
@@ -220,6 +220,7 @@ class SymmetricComponent(Component):
     Instances of this class are multi-port components which are able to have
     connections made without specifying ports.
     """
+
     def get_port(self, port=None):
         """See `Component`"""
         if not port and not isinstance(port, int):
@@ -243,6 +244,7 @@ class EqualEffort(BondGraphBase, PortExpander):
          constitutive_relations:
 
     """
+
     def __init__(self, **kwargs):
 
         PortExpander .__init__(self, {None: None})
@@ -302,7 +304,7 @@ class EqualFlow(BondGraphBase, PortExpander):
 
     @property
     def basis_vectors(self):
-        return {},  self._port_vectors(), {}
+        return {}, self._port_vectors(), {}
 
     def get_port(self, port=None):
         try:
@@ -320,13 +322,13 @@ class EqualFlow(BondGraphBase, PortExpander):
         (e_0, f_0), port = var.pop()
 
         sigma_0 = port.weight
-        partial_sum = sigma_0*e_0
+        partial_sum = sigma_0 * e_0
 
         while var:
             (e_i, f_i), port = var.pop()
             sigma_i = port.weight
-            partial_sum += sigma_i*e_i
-            relations.append(sigma_i*f_i - sigma_0*f_0)
+            partial_sum += sigma_i * e_i
+            relations.append(sigma_i * f_i - sigma_0 * f_0)
 
         relations.append(partial_sum)
         return relations

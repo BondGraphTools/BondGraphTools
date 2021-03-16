@@ -24,14 +24,11 @@ def test_uri_tree():
 
     assert c_o.uri == "Model:/C_1"
 
-
     assert internal_model in model.components
     assert r_i in internal_model.components
     assert r_i not in model.components
 
-
     assert r_i.uri == "Model:/Model/" + r_i.name
-
 
     c_i = new("C", name="C_1")
     internal_model.add(
@@ -47,4 +44,3 @@ def test_uri_tree():
 
     assert c_i.uri == "Model:/C_1"
     assert c_o.uri == "Model:/C_1"
-

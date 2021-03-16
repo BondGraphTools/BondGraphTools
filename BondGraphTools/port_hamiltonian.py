@@ -29,7 +29,7 @@ class PortHamiltonian(Component):
 
         creates a new port hamiltonian component `ph`, which has one port
         defined by the relation
-        $$\dot{x}_i = f_i, \qquad e_i = \frac{\partial H}{\partial x_i}$$
+        $$\\dot{x}_i = f_i, \\qquad e_i = \frac{\\partial H}{\\partial x_i}$$
         where $H = w*x^2$,.
 
     See Also: Component

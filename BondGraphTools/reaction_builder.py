@@ -28,6 +28,7 @@ class Reaction_Network(object):
         temperature: Temperature in Kelvin (Default 300K, or approx 27c)
         volume:
     """
+
     def __init__(self, reactions=None, name=None, temperature=300, volume=1):
 
         self._reactions = {}
@@ -60,7 +61,7 @@ class Reaction_Network(object):
     @property
     def reverse_stoichiometry(self):
         """The reverse stoichiometric matrix"""
-        matrix = SparseMatrix(len(self._species), len(self._reactions),{})
+        matrix = SparseMatrix(len(self._species), len(self._reactions), {})
         for col, (_, forward_species, _, _) in enumerate(
                 self._reactions.values()):
             for species, qty in forward_species.items():
@@ -71,8 +72,8 @@ class Reaction_Network(object):
     @property
     def forward_stoichiometry(self):
         """The forward stoichiometric matrix"""
-        matrix = SparseMatrix(len(self._species), len(self._reactions),{})
-        for col, (back_species,_, _, _) in enumerate(
+        matrix = SparseMatrix(len(self._species), len(self._reactions), {})
+        for col, (back_species, _, _, _) in enumerate(
                 self._reactions.values()):
             for species, qty in back_species.items():
                 matrix[(self.species.index(species), col)] = qty
@@ -108,10 +109,10 @@ class Reaction_Network(object):
                             symbols(f"x_{{{s}}}"), qty)
             eqn = prod - subst
             fluxes.append(eqn)
-        matrix = Matrix(len(fluxes),1, fluxes)
+        matrix = Matrix(len(fluxes), 1, fluxes)
         return matrix, coords
 
-    def as_network_model(self, normalised: bool=False):
+    def as_network_model(self, normalised: bool = False):
         """Produces a bond graph :obj:`BondGraph.BondGraph` model of the system
 
         Args:
@@ -175,18 +176,18 @@ class Reaction_Network(object):
 
             if qty == 1:
                 if is_reversed:
-                    connect(species_anchors[species],junct.non_inverting)
+                    connect(species_anchors[species], junct.non_inverting)
                 else:
-                    connect(junct.non_inverting,species_anchors[species])
+                    connect(junct.non_inverting, species_anchors[species])
             else:
                 tf = new("TF", value=qty)
                 system.add(tf)
                 if is_reversed:
                     connect((tf, 1), junct.non_inverting)
-                    connect(species_anchors[species], (tf,0))
+                    connect(species_anchors[species], (tf, 0))
                 else:
                     connect(junct.non_inverting, (tf, 1))
-                    connect((tf,0), species_anchors[species])
+                    connect((tf, 0), species_anchors[species])
 
     def _build_species(self, system, normalised):
         if normalised:
@@ -199,12 +200,12 @@ class Reaction_Network(object):
             # edit: create new component for chemostat
             if species in self._chemostats:
                 this_species = new(
-                        "Se", name=species, value=self._chemostats[species]
+                    "Se", name=species, value=self._chemostats[species]
                 )
-                n_reactions = n_reactions-1
+                n_reactions = n_reactions - 1
             else:
                 this_species = new(
-                        "Ce", library=LIBRARY, name=species, value=param_dict
+                    "Ce", library=LIBRARY, name=species, value=param_dict
                 )
             system.add(this_species)
 
@@ -260,7 +261,7 @@ class Reaction_Network(object):
 
         if not name or name in self._reactions:
             n = 1
-            while "r_{{{base}}}".format(base=str(n)+';0') in self._reactions:
+            while "r_{{{base}}}".format(base=str(n) + ';0') in self._reactions:
                 n += 1
             base = str(n) + ';'
             idx = "r_{{{base}}}"
@@ -288,12 +289,12 @@ class Reaction_Network(object):
             for sp in reaction_step[i]:
                 self._species[sp] += 1
 
-            for sp in reaction_step[i+1]:
+            for sp in reaction_step[i + 1]:
                 self._species[sp] += 1
 
-            self._reactions[idx.format(base=base+str(i))] = (reaction_step[i],
-                                              reaction_step[i+1],
-                                              f_rate, r_rate)
+            self._reactions[idx.format(base=base + str(i))] = (reaction_step[i],
+                                                               reaction_step[i + 1],
+                                                               f_rate, r_rate)
 
     def add_chemostat(self, species, concentration=None):
         """
@@ -355,4 +356,3 @@ def _split_reactants(reactants):
         stoiciometrics[prod] = coeff
 
     return stoiciometrics
-

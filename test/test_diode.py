@@ -6,11 +6,11 @@ import BondGraphTools as bgt
 
 def test_make_diode():
 
-    d = bgt.new("Di", library="elec", value={"Is": 5*10**-6})
+    d = bgt.new("Di", library="elec", value={"Is": 5 * 10**-6})
     # todo: fix this
     # assert d.metamodel == "Di"
     assert len(d.ports) == 1
-    assert d.params["Is"]["value"] == 5*10**-6
+    assert d.params["Is"]["value"] == 5 * 10**-6
 
 
 def test_diode_model():
@@ -21,4 +21,3 @@ def test_diode_model():
     assert not d.control_vars
 
     assert d.constitutive_relations[0] == sp.sympify('f_0 - exp(e_0) +1')
-
