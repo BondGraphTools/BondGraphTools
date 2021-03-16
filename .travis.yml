@@ -16,6 +16,7 @@ before_install:
   - git clone https://github.com/LLNL/sundials.git
   - mkdir sundials/build && cd sundials/build && cmake -DLAPACK_ENABLE=ON ..
   - make && sudo make install
+  - cd .. && cd ..
 
 install:
   - python -m pip install -r requirements.txt
