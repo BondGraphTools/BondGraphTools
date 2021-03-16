@@ -116,6 +116,7 @@ def simulate(system,
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
+<<<<<<< HEAD
     samples = int(1 / dt) + 1
     t = np.linspace(*timespan, samples)
 
@@ -135,6 +136,28 @@ def _to_function(string, X, DX, substitutions):
     f_n = sp.lambdify((sp.S('t'), X, DX), f, "numpy")
     return f_n
 
+=======
+    samples = int((timespan[1]-timespan[0]) / dt) + 1
+    t = np.linspace(*timespan, samples)
+
+    res, X = _bondgraph_to_residuals(system, control_vars)
+
+    X0, DX0 = _fetch_ic(x0, dx0, system, res, t[0])
+
+    solver_name = 'ida'
+    dae_solver = dae(solver_name, res)
+    sol = dae_solver.solve(t, X0, DX0)
+
+    return t.reshape((samples, 1)), np.transpose(sol.values.y).T
+
+
+def _to_function(string, X, DX, substitutions):
+    f = sp.sympify(string).subs(substitutions)
+
+    f_n = sp.lambdify((sp.S('t'), X, DX), f, "numpy")
+    return f_n
+
+>>>>>>> master
 
 def _bondgraph_to_residuals(model, control_vars=None):
     dX = sp.IndexedBase('dX')
@@ -185,6 +208,10 @@ def _bondgraph_to_residuals(model, control_vars=None):
                 message = f"Invalid control function for var: {idx}.\n " \
                     "Control functions should be of the form:\n" \
                     f"{idx} = f(t, x, dx/dt)"
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
                 raise ModelException(message)
 
         for i, u in enumerate(model.control_vars):
@@ -201,6 +228,10 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for r in model.constitutive_relations]
 
     if len(rels) != n:
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
         raise ModelException(
             "Model simplification error: system is under-determined")
 
