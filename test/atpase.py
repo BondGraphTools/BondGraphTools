@@ -1,11 +1,13 @@
+import BondGraphTools as bgt
 import pathlib
 import sys
 import os
 path = os.path.relpath(path=".")
 sys.path.insert(0, os.path.abspath(path))
 
-import BondGraphTools as bgt
 log_file = "profile.log"
+
+
 def atpase():
 
     # Reaction Conductance in fmol/s
@@ -93,10 +95,10 @@ def atpase():
     model = bgt.new(name="ATPase")
     # add all the pumps
     for pump, affinity in enumerate(pump_affinities):
-        parameters = {'k':affinity,
-                      'R':Gas_Constant,
-                      'T':Temperature}
-        name = "P{}".format(pump+1)
+        parameters = {'k': affinity,
+                      'R': Gas_Constant,
+                      'T': Temperature}
+        name = "P{}".format(pump + 1)
         Ce = bgt.new(component="Ce",
                      name=name,
                      library="BioChem",
@@ -108,9 +110,9 @@ def atpase():
 
     # add all the species
     for species, affinity in species_affinities.items():
-        parameters = {'k':affinity,
-                      'R':Gas_Constant,
-                      'T':Temperature}
+        parameters = {'k': affinity,
+                      'R': Gas_Constant,
+                      'T': Temperature}
         Ce = bgt.new(component="Ce",
                      name=species,
                      library="BioChem",
@@ -120,17 +122,19 @@ def atpase():
         model.add(Ce, junction)
         model.connect(Ce, junction)
 
-    #add the electrical components
-    c_mem = bgt.new('C',name="mem",value={'C':membrane_capacitance})
+    # add the electrical components
+    c_mem = bgt.new('C', name="mem", value={'C': membrane_capacitance})
     c_junction = bgt.new("0", name="mem")
     model.add(c_mem, c_junction)
     model.connect(c_mem, c_junction)
 
-    zF_5 = bgt.new('TF',name='zF_5', value={'r':r5_charge})
-    zF_8 = bgt.new('TF',name='zF_8', value={'r':r8_charge})
+    zF_5 = bgt.new('TF', name='zF_5', value={'r': r5_charge})
+    zF_8 = bgt.new('TF', name='zF_8', value={'r': r8_charge})
 
     model.add(zF_5, zF_8)
-    port= 1 #  port 0 is the primary winding of a transformer and 1 is the secondary winding.
+    # port 0 is the primary winding of a transformer and 1 is the secondary
+    # winding.
+    port = 1
     zF_5_secondary = (zF_5, port)
     zF_8_secondary = (zF_8, port)
     model.connect(zF_5_secondary, c_junction)
@@ -162,7 +166,7 @@ def atpase():
             for product in products:
                 if product == 'zF_5':
                     junction = (
-                    zF_5, 0)  # the primary winding of the charge transporter
+                        zF_5, 0)  # the primary winding of the charge transporter
                 elif product == 'zF_8':
                     junction = (zF_8, 0)
                 else:
@@ -176,7 +180,7 @@ def atpase():
     from math import log
     # Add Chemostats
     for species, affinity in species_affinities.items():
-        effort = log(affinity*initial_conditions[species])
+        effort = log(affinity * initial_conditions[species])
         Se = bgt.new('Se', value=effort, name=species)
         model.add(Se)
         junction = model.find(name=species, component='0')

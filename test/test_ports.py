@@ -1,5 +1,6 @@
 import pytest
 
+
 class TestPort:
     def test_in(self):
         from BondGraphTools.base import Port
@@ -28,6 +29,7 @@ class TestPort:
         assert port_c is not port_one
         assert port_c != port_one
 
+
 class TestIntegrations:
 
     def test_get_exposed_port(self):
@@ -53,10 +55,10 @@ class TestPortIntegration(object):
         expose(port, label='port_1')
 
         test_model = new()
-        component = new("0") ## could be anything
+        component = new("0")  # could be anything
         test_model.add(component, model)
 
-        target_port =(model, 'port_')     # typo in port name
+        target_port = (model, 'port_')     # typo in port name
         with pytest.raises(InvalidPortException):
             connect(component, target_port)
 
@@ -76,4 +78,3 @@ class TestPortIntegration(object):
             connect((c2, 0), c3)
 
         assert "Port is already connected: " in str(ex)
-

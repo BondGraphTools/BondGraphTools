@@ -18,6 +18,7 @@ __all__ = [
     "augmented_rref"
 ]
 
+
 def extract_coefficients(equation: sympy.Expr,
                          local_map: dict,
                          global_coords: list) -> tuple:
@@ -30,13 +31,13 @@ def extract_coefficients(equation: sympy.Expr,
         global_coords: The list of global co-ordinates.
 
     Returns:
-        The linear and nonlinear parts of the equation in the global 
-        co-ordinate system. 
+        The linear and nonlinear parts of the equation in the global
+        co-ordinate system.
 
     Extracts the coordinates from the given equation and maps them into
     the global coordinate space.
     Equations are assumed to come in as sympy expressions of the form
-    :math:`\Phi(x) = 0`.
+    :math:`\\Phi(x) = 0`.
     local_map is a dictionary mappings
 
     .. math::
@@ -93,7 +94,8 @@ def extract_coefficients(equation: sympy.Expr,
     return coeff_dict, nonlinear_terms
 
 
-def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_tup):
+def _generate_substitutions(linear_op, nonlinear_op,
+                            constraints, coords, size_tup):
 
     # Lx + F(x) = 0 =>  Ix = (I - L)x - F(x) = Rx - F(x)
     # Since L is in smith normal form (rref and square)
@@ -113,14 +115,14 @@ def _generate_substitutions(linear_op, nonlinear_op, constraints, coords, size_t
     ss_size, js_size, cv_size, n = size_tup
     substitutions = []
     coords_vect = sympy.Matrix(coords)
-    for i in reversed(range(2*(ss_size  + js_size))):
+    for i in reversed(range(2 * (ss_size + js_size))):
         co = coords[i]
-        if Rx[i,i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
+        if Rx[i, i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
 
-            eqn = (Rx[i,:]*coords_vect)[0] - nonlinear_op[i]
+            eqn = (Rx[i, :] * coords_vect)[0] - nonlinear_op[i]
             pair = (coords[i], eqn)
             logger.debug("Generating substition %s = %s",
-                        repr(coords[i]), repr(eqn))
+                         repr(coords[i]), repr(eqn))
             substitutions = [
                 (c, s.subs(*pair)) for c, s in substitutions
             ]
@@ -139,20 +141,20 @@ def _process_constraints(linear_op,
     ss_size, js_size, cv_size, n = size_tup
     offset = 2 * js_size + ss_size
 
-    coord_atoms = set(coordinates[0:offset+ss_size])
+    coord_atoms = set(coordinates[0:offset + ss_size])
 
     coords_vect = sympy.Matrix(coordinates)
     cv_constraints = list(
-        linear_op[offset+ss_size:n,:]*coords_vect +
-        nonlinear_op[offset+ss_size:n,0]
+        linear_op[offset + ss_size:n, :] * coords_vect +
+        nonlinear_op[offset + ss_size:n, 0]
     )
     constraints += [cons for cons in cv_constraints if cons]
-    linear_op = linear_op[:offset+ss_size, :]
-    nonlinear_op = nonlinear_op[:offset+ss_size, :]
+    linear_op = linear_op[:offset + ss_size, :]
+    nonlinear_op = nonlinear_op[:offset + ss_size, :]
 
     while constraints:
         constraint, _ = sympy.fraction(constraints.pop())
-        logger.debug("Processing constraint: %s",repr(constraint))
+        logger.debug("Processing constraint: %s", repr(constraint))
         atoms = constraint.atoms() & set(coord_atoms)
 
         # todo: check to see if we can solve f(x) = u => g(u) = x
@@ -168,7 +170,7 @@ def _process_constraints(linear_op,
                     sympy.SparseMatrix(1, linear_op.cols, {(0, idx): 1})
                 )
                 nonlinear_op = nonlinear_op.col_join(
-                    sympy.SparseMatrix(1, 1, {(0,0): -sol})
+                    sympy.SparseMatrix(1, 1, {(0, 0): -sol})
                 )
                 constraint = c - sol
         else:
@@ -178,8 +180,8 @@ def _process_constraints(linear_op,
             partials = [constraint.diff(c) for c in coordinates]
         except Exception as ex:
             logger.exception("Could not differentiate %s with respect to %s",
-                         repr(constraint),repr(coordinates)
-             )
+                             repr(constraint), repr(coordinates)
+                             )
             raise ex
 
         if any(p != 0 for p in partials[0:offset]):
@@ -203,7 +205,7 @@ def _process_constraints(linear_op,
                         nlin += new_coeff * coordinates[idx]
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
-                    cv = coordinates[offset+ss_size+idx]
+                    cv = coordinates[offset + ss_size + idx]
                     dvc = sympy.Symbol(f"d{str(cv)}")
                     try:
                         dc_idx = coordinates.index(dvc)
@@ -215,16 +217,16 @@ def _process_constraints(linear_op,
                         linear_op = linear_op.row_join(
                             sympy.SparseMatrix(linear_op.rows, 1, {})
                         )
-                    eqn = coeff/factor
+                    eqn = coeff / factor
                     if eqn.is_number:
                         lin_dict.update({(0, dc_idx): eqn})
                     else:
-                        nlin += eqn*dvc
+                        nlin += eqn * dvc
             linear_op = linear_op.col_join(
-                sympy.SparseMatrix(1,linear_op.cols, lin_dict)
+                sympy.SparseMatrix(1, linear_op.cols, lin_dict)
             )
             nonlinear_op = nonlinear_op.col_join(
-                    sympy.SparseMatrix(1,1,{(0,0):nlin})
+                sympy.SparseMatrix(1, 1, {(0, 0): nlin})
             )
 
     linear_op, nonlinear_op, new_constraints = smith_normal_form(
@@ -232,14 +234,14 @@ def _process_constraints(linear_op,
         augment=nonlinear_op)
 
     return linear_op, nonlinear_op, new_constraints + initial_constraints, \
-           coordinates, (ss_size, js_size, cv_size, n)
+        coordinates, (ss_size, js_size, cv_size, n)
 
 
 def _generate_cv_substitutions(subs_pairs, mappins, coords):
     state_map, port_map, control_map = mappins
     ss_size = len(state_map)
 
-    cv_offset = 2*(ss_size + len(port_map))
+    cv_offset = 2 * (ss_size + len(port_map))
 
     control_vars = {str(c) for c in coords[cv_offset:]}
     subs = []
@@ -341,30 +343,32 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             for idx in range(ss_size):
                 v = linear_op[row, idx + offset]
                 if v:
-                    lin_dict.update({(rows_added,idx): v})
+                    lin_dict.update({(rows_added, idx): v})
             for idx in range(cv_size):
-                v = linear_op[row, idx + offset+ss_size]
+                v = linear_op[row, idx + offset + ss_size]
                 if v:
                     cv_diff_dict.update({(rows_added, idx): v})
 
     for row in range(offset, linear_op.rows):
         logger.debug("Testing row %s: %s + %s", repr(row),
-                    repr(linear_op[row, :] * sympy.Matrix(coordinates)),
-                    repr(nonlinear_op[row]) if nonlinear_op else '')
+                     repr(linear_op[row, :] * sympy.Matrix(coordinates)),
+                     repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
         F_args = set(coordinates[0:offset + ss_size]) & \
-                 nonlinear_constraint.atoms()
-        if linear_op[row, offset:-1].is_zero and not nonlinear_constraint:
+            nonlinear_constraint.atoms()
+        if linear_op[row, offset:-
+                     1].is_zero_matrix and not nonlinear_constraint:
             continue
 
         state_constraint = linear_op[row, offset: offset + ss_size]
         control_constraint = linear_op[row, offset + ss_size:]
 
-        row = state_constraint.row_join(sympy.SparseMatrix(1, offset + cv_size, {}))
+        row = state_constraint.row_join(
+            sympy.SparseMatrix(1, offset + cv_size, {}))
 
         cv_dict = {}
-        if not control_constraint.is_zero:
+        if not control_constraint.is_zero_matrix:
             logger.debug("Found higher order control constraint")
             for cv_col in range(control_constraint.cols):
                 const = control_constraint[cv_col]
@@ -376,14 +380,15 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                 except ValueError:
                     idx = len(added_cvs)
                     added_cvs.append(cv_col)
-                    linear_op= linear_op.row_join(sympy.SparseMatrix(linear_op.rows, 1, {}))
+                    linear_op = linear_op.row_join(
+                        sympy.SparseMatrix(linear_op.rows, 1, {}))
                     coord = coordinates[offset + ss_size + cv_col]
                     d_coord = sympy.Symbol(f"d{str(coord)}")
                     coordinates.append(d_coord)
                     cv_size += 1
                     n += 1
 
-                cv_dict[(0,idx)] = const
+                cv_dict[(0, idx)] = const
 
         row = row.row_join(sympy.SparseMatrix(1, len(added_cvs), cv_dict))
         jac_dx = [nonlinear_constraint.diff(c) for c in coordinates[:ss_size]]
@@ -394,7 +399,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
         jac_x = [
             nonlinear_constraint.diff(c)
             for c in coordinates[offset:
-            offset+ss_size]
+                                 offset + ss_size]
         ]
         jac_cv = [
             nonlinear_constraint.diff(c)
@@ -403,26 +408,26 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
         nlin_row = sympy.S(0)
 
-        if any(x!=0 for x in jac_dx):
+        if any(x != 0 for x in jac_dx):
             logger.warning("Second order constraint not implemented: %s",
                            jac_dx)
 
-        elif any(x!=0 for x in jac_junciton):
+        elif any(x != 0 for x in jac_junciton):
             logger.warning("First order junciton constraint not implemented: %s",
                            str(jac_junciton))
 
-        elif any(x!=0 for x in jac_cv):
+        elif any(x != 0 for x in jac_cv):
             logger.warning("First order control constraint not implemented: %s",
                            str(jac_cv))
 
-        elif any(x!=0 for x in jac_x):
+        elif any(x != 0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
-            fx = sum(x*y for x,y in zip(jac_x, coordinates[:ss_size]))
+            fx = sum(x * y for x, y in zip(jac_x, coordinates[:ss_size]))
             logger.debug(repr(fx))
             p, q = sympy.fraction(sympy.simplify(fx))
-            if row.is_zero:
+            if row.is_zero_matrix:
                 lin_dict, nlin = extract_coefficients(
-                    p, {c:i for i,c in enumerate(coordinates)},
+                    p, {c: i for i, c in enumerate(coordinates)},
                     coordinates)
 
                 for k, v in lin_dict.items():
@@ -433,7 +438,8 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             else:
                 nlin_row += fx
 
-        nonlinear_op = nonlinear_op.col_join(sympy.SparseMatrix(1,1,[nlin_row]))
+        nonlinear_op = nonlinear_op.col_join(
+            sympy.SparseMatrix(1, 1, [nlin_row]))
 
         linear_op = linear_op.col_join(row)
         rows_added += 1
@@ -489,7 +495,7 @@ def augmented_rref(matrix, augmented_rows=0):
                     if v > v_max:
                         j = row
                         v_max = v
-                except TypeError: # symbolic variable
+                except TypeError:  # symbolic variable
                     j = row
                     v_max = v
             if not j:
@@ -501,7 +507,7 @@ def augmented_rref(matrix, augmented_rows=0):
 
         for i in range(matrix.rows):
             if i != pivot and matrix[i, col] != 0:
-                b = matrix[i, col]/a
+                b = matrix[i, col] / a
                 matrix[i, :] += - b * matrix[pivot, :]
 
         matrix[pivot, :] *= 1 / a
@@ -558,25 +564,25 @@ def smith_normal_form(matrix, augment=None):
     m, n = M.shape
     M = augmented_rref(M, k)
 
-    Mp = sympy.MutableSparseMatrix(n-k, n, {})
+    Mp = sympy.MutableSparseMatrix(n - k, n, {})
 
     constraints = []
     for row in range(m):
         leading_coeff = -1
-        for col in range(row, n-k):
+        for col in range(row, n - k):
             if M[row, col] != 0:
                 leading_coeff = col
                 break
         if leading_coeff < 0:
-            if not M[row, n-k:].is_zero:
-                constraints.append(sum(M[row,:]))
+            if not M[row, n - k:].is_zero_matrix:
+                constraints.append(sum(M[row, :]))
         else:
             Mp[leading_coeff, :] = M[row, :]
 
     if augment:
-        return Mp[:,:-k], Mp[:, -k:], constraints
+        return Mp[:, :-k], Mp[:, -k:], constraints
     else:
-        return Mp, sympy.SparseMatrix(m,k,{}), constraints
+        return Mp, sympy.SparseMatrix(m, k, {}), constraints
 
 
 def adjacency_to_dict(nodes, edges, offset=0):
@@ -643,20 +649,20 @@ def get_relations_iterator(component, mappings, coordinates, io_map=None):
     # todo: Fix this dirty hack; there has to be a better way to hand io ports
     for cv, value in local_cv.items():
         try:
-            local_map[cv] = 2*(num_ports+num_state_vars) + inv_cv[value]
+            local_map[cv] = 2 * (num_ports + num_state_vars) + inv_cv[value]
         except KeyError:
             logger.debug("Could not find %s, trying the io_map", value)
             key = io_map[value]
             local_map[cv] = key
-            logger.debug("Mapping %s to co-ord %s",cv, coordinates[key])
+            logger.debug("Mapping %s to co-ord %s", cv, coordinates[key])
 
     for (x, dx), coord in local_tm.items():
         local_map[dx] = inv_tm[coord]
         local_map[x] = inv_tm[coord] + num_state_vars + 2 * num_ports
 
     for (e, f), port in local_js.items():
-        local_map[e] = 2*inv_js[port] + num_state_vars
-        local_map[f] = 2*inv_js[port] + num_state_vars + 1
+        local_map[e] = 2 * inv_js[port] + num_state_vars
+        local_map[f] = 2 * inv_js[port] + num_state_vars + 1
     logger.debug("Getting relations iterator for %s", repr(component))
     for relation in component.constitutive_relations:
         if relation:

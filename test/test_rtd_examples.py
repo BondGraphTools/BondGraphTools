@@ -23,10 +23,19 @@ def test_example_2():
         # Here we build the reaction, again with the rate as a control variable.
         # Again, we assume parameterised have be normalised with respect to
         # pressure and temperature.
-        cat_reaction = bgt.new("Re", name="Re", library="BioChem", value={'r': None, 'R': 1, 'T': 1})
+        cat_reaction = bgt.new(
+            "Re", name="Re", library="BioChem", value={
+                'r': None, 'R': 1, 'T': 1})
 
         # We choose 'k' to be 1 for demonstration.
-        enzyme = bgt.new("Ce", name="E", library="BioChem", value={'k': 1, 'R': 1, 'T': 1})
+        enzyme = bgt.new(
+            "Ce",
+            name="E",
+            library="BioChem",
+            value={
+                'k': 1,
+                'R': 1,
+                'T': 1})
 
         # Substrate + Enzyme flux conservation law
         SE = bgt.new('1')
@@ -36,7 +45,15 @@ def test_example_2():
         # Conservation of enzyme law.
         law_E = bgt.new("0")
 
-        bgt.add(cat_model, substrate, product, enzyme, SE, PE, law_E, cat_reaction)
+        bgt.add(
+            cat_model,
+            substrate,
+            product,
+            enzyme,
+            SE,
+            PE,
+            law_E,
+            cat_reaction)
 
         connections = [
             (substrate, SE),

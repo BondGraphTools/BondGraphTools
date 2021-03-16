@@ -23,12 +23,13 @@ __all__ = [
 class BondGraph(BondGraphBase, LabeledPortManager):
     """Representation of a bond graph model.
     """
+
     def __init__(self, name, components=None, **kwargs):
 
         BondGraphBase.__init__(self, name, **kwargs)
         LabeledPortManager.__init__(self)
         self.components = OrderedSet()
-        """The components, instances of :obj:`BondGraphBase`, 
+        """The components, instances of :obj:`BondGraphBase`,
         that make up this model"""
 
         if components:
@@ -225,7 +226,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         out = dict()
         excluded = {
             v for pair in self._port_map.values() for v in pair
-         }
+        }
 
         for v in self.components:
             try:
@@ -302,8 +303,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         coord_vect = sp.Matrix(coordinates)
         relations = [
             sp.Add(l, r) for i, (l, r) in enumerate(zip(
-                lin_op*coord_vect, nlin_op))
-            if not ss_size <= i < ss_size + 2*js_size - 2*len(out_ports)
+                lin_op * coord_vect, nlin_op))
+            if not ss_size <= i < ss_size + 2 * js_size - 2 * len(out_ports)
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
@@ -344,8 +345,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         .. math::
 
-            x = (dx_0,  dx_1,  \ldots,  e_0,  f_0, e_1, f_1, \ldots, x_0,
-            x_1, \ldots, u_0, u_1, \ldots)
+            x = (dx_0,  dx_1,  \\ldots,  e_0,  f_0, e_1, f_1, \\ldots, x_0,
+            x_1, \\ldots, u_0, u_1, \\ldots)
 
         So that the system obeys the differential-algebraic equation
 
@@ -382,8 +383,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         inverse_port_map = {}
 
         for port, (cv_e, cv_f) in self._port_map.items():
-            inverse_port_map[cv_e] = ss_size + 2*inv_js[port]
-            inverse_port_map[cv_f] = ss_size + 2*inv_js[port] + 1
+            inverse_port_map[cv_e] = ss_size + 2 * inv_js[port]
+            inverse_port_map[cv_f] = ss_size + 2 * inv_js[port] + 1
 
         for component in self.components:
             relations = get_relations_iterator(
@@ -399,7 +400,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         linear_op = sp.SparseMatrix(row, n, lin_dict)
         nonlinear_op = sp.SparseMatrix(row, 1, nlin_dict)
         coordinates, linear_op, nonlinear_op, constraints = reduce_model(
-                linear_op, nonlinear_op, coordinates, size_tuple,
+            linear_op, nonlinear_op, coordinates, size_tuple,
             control_vars=control_vars
         )
 
@@ -459,6 +460,7 @@ class BondSet(OrderedSet):
     """
     Container class for internal bonds.
     """
+
     def add(self, bond):
         tail = bond.tail
         head = bond.head

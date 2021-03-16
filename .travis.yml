@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 
 env:
   global:
@@ -7,21 +7,23 @@ env:
 language: python
 
 python:
-  - "3.6"
   - "3.7"
+  - "3.8"
+  - "3.9"
 
 before_install:
-  - curl -L https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz > julia-0.6.2-linux-x86_64.tar.gz
-  - tar xf julia-0.6.2-linux-x86_64.tar.gz
-  - export PATH=$PATH:./julia-d386e40c17/bin/
-  - chmod +x ./julia-d386e40c17/bin/julia
-
+  - sudo apt-get update && sudo apt-get install -y gfortran libblas-dev liblapack-dev git build-essential cmake python3-dev
+  - git clone https://github.com/LLNL/sundials.git
+  - mkdir sundials/build && cd sundials/build && cmake -DLAPACK_ENABLE=ON ..
+  - make && sudo make install
+  - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+  - cd .. && cd ..
 
 install:
+  - echo $PYTHONPATH
+  - pip3 install --upgrade numpy
   - python -m pip install -r requirements.txt
-  - python -m pip install pytest==4.1.0 coverage==4.5.1 mock pytest-cov==2.6.1
-  - LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
-  - export LD_LIBRARY_PATH
+  - python -m pip install pytest coverage mock pytest-cov==2.6.1
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter

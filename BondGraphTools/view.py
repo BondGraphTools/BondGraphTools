@@ -48,7 +48,7 @@ def _build_graph(system):
 
     try:
         comp_map = {comp: i for i, comp in enumerate(system.components)}
-        graph = dok_matrix((len(comp_map), len(comp_map)), dtype=np.int)
+        graph = dok_matrix((len(comp_map), len(comp_map)), dtype=int)
         for (c1, _), (c2, _) in system.bonds:
             graph[(comp_map[c1], comp_map[c2])] = 1
             graph[(comp_map[c2], comp_map[c1])] = 1
@@ -65,7 +65,7 @@ def _networkx_layout(graph):
     nx_graph = nx.Graph(graph)
     #layout = nx.spring_layout(nx_graph, k=1)
     layout = nx.kamada_kawai_layout(nx_graph, scale=20)
-    pos = [(pair[0],pair[1]) for pair in list(layout.values())]
+    pos = [(pair[0], pair[1]) for pair in list(layout.values())]
 
     return pos
 
@@ -84,11 +84,11 @@ class PortGlyph:
 
         self.x, self.y = pos
         if dir == 'top':
-            self.y += self.height/2
+            self.y += self.height / 2
         elif dir == 'bottom':
             self.y -= self.height / 2
         elif dir == 'right':
-            self.x += self.width/2
+            self.x += self.width / 2
         else:
             self.x -= self.width / 2
 
@@ -108,10 +108,10 @@ class Glyph:
         self.height = 0.1
         self._text = None
         self.ports = {
-            'top':[],
+            'top': [],
             'right': [],
             'bottom': [],
-            'left':[]
+            'left': []
         }
 
     @property
@@ -143,36 +143,36 @@ class Glyph:
 
     def add_port(self, string, dir):
 
-        dx,dy = dir
+        dx, dy = dir
         text_dict = {
             'size': FONT_SM
         }
 
         if dy > abs(dx):
             text_dict.update({
-                'xytext':(self.x, self.y+self.height/2),
-                'horizontalalignment':'center',
+                'xytext': (self.x, self.y + self.height / 2),
+                'horizontalalignment': 'center',
                 'verticalalignment': 'bottom'
-                }
+            }
             )
             dir = 'top'
         elif -dy > abs(dx):
 
             text_dict.update({
-                'xytext':(self.x, self.y-self.height/2),
-                'horizontalalignment':'center',
+                'xytext': (self.x, self.y - self.height / 2),
+                'horizontalalignment': 'center',
                 'verticalalignment': 'top'
-                }
+            }
             )
-            dir= 'bottom'
+            dir = 'bottom'
 
         elif dx >= abs(dy):
 
             text_dict.update({
-                'xytext':(self.x+self.width/2, self.y),
+                'xytext': (self.x + self.width / 2, self.y),
                 'horizontalalignment': 'left',
                 'verticalalignment': 'center'
-                }
+            }
             )
             dir = 'right'
         else:
@@ -184,7 +184,7 @@ class Glyph:
             )
             dir = 'left'
 
-        port = PortGlyph(self.axes, string, self.pos,dir, text_dict)
+        port = PortGlyph(self.axes, string, self.pos, dir, text_dict)
         self.ports[dir] = port
 
         return port
@@ -198,7 +198,7 @@ class BondView(Line2D):
     def __init__(self, port_1, port_2, *args, **kwargs):
         self.port_1 = port_1
         self.port_2 = port_2
-        super().__init__([],[],*args, **kwargs)
+        super().__init__([], [], *args, **kwargs)
 
     def calc_lines(self):
         x1, y1 = self.port_1.pos
@@ -209,12 +209,12 @@ class BondView(Line2D):
 
         dx = x2 - x1
         dy = y2 - y1
-        x1 += r1*dx
-        y1 += r1*dy
-        x2 -= r2*dx
+        x1 += r1 * dx
+        y1 += r1 * dy
+        x2 -= r2 * dx
         y2 -= r2 * dy
 
-        lx, ly = x2-x1, y2-y1
+        lx, ly = x2 - x1, y2 - y1
         L = np.sqrt((lx)**2 + (ly)**2)
 
         if not self.shortest_bond or self.shortest_bond > L:
@@ -223,12 +223,12 @@ class BondView(Line2D):
         lx /= L
         ly /= L
 
-        headlength = self.shortest_bond/5
+        headlength = self.shortest_bond / 5
 
         vect = np.array((lx, ly))
 
         assert abs(np.linalg.norm(vect) - 1) < 0.01
-        x3, y3 = headlength *self.R.dot(vect) + (x2, y2)
+        x3, y3 = headlength * self.R.dot(vect) + (x2, y2)
 
         self.set_xdata([x1, x2, x3])
         self.set_ydata([y1, y2, y3])
@@ -248,26 +248,26 @@ class GraphLayout(Glyph):
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
 
-        for component, (x,y) in zip(self._node.components,
-                                                  points):
+        for component, (x, y) in zip(self._node.components,
+                                     points):
             x_min = min(x, x_min)
             x_max = max(x, x_max)
             y_min = min(y, y_min)
             y_max = max(y, y_max)
 
-            component.view.pos = (x,y)
-            if component.metamodel not in {'0','1'}:
+            component.view.pos = (x, y)
+            if component.metamodel not in {'0', '1'}:
                 try:
-                    component.view.string = "\mathbf{{{t}}}: {n}".format(
+                    component.view.string = r"\mathbf{{{t}}}: {n}".format(
                         t=component.metamodel, n=component.name)
-                except:
+                except BaseException:
                     component.view.string = "{t}: {n}".format(
                         t=component.metamodel, n=component.name)
             else:
                 try:
-                    component.view.string = "\mathbf{{{t}}}".format(
+                    component.view.string = r"\mathbf{{{t}}}".format(
                         t=component.metamodel)
-                except:
+                except BaseException:
                     component.view.string = "{t}".format(
                         t=component.metamodel, n=component.name)
             component.view.axes = ax
@@ -302,24 +302,24 @@ class GraphLayout(Glyph):
         width = abs(x_max - x_min)
         height = abs(y_min - y_max)
         tweak = 0.1
-        ax.axis([x_min - tweak*width,
-                 x_max + tweak*width,
-                 y_min - tweak*height,
-                 y_max + tweak*height])
+        ax.axis([x_min - tweak * width,
+                 x_max + tweak * width,
+                 y_min - tweak * height,
+                 y_max + tweak * height])
 
 
 def find_renderer(fig):
 
     if hasattr(fig.canvas, "get_renderer"):
-        #Some backends, such as TkAgg, have the get_renderer method, which
-        #makes this easy.
+        # Some backends, such as TkAgg, have the get_renderer method, which
+        # makes this easy.
         renderer = fig.canvas.get_renderer()
     else:
-        #Other backends do not have the get_renderer method, so we have a work
-        #around to find the renderer.  Print the figure to a temporary file
-        #object, and then grab the renderer that was used.
-        #(I stole this trick from the matplotlib backend_bases.py
-        #print_figure() method.)
+        # Other backends do not have the get_renderer method, so we have a work
+        # around to find the renderer.  Print the figure to a temporary file
+        # object, and then grab the renderer that was used.
+        # (I stole this trick from the matplotlib backend_bases.py
+        # print_figure() method.)
         import io
         fig.canvas.print_pdf(io.BytesIO())
         renderer = fig._cachedRenderer

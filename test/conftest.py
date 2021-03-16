@@ -7,6 +7,10 @@ def pytest_addoption(parser):
                      default=False, help="run slow tests")
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: mark tests as slow")
+
+
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
@@ -32,4 +36,3 @@ def rlc():
     bgt.connect(c, kvl)
 
     return rlc
-

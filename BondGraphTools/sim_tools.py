@@ -7,13 +7,13 @@ import numpy as np
 import sympy as sp
 from sympy.core import SympifyError
 from scipy.optimize import broyden1
-
+from scikits.odes.dae import dae
 from .exceptions import ModelException, SolverException
 
 logger = logging.getLogger(__name__)
 
 
-def _fetch_ic(x0, dx0, system, func, eps=0.001):
+def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
     if isinstance(x0, list):
         assert len(x0) == len(system.state_vars)
         X0 = np.array(x0, dtype=np.float64)
@@ -22,7 +22,7 @@ def _fetch_ic(x0, dx0, system, func, eps=0.001):
             [np.NaN for _ in system.state_vars], dtype=np.float64
         )
         for k, v in x0.items():
-            *_ , idx = str(k).split('_')
+            _, idx = str(k).split('_')
             idx = int(idx)
             X0[idx] = v
     elif isinstance(x0, (int, float, complex)) and len(system.state_vars) == 1:
@@ -39,7 +39,12 @@ def _fetch_ic(x0, dx0, system, func, eps=0.001):
 
     # if we don't have consistent initial conditions; find them if we can
     # fail if we can't
-    f = lambda y: func(y, X0, 0, 0)
+
+    def f(y):
+        res = np.empty_like(X0)
+        func(t0, X0, y, res)
+        return res
+
     if np.linalg.norm(f(DX0)) > eps:
 
         DX0 = broyden1(f, DX0)
@@ -49,6 +54,7 @@ def _fetch_ic(x0, dx0, system, func, eps=0.001):
                 f"Could not find dx0 for the given x0 {x0}")
 
     return X0, DX0
+
 
 def simulate(system,
              timespan,
@@ -101,9 +107,7 @@ def simulate(system,
     Raises:
         ModelException, SolverException
     """
-    from .config import config
-    de = config.de
-    j = config.julia
+
     if system.ports:
         raise ModelException(
             "Cannot Simulate %s: unconnected ports %s",
@@ -112,140 +116,114 @@ def simulate(system,
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
-    tspan = tuple(float(t) for t in timespan)
+    samples = int(1 / dt) + 1
+    t = np.linspace(*timespan, samples)
+
+    res, X = _bondgraph_to_residuals(system, control_vars)
+    X0, DX0 = _fetch_ic(x0, dx0, system, res, t[0])
+
+    solver_name = 'ida'
+    dae_solver = dae(solver_name, res)
+    sol = dae_solver.solve(t, X0, DX0)
+
+    return t.reshape((samples, 1)), np.transpose(sol.values.y).T
 
 
-    func_str, diffs = to_julia_function_string(system, control_vars)
-    func = j.eval(func_str)
-    X0, DX0 = _fetch_ic(x0, dx0, system, func)
+def _to_function(string, X, DX, substitutions):
+    f = sp.sympify(string).subs(substitutions)
+
+    f_n = sp.lambdify((sp.S('t'), X, DX), f, "numpy")
+    return f_n
 
 
-    problem = de.DAEProblem(func, DX0, X0, tspan, differential_vars=diffs)
-
-    sol = de.solve(problem, dense=True, saveat=float(dt))
-
-    if sol.retcode not in ("Default", "Success"):
-        raise SolverException("Integration error: Solver returned %s "
-                              % sol.retcode, sol)
-
-    t = np.transpose(sol.t)
-
-    return np.resize(t, (len(t), 1)), np.transpose(sol.u).T
-
-
-def to_julia_function_string(model, control_vars=None, in_place=False):
-    """
-    Produces a Julia function string from the given model.
-
-    We expect that that control_vars is a dict with the same keys,
-    or list of the same size, as the model.control_vars
-
-    Args:
-        model:
-        control_vars:
-        in_place:
-
-    Returns:
-        (string, list)
-        A string containing the function definition, and a list of bools
-        identifing which variables contain derivatives.
-    """
-
+def _bondgraph_to_residuals(model, control_vars=None):
     dX = sp.IndexedBase('dX')
     X = sp.IndexedBase('X')
+    U = sp.IndexedBase('U')
     x_subs = []
     dx_subs = []
+    u_subs = []
+    u_func = []
+    n = len(model.state_vars)
+    m = 0
 
     for i, x in enumerate(model.state_vars):
-        x_subs.append((x, X[i+1]))
-        dx_subs.append((sp.S(f'dx_{i}'), dX[i+1]))
+        x_subs.append((x, X[i]))
+        dx_subs.append((sp.S(f'dx_{i}'), dX[i]))
 
-
-    cv_strings, dcv_strings = _generate_control_strings(
-        list(model.control_vars.keys()),
-        control_vars,
-        x_subs,
-        dx_subs
-    )
-
-    differential_vars = []
-    subs = x_subs + dx_subs
-
-    function_header = ""
-    function_body = ""
-    function_footer = ""
-
-    if in_place:
-        function_header = "function f(res, dX, X, p, t)\n"
-    else:
-        k = len(model.constitutive_relations)
-        function_header = "function f(dX, X, p, t)\n"
-        function_header += f"    res = zeros({k})\n"
-
-    for cv, dcv in zip(cv_strings, dcv_strings):
-        function_header += cv
-        if dcv:
-            function_header += dcv
-
-    assert model.constitutive_relations
-
-    for relation in model.constitutive_relations:
-
-        eqn_str = str(relation.subs(subs))
-        eqn_str = eqn_str.replace('**', '^')
-        if 'dX' in eqn_str:
-            differential_vars.append(True)
+    if len(model.control_vars) > 0:
+        u_func_dict = {}
+        u_constants = {}
+        if isinstance(control_vars, list):
+            u_func_dict.update({
+                i: f for i, f in enumerate(control_vars)}
+            )
+        elif isinstance(control_vars, dict):
+            u_func_dict.update({
+                int(v[2:]): f for v, f in control_vars.items()
+            })
+        elif len(model.control_vars) == 1:
+            u_func_dict[0] = control_vars
         else:
-            differential_vars.append(False)
+            raise TypeError(f"Control argument {control_vars} is invalid")
 
-        function_body += f"    res[{len(differential_vars)}] = {eqn_str}\n"
+        test_x = np.zeros(shape=(n,), dtype=np.float32)
+        for idx, f in u_func_dict.items():
+            try:
+                if isinstance(f, str):
+                    f = _to_function(f, X, dX, dx_subs + x_subs)
+                    u_func_dict[idx] = f
+                if isinstance(f, (float, int, sp.Number)):
+                    u_constants[idx] = f
+                if n == 1:
+                    r = f(0, 0, 0)
+                else:
+                    r = f(0, test_x, test_x)
+                assert isinstance(r, (float, int, sp.Number)
+                                  ), "Invalid output from control"
+            except Exception as ex:
+                message = f"Invalid control function for var: {idx}.\n " \
+                    "Control functions should be of the form:\n" \
+                    f"{idx} = f(t, x, dx/dt)"
+                raise ModelException(message)
 
-    if in_place:
-        function_footer += "end\n"
+        for i, u in enumerate(model.control_vars):
+            if i in u_constants:
+                u_subs.append((u, u_constants[i]))
+                continue
+            u_subs.append((u, U[m]))
+            try:
+                u_func.append(u_func_dict[i])
+            except KeyError:
+                raise ModelException(f"Control variable {u} must be specified")
+            m += 1
+    rels = [r.subs(dx_subs).subs(x_subs).subs(u_subs)
+            for r in model.constitutive_relations]
+
+    if len(rels) != n:
+        raise ModelException(
+            "Model simplification error: system is under-determined")
+
+    Fsym = sp.symarray('F', shape=n)
+    for i, r in enumerate(rels):
+        Fsym[i] = r
+
+    t = sp.S('t')
+    _r = np.empty(shape=(n,), dtype=np.float64)
+    if not u_func:
+        F = sp.lambdify((t, X, dX), Fsym)
+
+        def residual(_t, _x, _dx, _res):
+            _r = F(_t, _x, _dx)
+            for i in range(n):
+                _res[i] = _r[i]
     else:
-        function_footer += "    return res\n end\n"
+        _u = np.empty(shape=(m,), dtype=np.float64)
+        Fsym_u = sp.lambdify((t, X, dX, U), Fsym)
 
-    out_str = function_header + function_body + function_footer
-
-    return (out_str,
-            differential_vars)
-
-
-def _generate_control_strings(cv, cv_substitutions, x_subs, dx_subs):
-
-    if isinstance(cv_substitutions, dict):
-        pairs = [(cv_i, cv_substitutions[cv_i]) for cv_i in cv]
-    elif isinstance(cv_substitutions, list):
-        pairs = list(zip(cv, cv_substitutions))
-    elif len(cv) == 1 and (isinstance(cv_substitutions, (str, sp.Expr))):
-        pairs = [cv[0], cv_substitutions]
-    elif not cv and not cv_substitutions:
-        return [], []
-    else:
-        raise NotImplementedError(
-            f"Could not substitute {cv_substitutions} into {cv}"
-        )
-
-    cv_strings = []
-    dcv_strings = []
-    subs = x_subs + dx_subs
-    partial_pairs = [(X_i,DX_i) for (_,X_i), (_,DX_i) in zip(x_subs, dx_subs)]
-    for var, val in pairs:
-        try:
-
-            u_i = sp.sympify(val).subs(subs)
-            du_i = u_i.diff(sp.S('t')) + sum([
-                u_i.diff(X)*DX for X,DX in partial_pairs
-            ])
-            cv_strings.append(f"    {str(var)} = {u_i}\n")
-            dcv_strings.append(f"    d{str(var)} = {du_i}\n")
-        except SympifyError as ex:
-            s = val
-
-            for x, X in reversed(x_subs):
-                s = s.replace(str(x), str(X))
-
-            cv_strings.append(f"    {str(var)} = {s}\n")
-            dcv_strings.append(None)
-
-    return cv_strings, dcv_strings
+        def residual(_t, _x, _dx, _res):
+            _u = [u_f(_t, _x, _dx) for u_f in u_func]
+            _r = Fsym_u(_t, _x, _dx, _u)
+            for i in range(n):
+                _res[i] = _r[i]
+    return residual, X

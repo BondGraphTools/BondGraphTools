@@ -1,4 +1,4 @@
-"""The file save/load interface and file format data model
+"""The file save/load interface and file format data model.
 
 This module provides the basic IO functionality such as saving and loading
 to file.
@@ -14,21 +14,21 @@ import yaml
 
 from .compound import BondGraph
 from .actions import connect, new, expose
-from .exceptions import *
+from .exceptions import InvalidComponentException
 
 logger = logging.getLogger(__name__)
 
 FILE_VERSION = "0.1"
 
+
 def save(model, filename):
-    """
-    Saves the model to the specified path
+    """Save the model to file.
 
     Args:
         model: The model to be saved
         filename: The file to save to
-    """
 
+    """
     model_directory = _build_model_directory(model)
 
     models = {}
@@ -39,7 +39,7 @@ def save(model, filename):
             uri: _build_model_data(sub_model, templates)
         })
     data = {
-        "version":FILE_VERSION,
+        "version": FILE_VERSION,
         "root": model.name,
         "models": models
     }
@@ -89,8 +89,8 @@ def _build_model_data(model, templates):
 
     ports = []
     for port in model.ports:
-        (c1, e), (c2, f) = model._port_map[port]
-        if c1==c2:
+        (c1, e), (c2, f) = model._port_map[port]  # noqa
+        if c1 == c2:
             ports.append(f"{c1.name} {port.name}")
         else:
             raise NotImplementedError
@@ -120,13 +120,12 @@ def _build_component_string(component):
 
     except AttributeError:
         pass
-    logger.debug("Saving component string: %s", out_str )
+    logger.debug("Saving component string: %s", out_str)
     return out_str
 
 
 def load(file_name, model=None, as_name=None):
-    """
-    Loads a model from file
+    """Load a model from file.
 
     Args:
         file_name (str or Path): The file to load.
@@ -136,12 +135,13 @@ def load(file_name, model=None, as_name=None):
 
     Raises:
         `NotImplementedError` for incorrect file version.
+
     """
     if isinstance(file_name, pathlib.Path):
         file_name = str(file_name)
 
     with open(file_name, 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f, Loader=yaml.SafeLoader)
 
     version = str(data['version'])
     if version == FILE_VERSION:
@@ -180,8 +180,8 @@ def _builder(data, model=None, as_name=None):
         _wire(model, netlist)
 
         try:
-            IO_ports = model_data["ports"]
-            _expose(model, IO_ports)
+            io_ports = model_data["ports"]
+            _expose(model, io_ports)
         except KeyError:
             logger.debug("No ports on model ")
 
@@ -205,7 +205,7 @@ def _builder(data, model=None, as_name=None):
             except StopIteration:
                 return comp
             try:
-                t3 = next(tokens)
+                _ = next(tokens)
             except StopIteration:
 
                 logger.debug("Tyring to get port %s, %s", str(comp), str(t2))
@@ -227,8 +227,8 @@ def _builder(data, model=None, as_name=None):
             head = get_port(head_str)
             connect(tail, head)
 
-    def _expose(model, IO_ports):
-        for port_string in IO_ports:
+    def _expose(model, _io_ports):
+        for port_string in _io_ports:
             component_name, port_label = port_string.split(" ")
             comp, = {
                 c for c in model.components if c.name == component_name
@@ -238,7 +238,7 @@ def _builder(data, model=None, as_name=None):
     def _parse_build_args(in_args):
 
         if not in_args:
-            return [] , {}
+            return [], {}
 
         arg = in_args[0]
         args, kwargs = _parse_build_args(in_args[1:])
@@ -253,11 +253,11 @@ def _builder(data, model=None, as_name=None):
             try:
                 v = int(v)
             except ValueError:
-                v= float(v)
+                v = float(v)
         if not k:
             args.append(v)
         else:
-            kwargs.update({k:v})
+            kwargs.update({k: v})
 
         return args, kwargs
 
@@ -275,13 +275,6 @@ def _builder(data, model=None, as_name=None):
             comp.set_param(k, v)
         return comp
 
-    def _validate(model_dict):
-        # We should use this function to make sure we don't have an infinite loop
-        # in the build cycle.
-        pass
-
-    _validate(models)
-
     out = _build(root, root)
 
     if as_name:
@@ -290,6 +283,3 @@ def _builder(data, model=None, as_name=None):
         out.name = data["root"]
 
     return out
-
-
-

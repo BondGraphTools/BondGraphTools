@@ -15,26 +15,23 @@ https://bondgraphtools.readthedocs.io/
 
 ### Dependencies
 
-BondGraph requires:
-- python 3.6
-- julia 0.6.4
+BondGraphTools requires:
+- python 3.7
+- LaTeX 
+- gFortran, BLAS, LAPACK and SUNDIALS (for the numerical solver)
 
 Python dependencies:
-- sympy>=1.1.1
-- numpy>=1.14
-- scipy>=1.0.1
-- matplotlib>=2.2.2
-- julia>=0.1.5
-- diffeqpy>=0.4
+- sympy
+- numpy
+- scipy
+- matplotlib
+- scikits.odes 
 
-Julia dependencies:
- - PyCall
- - DifferentialEquations.jl
+## Instructions:
 
-### Instructions:
-1. Install python > 3.6 for your operating system.
-2. Install Julia 0.6.4 (https://julialang.org/downloads/) for your operating
- system. _Julia 0.7 and 1.0 are not yet supported_
-3. Make sure Julia 0.6.4 is in your os path. (test this by running `julia -v`)
-4. Install using PyPI; `pip install BondGraphTools`
-
+#### Recommended installation using Conda
+1. Install [Anaconda](https://anaconda.org/) (or miniconda).
+2. Install dependencies from conda-forge: liblas, liblapack, sundials using
+   `conda install -c conda-forge libblas liblapack sundials fortran-compiler`
+3. Install LaTeX via `conda install -c conda-forge miktex` (windows) or `conda install -c conda-forge texlive-core` (osx/linux)
+4. Install the package using `pip install bondgraphtools`

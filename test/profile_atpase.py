@@ -1,3 +1,4 @@
+from pyprof2calltree import convert, visualize
 import logging
 from cProfile import Profile
 from atpase import atpase, bgt
@@ -7,7 +8,7 @@ LOG = "profile.log"
 profiler = Profile()
 logger = bgt.logger
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename=LOG,mode='w')
+handler = logging.FileHandler(filename=LOG, mode='w')
 logger.addHandler(handler)
 
 try:
@@ -15,8 +16,6 @@ try:
 except KeyboardInterrupt as ex:
     handler.flush()
     raise ex
-from pyprof2calltree import convert, visualize
 
 convert(profiler.getstats(), FILENAME)
 visualize(profiler.getstats())
-

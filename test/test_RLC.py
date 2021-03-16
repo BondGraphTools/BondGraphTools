@@ -4,10 +4,10 @@ import BondGraphTools as bgt
 import BondGraphTools.sim_tools as sim
 
 
-@pytest.mark.use_fixture("rlc")
 def test_build(rlc):
     assert len(rlc.state_vars) == 2
     assert len(rlc.ports) == 0
+
 
 def test_build_rlc():
     r = bgt.new("R", value=1)
@@ -23,7 +23,6 @@ def test_build_rlc():
     assert len(kvl.ports) == 3
 
 
-@pytest.mark.use_fixture("rlc")
 def test_build_and_drive(rlc):
     se = bgt.new("Se")
     assert len(se.control_vars) == 1
@@ -46,7 +45,7 @@ def test_symbolic_params():
     c = bgt.new("C", value=sympy.symbols('c'))
     kvl = bgt.new("0", name="kvl")
     rlc = bgt.new()
-    rlc.add([r,l, c , kvl])
+    rlc.add([r, l, c, kvl])
 
     bgt.connect(r, kvl)
     bgt.connect(l, kvl)
@@ -59,13 +58,11 @@ def test_symbolic_params():
     assert params & set(sympy.symbols('r, l, c'))
 
 
-@pytest.mark.use_fixture("rlc")
 def test_rlc_con_rel(rlc):
 
     rel = rlc.constitutive_relations
 
     _, v = rlc.state_vars['x_0']
-
 
     if str(v) != 'q_0':
         eq1 = sympy.sympify("dx_0 - x_1")
@@ -80,21 +77,20 @@ def test_rlc_con_rel(rlc):
     assert "x_0" in rlc.state_vars
     assert "x_1" in rlc.state_vars
 
+
 def test_tf():
     l = bgt.new("I", value=1)
     c = bgt.new("C", value=1)
     tf = bgt.new("TF", value=0.5)
     tflc = bgt.new()
-    tflc.add([tf,l, c])
-
-
+    tflc.add([tf, l, c])
 
     bgt.connect(l, (tf, 1))
     bgt.connect(c, (tf, 0))
 
-    c,m,lp,nlp,const = tflc.system_model()
-    assert nlp.is_zero
-    assert const ==[]
+    c, m, lp, nlp, const = tflc.system_model()
+    assert nlp.is_zero_matrix
+    assert const == []
 
 
 def test_se():
@@ -106,9 +102,9 @@ def test_se():
     assert Se.constitutive_relations == [sympy.sympify("e_0 - 1")]
     bgt.connect(Se, c)
 
-
     assert vc.constitutive_relations == [sympy.sympify("dx_0"),
                                          sympy.sympify("x_0 - 1")]
+
 
 def test_one():
     loop_law = bgt.new('1')
@@ -125,5 +121,3 @@ def test_one():
     assert vc.constitutive_relations == [
         sympy.sympify("dx_0 + x_0 - 1")
     ]
-
-

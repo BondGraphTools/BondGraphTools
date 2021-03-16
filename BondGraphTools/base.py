@@ -1,5 +1,5 @@
-"""This module contains the base classes for bond graph models and connections
-"""
+"""Base classes for bond graph models and connections."""
+
 import logging
 from collections import namedtuple
 
@@ -10,19 +10,11 @@ class BondGraphBase(object):
     """
     Base class definition for all bond graphs.
 
-    Attributes:
-        parent:
-        name:
-        metamodel:
-        template:
-        uri:
-        root:
-        basis_vectors:
-
     Args:
-        name: Assumed to be unique
-        parent:
-        metadata (dict):
+        name:               Name of this model, assumed to be unique.
+        parent:             Parent model, or none.
+        metamodel:          Metamodel class.
+
     """
 
     def __init__(self,
@@ -44,12 +36,13 @@ class BondGraphBase(object):
             self.name = name
 
         self.parent = parent
+        """Model that contains this object."""
         self.view = None
 
     def __repr__(self):
         return f"{self.metamodel}: {self.name}"
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # noqa: D102
         if "instances" not in cls.__dict__:
             cls.instances = 1
         else:
@@ -62,18 +55,22 @@ class BondGraphBase(object):
 
     @property
     def metamodel(self):
+        """The meta-model type of this object."""  # noqa: D401
         return self.__metamodel
 
     @property
     def template(self):
+        """The model template from which this was created."""  # noqa: D401
         raise NotImplementedError
 
     @property
     def constitutive_relations(self):
+        """The equations governing this objects dynamics."""   # noqa: D401
         raise NotImplementedError
 
     @property
     def uri(self):
+        """Model reference locator."""  # noqa: D401
         if not self.parent:
             return f"{self.name}:"
         else:
@@ -81,6 +78,7 @@ class BondGraphBase(object):
 
     @property
     def root(self):
+        """The root of the tree to which this object belongs."""  # noqa: D401
         if not self.parent:
             return self
         else:
@@ -88,6 +86,7 @@ class BondGraphBase(object):
 
     @property
     def basis_vectors(self):
+        """The input/ouput, dynamic and interconnect vectors."""  # noqa: D401
         raise NotImplementedError
 
     def __hash__(self):
@@ -95,13 +94,16 @@ class BondGraphBase(object):
 
 
 class Bond(namedtuple("Bond", ["tail", "head"])):
-    """A `namedtuple` that stores a connection between two ports.
+    """Stores the connection between two ports.
+
     Head and tail are specified to determine orientation
 
     Attributes:
         head: The 'harpoon' end of the power bond and direction of positive $f$
         tail: The non-harpoon end, and direction of negative $f$
+
     """
+
     def __contains__(self, item):
         if isinstance(item, BondGraphBase):
             return self.head[0] is item or self.tail[0] is item
@@ -114,17 +116,22 @@ class Bond(namedtuple("Bond", ["tail", "head"])):
 
 
 class Port(object):
-    """
-    Basic object for representing ports;
+    """Basic object for representing ports.
+
     Looks and behaves like a namedtuple:
-    component, index =  Port
+        component, index =  Port
+
+    Args:
+        component:      The owner of this port.
+        index:          The index of this port in the component.
+
     """
 
     def __init__(self, component, index):
         self.component = component
         """(`PortManager`) The component that this port is attached to"""
         self.index = index
-        """(int) The numberical index of this port"""
+        """(int) The numerical index of this port"""
         self.is_connected = False
         """(bool) True if this port is plugged in."""
 
@@ -159,7 +166,7 @@ class Port(object):
 
     def __eq__(self, other):
         try:
-            return ((self.component is other.component) and
+            return ((self.component is other.component) and  # noqa
                     (self.index == other.index))
         except AttributeError:
             try:

@@ -11,15 +11,15 @@ def test_hamiltonian():
     )
 
     assert state_vars == {"q_0": "x"}
-    assert params == {"C": None, "D":None}
-    assert ports == {0:None}
+    assert params == {"C": None, "D": None}
+    assert ports == {0: None}
     assert relations == ["-e_0 + q_0**3/D + q_0/C", "dq_0 - f_0"]
 
 
 def test_create_PH():
     hamiltonian = "x^2/(2*C) + x^4/(4*D)"
     ph = bgt.new(component="PH", value=hamiltonian)
-    assert ph.params == {"C": None, "D":None}
+    assert ph.params == {"C": None, "D": None}
 
     assert ph.state_vars == {"q_0": "x"}
 
@@ -49,7 +49,6 @@ def test_create_PH_2():
                 "dq_1 - f_1"):
         assert sp.sympify(rel) in ph.constitutive_relations
 
-
     assert ph.hamiltonian == hamiltonian
 
     port_list = list(ph.ports)
@@ -64,7 +63,7 @@ def test_create_PH_parameters():
     p_2 = sp.S("k")
     build_args = {
         "hamiltonian": hamiltonian,
-        "params":{"C":p_1, "D":p_2}
+        "params": {"C": p_1, "D": p_2}
     }
 
     ph = bgt.new(component="PH", value=build_args)
