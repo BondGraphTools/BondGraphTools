@@ -186,7 +186,6 @@ def _bondgraph_to_residuals(model, control_vars=None):
                 message = f"Invalid control function for var: {idx}.\n " \
                     "Control functions should be of the form:\n" \
                     f"{idx} = f(t, x, dx/dt)"
-
                 raise ModelException(message)
 
         for i, u in enumerate(model.control_vars):
@@ -203,7 +202,6 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for r in model.constitutive_relations]
 
     if len(rels) != n:
-
         raise ModelException(
             "Model simplification error: system is under-determined")
 

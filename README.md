@@ -14,10 +14,11 @@ https://bondgraphtools.readthedocs.io/
 ## Installation
 
 ### Dependencies
+
 BondGraphTools requires:
-- python 3.7 or greater,
-- LaTeX,
-- gFortran, BLAS, LAPACK and SUNDIALS (for the numerical solvers).
+- python 3.7
+- LaTeX 
+- gFortran, BLAS, LAPACK and SUNDIALS (for the numerical solver)
 
 Python dependencies:
 - sympy

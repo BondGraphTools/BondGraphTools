@@ -35,17 +35,21 @@ Getting Started
 ^^^^^^^^^^^^^^^
 Requirements
 ------------
+
 * Python 3.7 or above.
 
 Installation
 ------------
+
 1. Install Python 3.7 or greater.
 2. Install Sundials and ``scikits.odes`` [dependencies](https://scikits-odes.readthedocs.io/en/stable/installation.html)
 3. Install BondGraphTools via pip: ``pip install BondGraphTools``
 
+BondGraphTools is now installed.
 
 Usage
 -----
+
 BondGraphTools can be loaded inside a jupyter-notebook, python interpreter, or
 script by using::
 

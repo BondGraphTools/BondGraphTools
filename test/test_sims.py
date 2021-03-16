@@ -1,10 +1,8 @@
 import pytest
 import numpy as np
-import sympy as sp
 from BondGraphTools import *
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _bondgraph_to_residuals
-from BondGraphTools.algebra import inverse_coord_maps
 
 
 def test_c_sim_fail():
@@ -105,7 +103,9 @@ def test_c_se_sum_switch():
         return 1.5 if x >= 1 else -2.0
 
     t, x = simulate(
-        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang])
+        bg, timespan=[0, 10], x0=[0], dx0=[1], control_vars=[bang_bang]
+    )
+
 
     assert (x[0, -1] - 1) < 0.001
 
@@ -127,6 +127,6 @@ def test_rlc():
     connect(se, kvl)
     connect(l, kvl)
 
-    t, x=simulate(
+    t, x = simulate(
         bg, timespan=[0, 10], x0=[1, 0], control_vars=[1]
     )

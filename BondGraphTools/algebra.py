@@ -359,7 +359,6 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
             nonlinear_constraint.atoms()
         if linear_op[row, offset:-
                      1].is_zero_matrix and not nonlinear_constraint:
-
             continue
 
         state_constraint = linear_op[row, offset: offset + ss_size]
@@ -577,7 +576,6 @@ def smith_normal_form(matrix, augment=None):
         if leading_coeff < 0:
             if not M[row, n - k:].is_zero_matrix:
                 constraints.append(sum(M[row, :]))
-
         else:
             Mp[leading_coeff, :] = M[row, :]
 
