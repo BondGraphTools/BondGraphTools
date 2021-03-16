@@ -20,6 +20,8 @@ before_install:
   - cd .. && cd ..
 
 install:
+  - echo $PYTHONPATH
+  - pip3 install --upgrade numpy
   - python -m pip install -r requirements.txt
   - python -m pip install pytest coverage mock pytest-cov==2.6.1
 
