@@ -4,6 +4,8 @@ from BondGraphTools import *
 from BondGraphTools.exceptions import ModelException
 from BondGraphTools.sim_tools import simulate, _bondgraph_to_residuals
 
+from .test_biochem import biochemical_cycle, open_cycle
+
 
 def test_c_sim_fail():
 
@@ -130,3 +132,47 @@ def test_rlc():
     t, x = simulate(
         bg, timespan=[0, 10], x0=[1, 0], control_vars=[1]
     )
+
+@ pytest.mark.slow
+def test_closed_cycle():
+    model = biochemical_cycle()
+
+    x0 = [2.0,2.0,2.0]
+    tspan = (0,1.0)
+    K_X_vals = [1.0, 2.0, 3.0, 4.0]
+
+    r1 = (model/"R:r1").params['r']['value']
+    K_Y = (model/"C:Y").params['k']['value']
+    def v1(r,K_X,K_Y,x_X,x_Y): return r*K_X*x_X - r*K_Y*x_Y
+
+    for K_X in K_X_vals:
+        (model/"C:X").set_param('k',K_X)
+        t,x = simulate(model,tspan,x0,dt=0.01)
+        # Check initial reaction rate
+        assert v1(r1,K_X,K_Y,x[0][0],x[0][1]) == -4+2*K_X
+        # Check that the final reaction rate is small
+        assert v1(r1,K_X,K_Y,x[-1][0],x[-1][1]) < 1e-4
+
+@ pytest.mark.slow
+def test_open_cycle():
+    model = open_cycle()
+
+    x0 = [2.0,2.0,2.0]
+    tspan = (0,10.0)
+    K_A = 1
+    x_A_vals = [0.02,2.0,200]
+    expected_fluxes = [-3.0906200316489003,0.0,10.860335195530652]
+
+    r1 = (model/"R:r1").params['r']['value']
+    K_X = (model/"C:X").params['k']['value']
+    K_Y = (model/"C:Y").params['k']['value']
+    def v1(r,K_X,K_Y,K_A,x_X,x_Y,x_A): return r*K_X*x_X*K_A*x_A - r*K_Y*x_Y
+
+    for x_A,v_true in zip(x_A_vals,expected_fluxes):
+        mu_A = np.log(K_A*x_A)
+        (model/"SS:A").set_param('e',mu_A)
+        t,x = simulate(model,tspan,x0)
+        
+        x_end = x[-1]
+        flux = v1(r1,K_X,K_Y,K_A,x_end[0],x_end[1],x_A)
+        assert flux == pytest.approx(v_true,abs=1e-6)

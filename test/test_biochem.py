@@ -241,7 +241,7 @@ def test_closed_cycle():
     relations = set(model.constitutive_relations)
     assert not solutions ^ relations
 
-def test_open_cycle():
+def open_cycle():
     model = biochemical_cycle("Open cycle")
     r1 = model/("R:r1")
     r3 = model/("R:r3")
@@ -268,6 +268,11 @@ def test_open_cycle():
     bgt.connect(r3,XB)
     bgt.connect(XB,common_X)
     bgt.connect(XB,B)
+
+    return model
+
+def test_open_cycle():
+    model = open_cycle()
 
     assert len(model.state_vars) == 3
     assert len(model.control_vars) == 0
