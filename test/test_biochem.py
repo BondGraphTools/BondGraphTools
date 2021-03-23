@@ -31,7 +31,15 @@ def test_make_a_to_b():
     assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
     assert list(a_to_b.control_vars.keys()) == ['u_0']
     assert not a_to_b.ports
+    
+    state_basis, _, control_basis = a_to_b.basis_vectors
+    (x_A, dx_A), = (k for k, (v, _) in state_basis.items() if v is A)
+    (x_B, dx_B), = (k for k, (v, _) in state_basis.items() if v is B)
+    (r,) = (k for k, (v, _) in control_basis.items() if v is Re)
 
+    solutions = {dx_A + r*x_A - r*x_B, dx_B - r*x_A + r*x_B}
+    relations = set(a_to_b.constitutive_relations)
+    assert not solutions ^ relations
 
 def test_make_a_to_b_inplicit():
 
