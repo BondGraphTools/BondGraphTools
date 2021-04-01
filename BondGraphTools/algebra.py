@@ -483,40 +483,45 @@ def augmented_rref(matrix, augmented_rows=0):
     Returns: a matrix M =  [A' | B'] such that A' is in rref.
 
     """
-    pivot = 0
+
     m = matrix.cols - augmented_rows
-    for col in range(m):
-        if matrix[pivot, col] == 0:
-            j = None
-            v_max = 0
-            for row in range(pivot, matrix.rows):
-                val = matrix[row, col]
-                v = abs(val)
-                try:
-                    if v > v_max:
-                        j = row
-                        v_max = v
-                except TypeError:  # symbolic variable
-                    j = row
-                    v_max = v
-            if not j:
-                continue  # all zeros below, skip on to next column
-            else:
-                matrix.row_swap(pivot, j)
+    col = 0
+    row = 0
+    # forward pass
+    while col < m and row < matrix.rows - 1:
+        pivot = row
+        while pivot < matrix.rows:
+            if matrix[pivot, col] != 0:
+                break
+            pivot += 1
 
-        a = matrix[pivot, col]
+        if pivot == matrix.rows:
+            col += 1
+            continue    # no entry on this row
+        elif pivot != row:
+            matrix.row_swap(pivot, row)
 
-        for i in range(matrix.rows):
-            if i != pivot and matrix[i, col] != 0:
-                b = matrix[i, col] / a
-                matrix[i, :] += - b * matrix[pivot, :]
+        matrix[row, :] = sympy.expand(matrix[row, :] / matrix[row, col])
+        for j in range(row + 1, matrix.rows):
+            if matrix[j, col] != 0:
+                matrix[j, :] = sympy.expand(matrix[j, :] - matrix[j, col] * matrix[row, :])
 
-        matrix[pivot, :] *= 1 / a
-
-        pivot += 1
-
-        if pivot >= matrix.rows:
+        col += 1
+        row += 1
+    # reverse pass
+    for row in range(1, matrix.rows):
+        col = row
+        while col < m:
+            if matrix[row, col] != 0:
+                break
+            col += 1
+        if col == m:
             break
+
+        for i in range(row):
+            a = matrix[i, col]
+            if a != 0:
+                matrix[i, :] = sympy.expand(matrix[i, :] - a * matrix[row, :])
     return matrix
 
 
