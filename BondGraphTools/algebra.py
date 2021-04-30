@@ -112,16 +112,16 @@ def _generate_substitutions(linear_op, nonlinear_op,
 
     Rx = (sympy.eye(linear_op.rows) - linear_op)
 
-    ss_size, js_size, cv_size, n = size_tup
+    state_size, network_size, inout_size, n = size_tup
     substitutions = []
     coords_vect = sympy.Matrix(coords)
-    for i in reversed(range(2 * (ss_size + js_size))):
+    for i in reversed(range(2 * (state_size + network_size))):
         co = coords[i]
         if Rx[i, i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
 
             eqn = (Rx[i, :] * coords_vect)[0] - nonlinear_op[i]
             pair = (coords[i], eqn)
-            logger.debug("Generating substition %s = %s",
+            logger.debug("Generating substitution %s = %s",
                          repr(coords[i]), repr(eqn))
             substitutions = [
                 (c, s.subs(*pair)) for c, s in substitutions
@@ -138,30 +138,23 @@ def _process_constraints(linear_op,
                          size_tup):
 
     initial_constraints = []
-    ss_size, js_size, cv_size, n = size_tup
-    offset = 2 * js_size + ss_size
+    state_size, network_size, inout_size, n = size_tup
+    offset = 2 * network_size + state_size
 
-    coord_atoms = set(coordinates[0:offset + ss_size])
-
-    coords_vect = sympy.Matrix(coordinates)
-    cv_constraints = list(
-        linear_op[offset + ss_size:n, :] * coords_vect +
-        nonlinear_op[offset + ss_size:n, 0]
-    )
-    constraints += [cons for cons in cv_constraints if cons]
-    linear_op = linear_op[:offset + ss_size, :]
-    nonlinear_op = nonlinear_op[:offset + ss_size, :]
+    coord_atoms = set(coordinates[0:offset + state_size])
+    linear_op = linear_op[:offset + state_size, :]
+    nonlinear_op = nonlinear_op[:offset + state_size, :]
 
     while constraints:
         constraint, _ = sympy.fraction(constraints.pop())
         logger.debug("Processing constraint: %s", repr(constraint))
         atoms = constraint.atoms() & set(coord_atoms)
 
-        # todo: check to see if we can solve f(x) = u => g(u) = x
         if len(atoms) == 1:
             c = atoms.pop()
             logger.debug("Attempting to find inverse")
             solns = list(sympy.solveset(constraint, c))
+
             if len(solns) == 1:
                 idx = coordinates.index(c)
                 sol = solns.pop()
@@ -188,8 +181,8 @@ def _process_constraints(linear_op,
             logger.warning("Cannot yet reduce order of %s", repr(constraint))
             initial_constraints.append(constraint)
         else:
-            ss_derivs = partials[offset: offset + ss_size]
-            cv_derivs = partials[offset + ss_size:]
+            ss_derivs = partials[offset: offset + state_size]
+            cv_derivs = partials[offset + state_size:]
             factor = 0
             lin_dict = {}
             nlin = 0
@@ -205,14 +198,14 @@ def _process_constraints(linear_op,
                         nlin += new_coeff * coordinates[idx]
             for idx, coeff in enumerate(cv_derivs):
                 if coeff != 0:
-                    cv = coordinates[offset + ss_size + idx]
+                    cv = coordinates[offset + state_size + idx]
                     dvc = sympy.Symbol(f"d{str(cv)}")
                     try:
                         dc_idx = coordinates.index(dvc)
                     except ValueError:
                         dc_idx = len(coordinates)
                         coordinates.append(dvc)
-                        cv_size += 1
+                        inout_size += 1
                         n += 1
                         linear_op = linear_op.row_join(
                             sympy.SparseMatrix(linear_op.rows, 1, {})
@@ -234,14 +227,14 @@ def _process_constraints(linear_op,
         augment=nonlinear_op)
 
     return linear_op, nonlinear_op, new_constraints + initial_constraints, \
-        coordinates, (ss_size, js_size, cv_size, n)
+        coordinates, (state_size, network_size, inout_size, n)
 
 
 def _generate_cv_substitutions(subs_pairs, mappins, coords):
     state_map, port_map, control_map = mappins
-    ss_size = len(state_map)
+    state_size = len(state_map)
 
-    cv_offset = 2 * (ss_size + len(port_map))
+    cv_offset = 2 * (state_size + len(port_map))
 
     control_vars = {str(c) for c in coords[cv_offset:]}
     subs = []
@@ -331,21 +324,19 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     #
     # Linear constraints are rows with more than 1 non-zero
     # that are not in the derivative subspace, and have a zero nonlinear part
-    #
-
     # ## New Code
-    ss_size, js_size, cv_size, n = size_tuple
-    offset = 2 * js_size + ss_size
+    state_size, network_size, inout_size, n = size_tuple
+    offset = 2 * network_size + state_size
     for row in reversed(range(linear_op.rows, offset)):
         atoms = nonlinear_op[row].atoms()
         if not atoms & set(coordinates) and linear_op[row].nnz() > 1:
             logger.debug("Linear constraint in row %s", repr(row))
-            for idx in range(ss_size):
+            for idx in range(state_size):
                 v = linear_op[row, idx + offset]
                 if v:
                     lin_dict.update({(rows_added, idx): v})
-            for idx in range(cv_size):
-                v = linear_op[row, idx + offset + ss_size]
+            for idx in range(inout_size):
+                v = linear_op[row, idx + offset + state_size]
                 if v:
                     cv_diff_dict.update({(rows_added, idx): v})
 
@@ -355,18 +346,18 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                      repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
-        F_args = set(coordinates[0:offset + ss_size]) & \
+        F_args = set(coordinates[0:offset + state_size]) & \
             nonlinear_constraint.atoms()
-        if linear_op[row, offset:-
-                     1].is_zero_matrix and not nonlinear_constraint:
 
+        if linear_op[row, offset:-1].is_zero_matrix \
+                and not nonlinear_constraint:
             continue
 
-        state_constraint = linear_op[row, offset: offset + ss_size]
-        control_constraint = linear_op[row, offset + ss_size:]
+        state_constraint = linear_op[row, offset: offset + state_size]
+        control_constraint = linear_op[row, offset + state_size:]
 
         row = state_constraint.row_join(
-            sympy.SparseMatrix(1, offset + cv_size, {}))
+            sympy.SparseMatrix(1, offset + inout_size, {}))
 
         cv_dict = {}
         if not control_constraint.is_zero_matrix:
@@ -383,28 +374,28 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                     added_cvs.append(cv_col)
                     linear_op = linear_op.row_join(
                         sympy.SparseMatrix(linear_op.rows, 1, {}))
-                    coord = coordinates[offset + ss_size + cv_col]
+                    coord = coordinates[offset + state_size + cv_col]
                     d_coord = sympy.Symbol(f"d{str(coord)}")
                     coordinates.append(d_coord)
-                    cv_size += 1
+                    inout_size += 1
                     n += 1
 
                 cv_dict[(0, idx)] = const
 
         row = row.row_join(sympy.SparseMatrix(1, len(added_cvs), cv_dict))
-        jac_dx = [nonlinear_constraint.diff(c) for c in coordinates[:ss_size]]
+        jac_dx = [nonlinear_constraint.diff(c) for c in coordinates[:state_size]]
         jac_junciton = [
             nonlinear_constraint.diff(c)
-            for c in coordinates[ss_size:offset]
+            for c in coordinates[state_size:offset]
         ]
         jac_x = [
             nonlinear_constraint.diff(c)
             for c in coordinates[offset:
-                                 offset + ss_size]
+                                 offset + state_size]
         ]
         jac_cv = [
             nonlinear_constraint.diff(c)
-            for c in coordinates[offset + ss_size:]
+            for c in coordinates[offset + state_size:]
         ]
 
         nlin_row = sympy.S(0)
@@ -423,7 +414,7 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
 
         elif any(x != 0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
-            fx = sum(x * y for x, y in zip(jac_x, coordinates[:ss_size]))
+            fx = sum(x * y for x, y in zip(jac_x, coordinates[:state_size]))
             logger.debug(repr(fx))
             p, q = sympy.fraction(sympy.simplify(fx))
             if row.is_zero_matrix:

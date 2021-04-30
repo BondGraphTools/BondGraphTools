@@ -297,14 +297,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
         logger.debug("Getting IO ports: %s", out_ports)
-        js_size = len(inv_js)  # number of ports
-        ss_size = len(inv_tm)  # number of state space coords
+        network_size = len(inv_js)  # number of ports
+        state_size = len(inv_tm)  # number of state space coords
 
         coord_vect = sp.Matrix(coordinates)
         relations = [
             sp.Add(l, r) for i, (l, r) in enumerate(zip(
                 lin_op * coord_vect, nlin_op))
-            if not ss_size <= i < ss_size + 2 * js_size - 2 * len(out_ports)
+            if not state_size <= i < state_size + 2 * network_size - 2 * len(out_ports)
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
@@ -364,14 +364,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         )
         inv_tm, inv_js, inv_cv = mappings
 
-        js_size = len(inv_js)  # number of ports
-        ss_size = len(inv_tm)  # number of state space coords
-        cv_size = len(inv_cv)
+        network_size = len(inv_js)  # number of ports
+        state_size = len(inv_tm)  # number of state space coords
+        inout_size = len(inv_cv)
         n = len(coordinates)
 
-        size_tuple = (ss_size, js_size, cv_size, n)
+        size_tuple = (state_size, network_size, inout_size, n)
 
-        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=state_size)
 
         nlin_dict = {}
 
@@ -383,8 +383,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         inverse_port_map = {}
 
         for port, (cv_e, cv_f) in self._port_map.items():
-            inverse_port_map[cv_e] = ss_size + 2 * inv_js[port]
-            inverse_port_map[cv_f] = ss_size + 2 * inv_js[port] + 1
+            inverse_port_map[cv_e] = state_size + 2 * inv_js[port]
+            inverse_port_map[cv_f] = state_size + 2 * inv_js[port] + 1
 
         for component in self.components:
             relations = get_relations_iterator(
