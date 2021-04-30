@@ -54,44 +54,33 @@ def extract_coefficients(equation: sympy.Expr,
 
     """
 
-    coeff_dict = {}
+    coefficients = {}
     nonlinear_terms = sympy.S(0)
     subs = [(k, global_coords[v]) for k, v in local_map.items()]
+    local_variables = set(local_map.keys())
 
     subs.sort(key=lambda x: str(x[1])[-1], reverse=True)
     logger.debug("Extracting coefficients from %s", repr(equation))
     logger.debug("Using local-to-global substitutions %s", repr(subs))
 
-    terms = equation.expand().args
-    if not terms:
-        if equation in local_map:
-            coeff_dict[local_map[equation]] = sympy.S(1)
+    remainder = equation
+    mappings = list(local_map.items())
+
+    while mappings and remainder:
+        variable, index = mappings.pop()
+        coefficient = equation.coeff(variable)
+        if not coefficient:
+            continue
+        remainder -= coefficient * variable
+        if coefficient.atoms() & local_variables:
+            nonlinear_terms += (coefficient * variable).subs(subs)
         else:
-            nonlinear_terms = equation
-    else:
-        for term in terms:
-            factors = list(flatten(term.as_coeff_mul()))
-            coeff = sympy.S(1)
-            base = []
-            while factors:
-                factor = factors.pop()
-                if factor.is_number:
-                    coeff *= factor
-                elif factor.is_symbol and factor not in local_map:
-                    coeff *= factor
-                else:
-                    base.append(factor)
-            if len(base) == 1 and base[0] in local_map:
-                coeff_dict[local_map[base[0]]] = coeff
-            else:
-                new_term = term
-                new_term = new_term.subs(subs)
-                nonlinear_terms = sympy.Add(new_term, nonlinear_terms)
+            coefficients[index] = coefficient
+    nonlinear_terms = sympy.expand(nonlinear_terms + remainder.subs(subs))
 
-    logger.debug("Linear terms: %s", repr(coeff_dict))
+    logger.debug("Linear terms: %s", repr(coefficients))
     logger.debug("Nonlinear terms: %s", repr(nonlinear_terms))
-
-    return coeff_dict, nonlinear_terms
+    return coefficients, nonlinear_terms
 
 
 def _generate_substitutions(linear_op, nonlinear_op,
