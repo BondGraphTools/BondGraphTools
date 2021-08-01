@@ -30,7 +30,7 @@ def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
     else:
         raise ModelException(f"Invalid Initial Conditions: {x0}")
 
-    if dx0:
+    if dx0 is not None:
         DX0 = np.array(dx0, dtype=np.float64)
     else:
         DX0 = np.zeros(X0.shape, dtype=np.float64)
