@@ -8,7 +8,7 @@ import sympy as sp
 
 from BondGraphTools.base import BondGraphBase, Bond
 from BondGraphTools.port_managers import LabeledPortManager
-from .exceptions import *
+from .exceptions import InvalidComponentException, InvalidPortException
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
@@ -21,8 +21,7 @@ __all__ = [
 
 
 class BondGraph(BondGraphBase, LabeledPortManager):
-    """Representation of a bond graph model.
-    """
+    """Representation of a bond graph model."""
 
     def __init__(self, name, components=None, **kwargs):
 
@@ -293,18 +292,18 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         if not self.components:
             return []
 
-        coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
+        coords, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
         logger.debug("Getting IO ports: %s", out_ports)
         network_size = len(inv_js)  # number of ports
-        state_size = len(inv_tm)  # number of state space coords
+        n = len(inv_tm)  # number of state space coords
 
-        coord_vect = sp.Matrix(coordinates)
+        coord_vect = sp.Matrix(coords)
         relations = [
-            sp.Add(l, r) for i, (l, r) in enumerate(zip(
-                lin_op * coord_vect, nlin_op))
-            if not state_size <= i < state_size + 2 * network_size - 2 * len(out_ports)
+            sp.Add(l, r) for i, (l, r) in enumerate(
+                zip(lin_op * coord_vect, nlin_op))
+            if not n <= i < n + 2 * (network_size - len(out_ports))  # noqa
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
@@ -336,7 +335,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         This method generates:
 
             * The model coordinate system (`list`) :math:`x`
-            * A mapping (`dict`) between the model coordinates and the component coordinates
+            * A mapping (`dict`) between the model coordinates and the
+              component coordinates
             * A linear operator (`sympy.Matrix`) :math:`L`
             * A nonlinear operator (`sympy.Matrix`) :math:`F`
             * A list of constraints (`sympy.Matrix`) :math:`G`

@@ -91,22 +91,6 @@ class Component(BondGraphBase, PortManager):
     def constitutive_relations(self):
         """See `BondGraphBase`"""
         models = self._build_relations()
-        # for var in self.state_vars:
-        #     var_type, port = var.split("_")
-        #
-        #     if var_type == "q":
-        #         ef_var = f'f_{port}'
-        #     elif var_type == "p":
-        #         ef_var = f'e_{port}'
-        #     else:
-        #         raise ModelParsingError(
-        #             "Error parsing model %s: "
-        #             "state variable %s must be either p or q",
-        #             self.metamodel, var
-        #         )
-        #
-        #     models.append(sp.sympify(f"d{var} - {ef_var}"))
-
         subs = []
 
         def _value_of(v):
@@ -120,7 +104,7 @@ class Component(BondGraphBase, PortManager):
             elif isinstance(v, dict):
                 return _value_of(v["value"])
             else:
-                raise ValueError(f"Invalid Parameter")
+                raise ValueError("Invalid Parameter")
 
         for param, value in self.params.items():
             try:
@@ -133,8 +117,6 @@ class Component(BondGraphBase, PortManager):
 
         return [model.subs(subs) for model in models]
 
-        # for each relation, pull out the linear part
-
     @property
     def basis_vectors(self):
         """See `BondGraphBase.basis_vectors`"""
@@ -146,12 +128,6 @@ class Component(BondGraphBase, PortManager):
 
         for var in self.state_vars:
             tangent_space[sp.symbols((var, f"d{var}"))] = (self, var)
-
-        # for port in self.ports:
-        #     if not isinstance(port, int):
-        #         continue
-        #
-        #     port_space[sp.symbols((f"e_{port}", f"f_{port}"))] = (self, port)
 
         for control in self.control_vars:
             control_space[sp.symbols(control)] = (self, control)
@@ -309,7 +285,7 @@ class EqualFlow(BondGraphBase, PortExpander):
     def get_port(self, port=None):
         try:
             return super().get_port(port)
-        except InvalidPortException as ex:
+        except InvalidPortException:
             if not port:
                 raise InvalidPortException("You must specify a port")
 
