@@ -1,5 +1,5 @@
 import pytest
-from BondGraphTools import new, add, remove
+from BondGraphTools import new
 from BondGraphTools.exceptions import InvalidComponentException
 
 
@@ -12,7 +12,7 @@ def test_uri_tree():
     internal_model.add(r_i)
 
     # should raise
-    with pytest.raises(InvalidComponentException) as ex:
+    with pytest.raises(InvalidComponentException) as _:
         model.add(model)
 
     model.add(internal_model)

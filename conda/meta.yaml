@@ -1,0 +1,40 @@
+package:
+  name: BondGraphTools
+  version: 0.4.3
+
+source:
+  git_rev: master
+  git_url: https://github.com/BondGraphTools/BondGraphTools
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - numpy >=1.19
+    - sympy
+    - scikits.odes
+    - matplotlib
+    - networkx
+    - pyYAML
+    - ordered-set
+
+
+  run:
+    - python
+    - numpy >=1.19
+    - sympy
+    - scikits.odes
+    - matplotlib
+    - networkx
+    - pyYAML
+    - ordered-set
+
+test:
+  requires:
+    - pytest
+  commands:
+    - pytest
+
+about:
+  home: https://BondGraphTools.readthedocs.io/en/latest/
+  license: Apache 2.0

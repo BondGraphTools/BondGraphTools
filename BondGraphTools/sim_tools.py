@@ -55,11 +55,11 @@ def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
 
 
 def _simulate(system,
-             timespan,
-             x0,
-             dx0=None,
-             dt=0.1,
-             control_vars=None):
+              timespan,
+              x0,
+              dx0=None,
+              dt=0.1,
+              control_vars=None):
     """Simulate the system dynamics.
 
     This method integrates the dynamics of the system over the specified
@@ -74,23 +74,12 @@ def _simulate(system,
     ensure they are consistent with the initial state, or change them if they
     are not.
 
-    Currently, control variables can take the form of numbers or a strings
-    and are assigned via a dictionary or list.
-
-    Permissible strings:
-
-        * numerical constants such as `1.0`, `pi`
-        * time `t`
-        * state variables; for example `x_0`
-        * arithmetic operators such as `+`,`-`, `*`, `/`, as well as `^`
-          (power operator), `%` (remainder)
-        * elementary math functions such as `sin`, `exp`, `log`
-        * ternary if; for example `t < 0 ? 0 : 1` which implements the Heaviside
+    todo: detial control variables.
 
     Args:
         system :obj:`BondGraph`: The system to simulate
-        timespan: A pair (`list` or `tuple`) containing the start and end points
-                  of the simulation.
+        timespan: A pair (`list` or `tuple`) containing the start and end
+                  points of the simulation.
         x0: The initial conditions of the system.
         dx0 (Optional): The initial rates of change of the system. The default
                         value (`None`) indicates that the system should be
@@ -114,7 +103,7 @@ def _simulate(system,
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
-    samples = int((timespan[1]-timespan[0]) / dt) + 1
+    samples = int((timespan[1] - timespan[0]) / dt) + 1
     t = np.linspace(*timespan, samples)
 
     res, X = _bondgraph_to_residuals(system, control_vars)
@@ -181,7 +170,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
                     r = f(0, test_x, test_x)
                 assert isinstance(r, (float, int, sp.Number)
                                   ), "Invalid output from control"
-            except Exception as ex:
+            except Exception:
                 message = f"Invalid control function for var: u_{idx}.\n " \
                     "Control functions should be of the form:\n" \
                     f"u_{idx} = f(t, x, dx/dt)"
@@ -211,7 +200,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
         Fsym[i] = r
 
     t = sp.S('t')
-    _r = np.empty(shape=(n,), dtype=np.float64)
+
     if not u_func:
         F = sp.lambdify((t, X, dX), Fsym)
 
@@ -220,7 +209,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for i in range(n):
                 _res[i] = _r[i]
     else:
-        _u = np.empty(shape=(m,), dtype=np.float64)
+
         Fsym_u = sp.lambdify((t, X, dX, U), Fsym)
 
         def residual(_t, _x, _dx, _res):
