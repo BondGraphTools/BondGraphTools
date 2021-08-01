@@ -3,7 +3,5 @@ sympy
 scipy
 matplotlib
 networkx
-requests
 pyYAML
 ordered-set
-scikits.odes

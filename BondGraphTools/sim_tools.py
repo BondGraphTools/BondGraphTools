@@ -8,11 +8,6 @@ import sympy as sp
 from scipy.optimize import broyden1
 from .exceptions import ModelException
 
-try:
-    from scikits.odes.dae import dae
-except ImportError:
-    print("Warning - sciket.odes not found. Simulations are disabled.")
-
 logger = logging.getLogger(__name__)
 
 
@@ -59,7 +54,7 @@ def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
     return X0, DX0
 
 
-def simulate(system,
+def _simulate(system,
              timespan,
              x0,
              dx0=None,
@@ -234,3 +229,19 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for i in range(n):
                 _res[i] = _r[i]
     return residual, X
+
+
+try:
+    from scikits.odes.dae import dae
+    simulate = _simulate
+except ImportError:
+    print("Warning - sciket.odes not found. Simulations are disabled.")
+
+    from BondGraphTools.exceptions import SolverException
+
+    def simulate(*args, **kwargs):
+        raise SolverException(
+            "library `scikits.odes` could not be imported "
+            "but is required for simulations")
+finally:
+    simulate.__doc__ = _simulate.__doc__
