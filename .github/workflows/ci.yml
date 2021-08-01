@@ -1,0 +1,42 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7 ,3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Sundails
+      run: |
+        sudo apt-get update
+        sudo apt install -y gfortran libblas-dev liblapack-dev git build-essential cmake python3-dev
+        git clone https://github.com/LLNL/sundials.git
+        mkdir sundials/build && cd sundials/build && cmake -DLAPACK_ENABLE=ON ..
+        make && sudo make install
+        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+        cd .. && cd ..
+    - name: Install Python3 Dependencies.
+      run: |
+        python3 -m pip install scikits.odes
+        python3 -m pip install -r requirements.txt
+    - name: Lint with flake8
+      run: |
+          flake8
+    - name: Test with pytest
+      run: |
+        pytest
