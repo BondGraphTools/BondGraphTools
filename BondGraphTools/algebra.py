@@ -106,7 +106,7 @@ def _generate_substitutions(linear_op, nonlinear_op,
     coords_vect = sympy.Matrix(coords)
     for i in reversed(range(2 * (state_size + network_size))):
         co = coords[i]
-        if Rx[i, i] == 0 and co in atoms and not co in nonlinear_op[i].atoms():
+        if Rx[i, i] == 0 and co in atoms and co not in nonlinear_op[i].atoms():
 
             eqn = (Rx[i, :] * coords_vect)[0] - nonlinear_op[i]
             pair = (coords[i], eqn)
@@ -275,7 +275,6 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
     added_cvs = []
     cv_diff_dict = {}
     lin_dict = {}
-    nlin_dict = {}
 
     logger.debug("Handling algebraic constraints")
 
@@ -335,8 +334,8 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                      repr(nonlinear_op[row]) if nonlinear_op else '')
 
         nonlinear_constraint = nonlinear_op[row]
-        F_args = set(coordinates[0:offset + state_size]) & \
-            nonlinear_constraint.atoms()
+        # F_args = set(coordinates[0:offset + state_size]) & \
+        #    nonlinear_constraint.atoms()
 
         if linear_op[row, offset:-1].is_zero_matrix \
                 and not nonlinear_constraint:
@@ -372,7 +371,8 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                 cv_dict[(0, idx)] = const
 
         row = row.row_join(sympy.SparseMatrix(1, len(added_cvs), cv_dict))
-        jac_dx = [nonlinear_constraint.diff(c) for c in coordinates[:state_size]]
+        jac_dx = [nonlinear_constraint.diff(c)
+                  for c in coordinates[:state_size]]
         jac_junciton = [
             nonlinear_constraint.diff(c)
             for c in coordinates[state_size:offset]
@@ -394,12 +394,16 @@ def reduce_model(linear_op, nonlinear_op, coordinates, size_tuple,
                            jac_dx)
 
         elif any(x != 0 for x in jac_junciton):
-            logger.warning("First order junciton constraint not implemented: %s",
-                           str(jac_junciton))
+            logger.warning(
+                "First order junciton constraint not implemented: %s",
+                str(jac_junciton)
+            )
 
         elif any(x != 0 for x in jac_cv):
-            logger.warning("First order control constraint not implemented: %s",
-                           str(jac_cv))
+            logger.warning(
+                "First order control constraint not implemented: %s",
+                str(jac_cv)
+            )
 
         elif any(x != 0 for x in jac_x):
             logger.debug("First order constriants: %s", jac_x)
@@ -484,7 +488,8 @@ def augmented_rref(matrix, augmented_rows=0):
         matrix[row, :] = sympy.expand(matrix[row, :] / matrix[row, col])
         for j in range(row + 1, matrix.rows):
             if matrix[j, col] != 0:
-                matrix[j, :] = sympy.expand(matrix[j, :] - matrix[j, col] * matrix[row, :])
+                matrix[j, :] = sympy.expand(
+                    matrix[j, :] - matrix[j, col] * matrix[row, :])
 
         col += 1
         row += 1
@@ -517,31 +522,12 @@ def smith_normal_form(matrix, augment=None):
         n x n smith normal form of the matrix.
         Particularly for projection onto the nullspace of M and the orthogonal
         complement that is, for a matrix M,
-        P = _smith_normal_form(M) is a projection operator onto the nullspace of M
-    """
-    # M, _ = matrix.rref()
-    # m, n = M.shape
-    # M = sympy.SparseMatrix(m, n, M)
-    # m_dict = {}
-    # current_row = 0
-    #
-    # row_map = {}
-    #
-    # current_row = 0
-    #
-    # for row, c_idx, entry in M.RL:
-    #     if row not in row_map:
-    #         row_map[row] = c_idx
-    #         r_idx = c_idx
-    #
-    #     else:
-    #         r_idx = row_map[row]
-    #
-    #     m_dict[(r_idx, c_idx)] = entry
-    #
-    # return sympy.SparseMatrix(n, n, m_dict)
+        P = _smith_normal_form(M) is a projection operator onto the
+        nullspace of M
 
-    if augment:
+    """
+
+    if augment is not None:
         M = matrix.row_join(augment)
         k = augment.cols
     else:

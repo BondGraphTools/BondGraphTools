@@ -6,8 +6,8 @@ for producing bond graph models from a reaction network.
 from sympy import SparseMatrix, symbols, Pow, Matrix
 from collections import defaultdict
 import logging
-from math import log
-from .actions import connect, disconnect, new
+
+from BondGraphTools.actions import connect, new
 logger = logging.getLogger(__name__)
 
 __all__ = ["Reaction_Network"]
@@ -60,7 +60,7 @@ class Reaction_Network(object):
 
     @property
     def reverse_stoichiometry(self):
-        """The reverse stoichiometric matrix"""
+        """The reverse stoichiometric matrix."""
         matrix = SparseMatrix(len(self._species), len(self._reactions), {})
         for col, (_, forward_species, _, _) in enumerate(
                 self._reactions.values()):
@@ -71,7 +71,7 @@ class Reaction_Network(object):
 
     @property
     def forward_stoichiometry(self):
-        """The forward stoichiometric matrix"""
+        """The forward stoichiometric matrix."""
         matrix = SparseMatrix(len(self._species), len(self._reactions), {})
         for col, (back_species, _, _, _) in enumerate(
                 self._reactions.values()):
@@ -119,8 +119,8 @@ class Reaction_Network(object):
             normalised: If true, sets pressure and temperature to 1
 
         Returns:
-             A new instance of :obj:`BondGraphTools.BondGraph` representing this
-             reaction system.
+             A new instance of :obj:`BondGraphTools.BondGraph` representing
+             this reaction system.
         """
         system = new(name=self.name)
         species_anchor = self._build_species(system, normalised)
@@ -170,7 +170,8 @@ class Reaction_Network(object):
                     fwd_sto, is_reversed=False
                 )
 
-    def _connect_complex(self, system, species_anchors, junct, stoichiometry,
+    @staticmethod
+    def _connect_complex(system, species_anchors, junct, stoichiometry,
                          is_reversed=False):
         for i, (species, qty) in enumerate(stoichiometry.items()):
 
@@ -224,12 +225,6 @@ class Reaction_Network(object):
                 system.add(flowstat)
                 connect(flowstat, species_anchors[species])
 
-
-#            if species in self._chemostats:
-#                chemostat = new("Se", value=0, name=species)
-#                connect(chemostat, species_anchors[species])
-#                this_species.initial_values['p_0'] = self._chemostats[species]
-
         return species_anchors
 
     def add_reaction(self, reaction,
@@ -257,7 +252,7 @@ class Reaction_Network(object):
         """
 
         reaction_step = []
-        remaining_reactions = reaction
+        remaining = reaction
 
         if not name or name in self._reactions:
             n = 1
@@ -269,9 +264,8 @@ class Reaction_Network(object):
             idx = "{name}".format(name=name)
             base = ""
 
-        while remaining_reactions:
-            in_react, _, remaining_reactions = remaining_reactions.partition(
-                "=")
+        while remaining:
+            in_react, _, remaining = remaining.partition("=")
             reactants = _split_reactants(in_react)
 
             reaction_step.append(reactants)
@@ -292,9 +286,9 @@ class Reaction_Network(object):
             for sp in reaction_step[i + 1]:
                 self._species[sp] += 1
 
-            self._reactions[idx.format(base=base + str(i))] = (reaction_step[i],
-                                                               reaction_step[i + 1],
-                                                               f_rate, r_rate)
+            self._reactions[idx.format(base=base + str(i))] = (
+                reaction_step[i], reaction_step[i + 1], f_rate, r_rate
+            )
 
     def add_chemostat(self, species, concentration=None):
         """

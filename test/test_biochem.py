@@ -31,15 +31,16 @@ def test_make_a_to_b():
     assert list(a_to_b.state_vars.keys()) == ['x_0', 'x_1']
     assert list(a_to_b.control_vars.keys()) == ['u_0']
     assert not a_to_b.ports
-    
+
     state_basis, _, control_basis = a_to_b.basis_vectors
     (x_A, dx_A), = (k for k, (v, _) in state_basis.items() if v is A)
     (x_B, dx_B), = (k for k, (v, _) in state_basis.items() if v is B)
     (r,) = (k for k, (v, _) in control_basis.items() if v is Re)
 
-    solutions = {dx_A + r*x_A - r*x_B, dx_B - r*x_A + r*x_B}
+    solutions = {dx_A + r * x_A - r * x_B, dx_B - r * x_A + r * x_B}
     relations = set(a_to_b.constitutive_relations)
     assert not solutions ^ relations
+
 
 def test_make_a_to_b_inplicit():
 
@@ -197,6 +198,7 @@ def test_nlin_se():
 
     assert not solutions ^ relations
 
+
 def biochemical_cycle(name="Cycle"):
     # Reactions: X = Y = Z = X
     R = 1
@@ -204,28 +206,35 @@ def biochemical_cycle(name="Cycle"):
 
     model = bgt.new(name=name)
 
-    X = bgt.new("Ce",name="X",library="BioChem",value={'k':1,'R':R,'T':T})
-    Y = bgt.new("Ce",name="Y",library="BioChem",value={'k':2,'R':R,'T':T})
-    Z = bgt.new("Ce",name="Z",library="BioChem",value={'k':3,'R':R,'T':T})
-    common_X = bgt.new("0",name="X")
-    common_Y = bgt.new("0",name="Y")
-    common_Z = bgt.new("0",name="Z")
-    r1 = bgt.new("Re",name="r1",library="BioChem",value={'r':1,'R':R,'T':T})
-    r2 = bgt.new("Re",name="r2",library="BioChem",value={'r':2,'R':R,'T':T})
-    r3 = bgt.new("Re",name="r3",library="BioChem",value={'r':3,'R':R,'T':T})
-    bgt.add(model,X,Y,Z,common_X,common_Y,common_Z,r1,r2,r3)
+    X = bgt.new("Ce", name="X", library="BioChem",
+                value={'k': 1, 'R': R, 'T': T})
+    Y = bgt.new("Ce", name="Y", library="BioChem",
+                value={'k': 2, 'R': R, 'T': T})
+    Z = bgt.new("Ce", name="Z", library="BioChem",
+                value={'k': 3, 'R': R, 'T': T})
+    common_X = bgt.new("0", name="X")
+    common_Y = bgt.new("0", name="Y")
+    common_Z = bgt.new("0", name="Z")
+    r1 = bgt.new("Re", name="r1", library="BioChem",
+                 value={'r': 1, 'R': R, 'T': T})
+    r2 = bgt.new("Re", name="r2", library="BioChem",
+                 value={'r': 2, 'R': R, 'T': T})
+    r3 = bgt.new("Re", name="r3", library="BioChem",
+                 value={'r': 3, 'R': R, 'T': T})
+    bgt.add(model, X, Y, Z, common_X, common_Y, common_Z, r1, r2, r3)
 
-    bgt.connect(common_X,X)
-    bgt.connect(common_X,r1)
-    bgt.connect(r1,common_Y)
-    bgt.connect(common_Y,Y)
-    bgt.connect(common_Y,r2)
-    bgt.connect(r2,common_Z)
-    bgt.connect(common_Z,Z)
-    bgt.connect(common_Z,r3)
-    bgt.connect(r3,common_X)
+    bgt.connect(common_X, X)
+    bgt.connect(common_X, r1)
+    bgt.connect(r1, common_Y)
+    bgt.connect(common_Y, Y)
+    bgt.connect(common_Y, r2)
+    bgt.connect(r2, common_Z)
+    bgt.connect(common_Z, Z)
+    bgt.connect(common_Z, r3)
+    bgt.connect(r3, common_X)
 
     return model
+
 
 def test_closed_cycle():
     model = biochemical_cycle("Closed cycle")
@@ -233,29 +242,30 @@ def test_closed_cycle():
     assert len(model.state_vars) == 3
     assert len(model.control_vars) == 0
 
-    X = model/"C:X"
-    Y = model/"C:Y"
-    Z = model/"C:Z"
+    X = model / "C:X"
+    Y = model / "C:Y"
+    Z = model / "C:Z"
     state_basis, _, _ = model.basis_vectors
     (x0, dx0), = (k for k, (v, _) in state_basis.items() if v is X)
     (x1, dx1), = (k for k, (v, _) in state_basis.items() if v is Y)
     (x2, dx2), = (k for k, (v, _) in state_basis.items() if v is Z)
 
     solutions = {
-        dx0 + 4*x0 - 2*x1 - 9*x2, 
-        dx1 - x0 + 6*x1 - 6*x2,
-        dx2 - 3*x0 - 4*x1 + 15*x2
+        dx0 + 4 * x0 - 2 * x1 - 9 * x2,
+        dx1 - x0 + 6 * x1 - 6 * x2,
+        dx2 - 3 * x0 - 4 * x1 + 15 * x2
     }
     relations = set(model.constitutive_relations)
     assert not solutions ^ relations
 
+
 def open_cycle():
     model = biochemical_cycle("Open cycle")
-    r1 = model/("R:r1")
-    r3 = model/("R:r3")
-    common_X = model/("0:X")
-    bgt.disconnect(common_X,r1)
-    bgt.disconnect(r3,common_X)
+    r1 = model / ("R:r1")
+    r3 = model / ("R:r3")
+    common_X = model / ("0:X")
+    bgt.disconnect(common_X, r1)
+    bgt.disconnect(r3, common_X)
 
     R = 1
     T = 1
@@ -264,20 +274,21 @@ def open_cycle():
     K_B = 2
     x_B = 1
 
-    A = bgt.new("Se",name="A",value={'e':R*T*np.log(K_A*x_A)})
-    B = bgt.new("Se",name="B",value={'e':R*T*np.log(K_B*x_B)})
-    XA = bgt.new("1",name="XA")
-    XB = bgt.new("1",name="XB")
-    bgt.add(model,A,B,XA,XB)
+    A = bgt.new("Se", name="A", value={'e': R * T * np.log(K_A * x_A)})
+    B = bgt.new("Se", name="B", value={'e': R * T * np.log(K_B * x_B)})
+    XA = bgt.new("1", name="XA")
+    XB = bgt.new("1", name="XB")
+    bgt.add(model, A, B, XA, XB)
 
-    bgt.connect(common_X,XA)
-    bgt.connect(A,XA)
-    bgt.connect(XA,r1)
-    bgt.connect(r3,XB)
-    bgt.connect(XB,common_X)
-    bgt.connect(XB,B)
+    bgt.connect(common_X, XA)
+    bgt.connect(A, XA)
+    bgt.connect(XA, r1)
+    bgt.connect(r3, XB)
+    bgt.connect(XB, common_X)
+    bgt.connect(XB, B)
 
     return model
+
 
 def test_open_cycle():
     model = open_cycle()
@@ -285,21 +296,22 @@ def test_open_cycle():
     assert len(model.state_vars) == 3
     assert len(model.control_vars) == 0
 
-    X = model/"C:X"
-    Y = model/"C:Y"
-    Z = model/"C:Z"
+    X = model / "C:X"
+    Y = model / "C:Y"
+    Z = model / "C:Z"
     state_basis, _, _ = model.basis_vectors
     (x0, dx0), = (k for k, (v, _) in state_basis.items() if v is X)
     (x1, dx1), = (k for k, (v, _) in state_basis.items() if v is Y)
     (x2, dx2), = (k for k, (v, _) in state_basis.items() if v is Z)
 
     solutions = {
-        dx0 + 7*x0 - 2*x1 - 9*x2, 
-        dx1 - x0 + 6*x1 - 6*x2,
-        dx2 - 6*x0 - 4*x1 + 15*x2
+        dx0 + 7 * x0 - 2 * x1 - 9 * x2,
+        dx1 - x0 + 6 * x1 - 6 * x2,
+        dx2 - 6 * x0 - 4 * x1 + 15 * x2
     }
     relations = set(model.constitutive_relations)
     assert not solutions ^ relations
+
 
 class TestReactionNames(object):
     def test_naming(self):

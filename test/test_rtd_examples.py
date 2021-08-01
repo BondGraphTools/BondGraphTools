@@ -101,6 +101,7 @@ def test_init_example():
     # produce timeseries data
     t, x = bgt.simulate(model, x0=[1, 1], timespan=[0, 10])
 
+
 def test_rlc_example():
 
     import BondGraphTools as bgt
@@ -132,21 +133,24 @@ def test_rlc_example():
 
     timespan = [0, 5]
     x0 = [1]
-    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0': 2})
+    t, x = bgt.simulate(model, timespan=timespan,
+                        x0=x0, control_vars={'u_0': 2})
     plt.plot(t, x)
 
-    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0': 'sin(2*t)'})
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0,
+                        control_vars={'u_0': 'sin(2*t)'})
     plt.plot(t, x)
 
     def step_fn(t, x, dx):
         return 1 if t < 1 else 0
 
-    t, x = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0': step_fn})
+    t, x = bgt.simulate(model, timespan=timespan, x0=x0,
+                        control_vars={'u_0': step_fn})
     plt.plot(t, x)
 
     fig = plt.figure()
     for i in range(4):
         func_text = "cos({i}*t)".format(i=i)
-        t_i, x_i = bgt.simulate(model, timespan=timespan, x0=x0, control_vars={'u_0': func_text})
+        t_i, x_i = bgt.simulate(model, timespan=timespan,
+                                x0=x0, control_vars={'u_0': func_text})
         plt.plot(t_i, x_i)
-

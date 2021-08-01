@@ -49,7 +49,8 @@ Build and simulate a RLC driven RLC circuit::
 Bugs
 ----
 
-Please report any bugs `here <https://github.com/BondGraphTools/BondGraphTools/issues>`_,
+Please report any bugs
+`here <https://github.com/BondGraphTools/BondGraphTools/issues>`_,
 or fork the repository and submit a pull request.
 
 License
@@ -60,7 +61,9 @@ Released under the Apache 2.0 License::
     Peter Cudmore <peter.cudmore@uqconnect.edu.au>
 """
 
-from .actions import *
+from .actions import (
+    add, connect, disconnect, expose, new, remove, swap, set_param
+)
 from .fileio import save, load
 from .compound import BondGraph
 from .sim_tools import simulate

@@ -60,7 +60,7 @@ def disconnect(target, other):
         model_prime = other[0].parent
 
     if not model or not model_prime or (model is not model_prime):
-        raise InvalidComponentException(f"Could not find components")
+        raise InvalidComponentException("Could not find components")
 
     def _filter(item):
         # assume item is a port:
@@ -70,7 +70,7 @@ def disconnect(target, other):
             _, _ = item
             return {bond for bond in model.bonds
                     if item in (bond.head, bond.tail)}
-        except TypeError as ex:
+        except TypeError:
             return {bond for bond in model.bonds
                     if item is bond.head.component or
                     item is bond.tail.component}
@@ -161,21 +161,14 @@ def swap(old_component, new_component):
 
     Raises:
         InvalidPortException, InvalidComponentException
+
     """
 
     # TODO: More validation required
-    #
-    def is_swap_valid(old_comp, new_comp):
+
+    def is_swap_valid(old_comp, new_comp): # noqa
         if not isinstance(new_comp, BondGraphBase):
             return False
-
-        # Dirty Hack because 'in' for BondSet double counts
-        num_bonds = len({b for b in old_comp.parent.bonds if old_comp is
-                         b.head.component or old_comp is b.tail.component})
-
-        # if isinstance(new_comp, PortManager) and len(new_comp.ports) < num_bonds:
-        #     return False
-
         return True
 
     model = old_component.parent
