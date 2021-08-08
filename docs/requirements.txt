@@ -3,5 +3,6 @@ sympy
 scipy
 matplotlib
 networkx
+requests
 pyYAML
 ordered-set

@@ -8,7 +8,7 @@ import sympy as sp
 
 from BondGraphTools.base import BondGraphBase, Bond
 from BondGraphTools.port_managers import LabeledPortManager
-from .exceptions import *
+from .exceptions import InvalidComponentException, InvalidPortException
 from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
@@ -21,8 +21,7 @@ __all__ = [
 
 
 class BondGraph(BondGraphBase, LabeledPortManager):
-    """Representation of a bond graph model.
-    """
+    """Representation of a bond graph model."""
 
     def __init__(self, name, components=None, **kwargs):
 
@@ -293,18 +292,18 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         if not self.components:
             return []
 
-        coordinates, mappings, lin_op, nlin_op, constraints = self.system_model()
+        coords, mappings, lin_op, nlin_op, constraints = self.system_model()
         inv_tm, inv_js, _ = mappings
         out_ports = [idx for p, idx in inv_js.items() if p in self.ports]
         logger.debug("Getting IO ports: %s", out_ports)
-        js_size = len(inv_js)  # number of ports
-        ss_size = len(inv_tm)  # number of state space coords
+        network_size = len(inv_js)  # number of ports
+        n = len(inv_tm)  # number of state space coords
 
-        coord_vect = sp.Matrix(coordinates)
+        coord_vect = sp.Matrix(coords)
         relations = [
-            sp.Add(l, r) for i, (l, r) in enumerate(zip(
-                lin_op * coord_vect, nlin_op))
-            if not ss_size <= i < ss_size + 2 * js_size - 2 * len(out_ports)
+            sp.Add(l, r) for i, (l, r) in enumerate(
+                zip(lin_op * coord_vect, nlin_op))
+            if not n <= i < n + 2 * (network_size - len(out_ports))  # noqa
         ]
         if isinstance(constraints, list):
             for constraint in constraints:
@@ -336,7 +335,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         This method generates:
 
             * The model coordinate system (`list`) :math:`x`
-            * A mapping (`dict`) between the model coordinates and the component coordinates
+            * A mapping (`dict`) between the model coordinates and the
+              component coordinates
             * A linear operator (`sympy.Matrix`) :math:`L`
             * A nonlinear operator (`sympy.Matrix`) :math:`F`
             * A list of constraints (`sympy.Matrix`) :math:`G`
@@ -364,14 +364,14 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         )
         inv_tm, inv_js, inv_cv = mappings
 
-        js_size = len(inv_js)  # number of ports
-        ss_size = len(inv_tm)  # number of state space coords
-        cv_size = len(inv_cv)
+        network_size = len(inv_js)  # number of ports
+        state_size = len(inv_tm)  # number of state space coords
+        inout_size = len(inv_cv)
         n = len(coordinates)
 
-        size_tuple = (ss_size, js_size, cv_size, n)
+        size_tuple = (state_size, network_size, inout_size, n)
 
-        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=ss_size)
+        lin_dict = adjacency_to_dict(inv_js, self.bonds, offset=state_size)
 
         nlin_dict = {}
 
@@ -383,8 +383,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
         inverse_port_map = {}
 
         for port, (cv_e, cv_f) in self._port_map.items():
-            inverse_port_map[cv_e] = ss_size + 2 * inv_js[port]
-            inverse_port_map[cv_f] = ss_size + 2 * inv_js[port] + 1
+            inverse_port_map[cv_e] = state_size + 2 * inv_js[port]
+            inverse_port_map[cv_f] = state_size + 2 * inv_js[port] + 1
 
         for component in self.components:
             relations = get_relations_iterator(

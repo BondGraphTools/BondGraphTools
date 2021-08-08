@@ -86,7 +86,7 @@ def test_aug_rref():
     assert m != matrix
     assert a != adj
 
-    assert (m - sympy.eye(4)).is_zero_matrix
+    assert (m - sympy.eye(4)).is_zero_matrix, str(m)
 
     assert (a * matrix - sympy.eye(4)).is_zero_matrix
 

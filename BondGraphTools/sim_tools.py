@@ -5,10 +5,8 @@ import logging
 
 import numpy as np
 import sympy as sp
-from sympy.core import SympifyError
 from scipy.optimize import broyden1
-from scikits.odes.dae import dae
-from .exceptions import ModelException, SolverException
+from .exceptions import ModelException
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
     else:
         raise ModelException(f"Invalid Initial Conditions: {x0}")
 
-    if dx0:
+    if dx0 is not None:
         DX0 = np.array(dx0, dtype=np.float64)
     else:
         DX0 = np.zeros(X0.shape, dtype=np.float64)
@@ -56,12 +54,12 @@ def _fetch_ic(x0, dx0, system, func, t0, eps=0.001):
     return X0, DX0
 
 
-def simulate(system,
-             timespan,
-             x0,
-             dx0=None,
-             dt=0.1,
-             control_vars=None):
+def _simulate(system,
+              timespan,
+              x0,
+              dx0=None,
+              dt=0.1,
+              control_vars=None):
     """Simulate the system dynamics.
 
     This method integrates the dynamics of the system over the specified
@@ -76,23 +74,12 @@ def simulate(system,
     ensure they are consistent with the initial state, or change them if they
     are not.
 
-    Currently, control variables can take the form of numbers or a strings
-    and are assigned via a dictionary or list.
-
-    Permissible strings:
-
-        * numerical constants such as `1.0`, `pi`
-        * time `t`
-        * state variables; for example `x_0`
-        * arithmetic operators such as `+`,`-`, `*`, `/`, as well as `^`
-          (power operator), `%` (remainder)
-        * elementary math functions such as `sin`, `exp`, `log`
-        * ternary if; for example `t < 0 ? 0 : 1` which implements the Heaviside
+    todo: detial control variables.
 
     Args:
         system :obj:`BondGraph`: The system to simulate
-        timespan: A pair (`list` or `tuple`) containing the start and end points
-                  of the simulation.
+        timespan: A pair (`list` or `tuple`) containing the start and end
+                  points of the simulation.
         x0: The initial conditions of the system.
         dx0 (Optional): The initial rates of change of the system. The default
                         value (`None`) indicates that the system should be
@@ -116,7 +103,7 @@ def simulate(system,
     if system.control_vars and not control_vars:
         raise ModelException("Control variable not specified")
 
-    samples = int((timespan[1]-timespan[0]) / dt) + 1
+    samples = int((timespan[1] - timespan[0]) / dt) + 1
     t = np.linspace(*timespan, samples)
 
     res, X = _bondgraph_to_residuals(system, control_vars)
@@ -171,21 +158,23 @@ def _bondgraph_to_residuals(model, control_vars=None):
         test_x = np.zeros(shape=(n,), dtype=np.float32)
         for idx, f in u_func_dict.items():
             try:
+                if isinstance(f, (float, int, sp.Number)):
+                    u_constants[idx] = f
+                    continue
                 if isinstance(f, str):
                     f = _to_function(f, X, dX, dx_subs + x_subs)
                     u_func_dict[idx] = f
-                if isinstance(f, (float, int, sp.Number)):
-                    u_constants[idx] = f
                 if n == 1:
                     r = f(0, 0, 0)
                 else:
                     r = f(0, test_x, test_x)
                 assert isinstance(r, (float, int, sp.Number)
                                   ), "Invalid output from control"
-            except Exception as ex:
-                message = f"Invalid control function for var: {idx}.\n " \
+            except Exception:
+                message = f"Invalid control function for var: u_{idx}.\n " \
                     "Control functions should be of the form:\n" \
-                    f"{idx} = f(t, x, dx/dt)"
+                    f"u_{idx} = f(t, x, dx/dt)"
+
                 raise ModelException(message)
 
         for i, u in enumerate(model.control_vars):
@@ -202,6 +191,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for r in model.constitutive_relations]
 
     if len(rels) != n:
+
         raise ModelException(
             "Model simplification error: system is under-determined")
 
@@ -210,7 +200,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
         Fsym[i] = r
 
     t = sp.S('t')
-    _r = np.empty(shape=(n,), dtype=np.float64)
+
     if not u_func:
         F = sp.lambdify((t, X, dX), Fsym)
 
@@ -219,7 +209,7 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for i in range(n):
                 _res[i] = _r[i]
     else:
-        _u = np.empty(shape=(m,), dtype=np.float64)
+
         Fsym_u = sp.lambdify((t, X, dX, U), Fsym)
 
         def residual(_t, _x, _dx, _res):
@@ -228,3 +218,19 @@ def _bondgraph_to_residuals(model, control_vars=None):
             for i in range(n):
                 _res[i] = _r[i]
     return residual, X
+
+
+try:
+    from scikits.odes.dae import dae
+    simulate = _simulate
+except ImportError:
+    print("Warning - sciket.odes not found. Simulations are disabled.")
+
+    from BondGraphTools.exceptions import SolverException
+
+    def simulate(*args, **kwargs):
+        raise SolverException(
+            "library `scikits.odes` could not be imported "
+            "but is required for simulations")
+finally:
+    simulate.__doc__ = _simulate.__doc__

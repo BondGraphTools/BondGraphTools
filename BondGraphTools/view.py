@@ -63,7 +63,6 @@ def _build_graph(system):
 
 def _networkx_layout(graph):
     nx_graph = nx.Graph(graph)
-    #layout = nx.spring_layout(nx_graph, k=1)
     layout = nx.kamada_kawai_layout(nx_graph, scale=20)
     pos = [(pair[0], pair[1]) for pair in list(layout.values())]
 
@@ -269,7 +268,7 @@ class GraphLayout(Glyph):
                         t=component.metamodel)
                 except BaseException:
                     component.view.string = "{t}".format(
-                        t=component.metamodel, n=component.name)
+                        t=component.metamodel)
             component.view.axes = ax
 
         for tail, head in self._node.bonds:

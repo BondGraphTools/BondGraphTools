@@ -1,16 +1,16 @@
 Tutorial: Building Modular Enzymatic Reactions
 ==============================================
-Overview
---------
-Goal: To build and simulate a simple reaction A = B, and exploit modularity to
-substitute in different reactions structures.
-
-Difficulty: Intermediate
-
-Requirement: BondGraphTools, jupyter.
-
-How to follow: Enter each block of code in consecutive cells in a jupyter
-notebook.
++----------------+------------------------------------------------------------+
+|  Goal:         | To build and simulate a simple reaction A = B, and exploit |
+|                | modularity to substitute in different reactions structures.|
++----------------+------------------------------------------------------------+
+| Difficulty:    | Intermediate.                                              |
++----------------+------------------------------------------------------------+
+| Requirements:  | BondGraphTools, jupyter.                                   |
++----------------+------------------------------------------------------------+
+| How to follow: | Enter each block of code in consecutive cells in a jupyter |
+|                | notebook.                                                  |
++----------------+------------------------------------------------------------+
 
 Part 1: Building a basic chemical reaction
 ------------------------------------------

@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ master, develop ]
   pull_request:
     branches: [ master ]
 
@@ -28,15 +28,19 @@ jobs:
         git clone https://github.com/LLNL/sundials.git
         mkdir sundials/build && cd sundials/build && cmake -DLAPACK_ENABLE=ON ..
         make && sudo make install
-        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
         cd .. && cd ..
     - name: Install Python3 Dependencies.
       run: |
         python3 -m pip install scikits.odes
         python3 -m pip install -r requirements.txt
+        python3 -m pip install flake8 pytest coverage mock pytest-cov==2.6.1
     - name: Lint with flake8
       run: |
-          flake8
-    - name: Test with pytest
-      run: |
-        pytest
+          flake8 BondGraphTools
+    - name: Code Climate Coverage Action
+      uses: paambaati/codeclimate-action@v2.7.5
+      env:
+        CC_TEST_REPORTER_ID: 895919e9413384a08a878a372ecad8e82ac0f6f80933e23cc36261e9986d27c0
+      with:
+        coverageCommand: export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+        && pytest --runslow --cov=BondGraphTools --cov-report=xml test
