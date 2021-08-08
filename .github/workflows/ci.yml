@@ -37,7 +37,7 @@ jobs:
         python3 -m pip install flake8 pytest coverage mock pytest-cov==2.6.1
     - name: Lint with flake8
       run: |
-          flake8
+          flake8 BondGraphTools
     - name: Code Climate Coverage Action
       uses: paambaati/codeclimate-action@v2.7.5
       env:
