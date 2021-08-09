@@ -6,3 +6,4 @@ networkx
 requests
 pyYAML
 ordered-set
+myst-parser
