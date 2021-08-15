@@ -5,7 +5,6 @@ cannot be decomposed into other components.
 import logging
 from BondGraphTools.base import BondGraphBase
 from BondGraphTools.exceptions import InvalidPortException
-from BondGraphTools.view import Glyph
 from BondGraphTools.port_managers import PortManager, PortExpander
 import sympy as sp
 
@@ -25,8 +24,6 @@ class Component(BondGraphBase, PortManager):
         self._state_vars = state_vars
 
         self._params = params
-
-        self.view = Glyph(self)
         self._constitutive_relations = constitutive_relations
 
     def __eq__(self, other):
@@ -225,7 +222,7 @@ class EqualEffort(BondGraphBase, PortExpander):
 
         PortExpander .__init__(self, {None: None})
         BondGraphBase.__init__(self, **kwargs)
-        self.view = Glyph(self)
+
 
     @property
     def template(self):
@@ -262,7 +259,7 @@ class EqualFlow(BondGraphBase, PortExpander):
         PortExpander.__init__(self, {"non_inverting": {"weight": 1},
                                      "inverting": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
-        self.view = Glyph(self)
+
 
     @property
     def non_inverting(self):

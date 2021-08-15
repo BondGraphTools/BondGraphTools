@@ -9,7 +9,6 @@ import sympy as sp
 from BondGraphTools.base import BondGraphBase, Bond
 from BondGraphTools.port_managers import LabeledPortManager
 from .exceptions import InvalidComponentException, InvalidPortException
-from .view import GraphLayout
 from .algebra import adjacency_to_dict, \
     inverse_coord_maps, reduce_model, get_relations_iterator
 
@@ -37,7 +36,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
         self._bonds = BondSet()
 
-        self.view = GraphLayout(self)
         """Graphical Layout of internal components"""
 
         self._port_map = dict()
