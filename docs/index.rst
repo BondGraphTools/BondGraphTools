@@ -13,23 +13,23 @@ Overview
 BondGraphTools is a python library for systems modelling based on the bond graph
 methodology [Gaw1996]_, [Gaw2007]_.
 
-BondGraphTools is intended to be used by:
-   * software developers; as a framework to build modelling interfaces on top of
-   * engineers; to quickly build and simulate physical systems
-   * mathematicians; to perform model reduction and analysis
+BondGraphTools is intended to be used by
+ * software developers; as a framework to build modelling interfaces on top of
+ * engineers; to quickly build and simulate physical systems
+ * mathematicians; to perform model reduction and analysis
 
 BondGraphTools is built upon the scientific python stack; numpy, scipy, sympy,
 scikit.odes and matplotlib
 
 How to read the docs
 ^^^^^^^^^^^^^^^^^^^^
-The documentation for this library is organised into five sections.
-   * This page show how to install BondGraphTools
-   * :doc:`tutorials` contains a list of step-by-step tutorials demonstrating how
-     to use BondGraphTools.
-   * :doc:`guides` contains recipes for common tasks.
-   * :doc:`discussion` contains high level discussion about to library.
-   * :doc:`api` is the library reference documentation.
+
+The documentation for this library is organised into the following sections.
+ * This page show how to install BondGraphTools
+ * :doc:`tutorials` contains a list of step-by-step tutorials demonstrating how
+   to use BondGraphTools.
+ * :doc:`discussion` contains high level discussion about to library.
+ * :doc:`api` is the library reference documentation.
 
 Getting Started
 ^^^^^^^^^^^^^^^

@@ -11,5 +11,8 @@ RUN git clone https://github.com/LLNL/sundials.git; \
     cmake -DLAPACK_ENABLE=ON ..; \
     make && make install
 
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
 RUN apt-get install -y python3-dev python3-pip
 RUN python3 -m pip install bondgraphtools
+
