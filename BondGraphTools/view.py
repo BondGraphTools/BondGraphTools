@@ -11,6 +11,7 @@ import numpy as np
 
 from scipy.sparse import dok_matrix
 from matplotlib.lines import Line2D
+from matplotlib.pyplot import rcParams
 import networkx as nx
 
 from .exceptions import InvalidComponentException
@@ -20,6 +21,8 @@ FONT = 14
 FONT_SM = 10
 
 __all__ = ["draw"]
+
+usetex = rcParams.get("usetex")
 
 
 def draw(system):
@@ -41,7 +44,7 @@ def draw(system):
     ax = fig.gca()
     ax.set_aspect("equal")
     ax.set_title(f"{system.name}")
-    return system.view.draw(ax)
+    return _draw(system, ax)
 
 
 def _build_graph(system):
@@ -129,14 +132,15 @@ class Glyph:
     def axes(self, ax):
         self._axes = ax
         from matplotlib.text import Text
+        string = f"${self.string}$" if usetex else self.string
         self._text = Text(
             self.x,
             self.y,
-            f"${self.string}$",
+            string,
             horizontalalignment='center',
             verticalalignment='center',
             size=FONT,
-            usetex=True)
+            usetex=usetex)
 
         ax.add_artist(self._text)
 
@@ -233,78 +237,78 @@ class BondView(Line2D):
         self.set_ydata([y1, y2, y3])
 
 
-class GraphLayout(Glyph):
-    def draw(self, ax, layout=_networkx_layout):
+def _draw(system, ax, layout=_networkx_layout):
 
-        graph = _build_graph(self._node)
+    graph = _build_graph(system)
 
-        points = layout(graph)
-        bonds = []
-        x_min = 0
-        x_max = 0
-        y_min = 0
-        y_max = 0
-        ax.get_yaxis().set_visible(False)
-        ax.get_xaxis().set_visible(False)
-
-        for component, (x, y) in zip(self._node.components,
-                                     points):
-            x_min = min(x, x_min)
-            x_max = max(x, x_max)
-            y_min = min(y, y_min)
-            y_max = max(y, y_max)
-
-            component.view.pos = (x, y)
-            if component.metamodel not in {'0', '1'}:
-                try:
-                    component.view.string = r"\mathbf{{{t}}}: {n}".format(
-                        t=component.metamodel, n=component.name)
-                except BaseException:
-                    component.view.string = "{t}: {n}".format(
-                        t=component.metamodel, n=component.name)
+    points = layout(graph)
+    bonds = []
+    x_min = 0
+    x_max = 0
+    y_min = 0
+    y_max = 0
+    ax.get_yaxis().set_visible(False)
+    ax.get_xaxis().set_visible(False)
+    views = {}
+    for component, (x, y) in zip(system.components, points):
+        x_min = min(x, x_min)
+        x_max = max(x, x_max)
+        y_min = min(y, y_min)
+        y_max = max(y, y_max)
+        view = Glyph(component)
+        view.pos = (x, y)
+        if component.metamodel not in {'0', '1'}:
+            if usetex:
+                view.string = r"\mathbf{{{t}}}: {n}".format(
+                    t=component.metamodel, n=component.name)
             else:
-                try:
-                    component.view.string = r"\mathbf{{{t}}}".format(
-                        t=component.metamodel)
-                except BaseException:
-                    component.view.string = "{t}".format(
-                        t=component.metamodel)
-            component.view.axes = ax
+                view.string = "{t}: {n}".format(
+                    t=component.metamodel, n=component.name)
+        else:
+            if usetex:
+                view.string = r"\mathbf{{{t}}}".format(
+                    t=component.metamodel)
+            else:
+                view.string = "{t}".format(
+                    t=component.metamodel)
+        view.axes = ax
 
-        for tail, head in self._node.bonds:
+        views[component] = view
 
-            c1 = tail.component
-            c2 = head.component
+    for tail, head in system.bonds:
 
-            try:
-                label_1 = f"[{tail.name}]"
-            except AttributeError:
-                label_1 = ""
+        tail_glyph = views[tail.component]
+        head_glyph = views[head.component]
 
-            try:
-                label_2 = f"[{head.name}]"
-            except AttributeError:
-                label_2 = ""
+        try:
+            label_1 = f"[{tail.name}]"
+        except AttributeError:
+            label_1 = ""
 
-            dx = c2.view.x - c1.view.x
-            dy = c2.view.y - c1.view.y
+        try:
+            label_2 = f"[{head.name}]"
+        except AttributeError:
+            label_2 = ""
 
-            p1 = c1.view.add_port(label_1, (dx, dy))
-            p2 = c2.view.add_port(label_2, (-dx, -dy))
-            bond = BondView(p1, p2)
-            ax.add_artist(bond)
-            bonds.append(bond)
+        dx = head_glyph.x - tail_glyph.x
+        dy = head_glyph.y - tail_glyph.y
 
-        for bond in bonds:
-            bond.calc_lines()
+        p1 = tail_glyph.add_port(label_1, (dx, dy))
+        p2 = head_glyph.add_port(label_2, (-dx, -dy))
+        bond = BondView(p1, p2)
+        ax.add_artist(bond)
+        bonds.append(bond)
 
-        width = abs(x_max - x_min)
-        height = abs(y_min - y_max)
-        tweak = 0.1
-        ax.axis([x_min - tweak * width,
-                 x_max + tweak * width,
-                 y_min - tweak * height,
-                 y_max + tweak * height])
+    for bond in bonds:
+        bond.calc_lines()
+
+    width = abs(x_max - x_min)
+    height = abs(y_min - y_max)
+    tweak = 0.1
+    ax.axis([x_min - tweak * width,
+             x_max + tweak * width,
+             y_min - tweak * height,
+             y_max + tweak * height])
 
 
 def find_renderer(fig):

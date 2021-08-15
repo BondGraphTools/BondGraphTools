@@ -14,7 +14,7 @@ from BondGraphTools.base import BondGraphBase, Bond, Port
 from BondGraphTools.port_managers import PortTemplate
 
 from .atomic import EqualFlow
-# from .port_hamiltonian import PortHamiltonian
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,31 +49,35 @@ def disconnect(target, other):
         model = target.parent
     elif isinstance(target, Port):
         model = target.component.parent
-    else:
+    elif isinstance(target, tuple):
         model = target[0].parent
+    else:
+        model = None
 
     if isinstance(other, BondGraphBase):
         model_prime = other.parent
     elif isinstance(other, Port):
         model_prime = other.component.parent
-    else:
+    elif isinstance(target, tuple):
         model_prime = other[0].parent
+    else:
+        model_prime = None
 
     if not model or not model_prime or (model is not model_prime):
-        raise InvalidComponentException("Could not find components")
+        raise InvalidComponentException(
+            "Could not find components in a shared model"
+        )
 
     def _filter(item):
         # assume item is a port:
-        if isinstance(item, Port):
-            return {bond for bond in model.bonds if item in bond}
-        try:
-            _, _ = item
-            return {bond for bond in model.bonds
-                    if item in (bond.head, bond.tail)}
-        except TypeError:
+        if isinstance(item, BondGraphBase):
             return {bond for bond in model.bonds
                     if item is bond.head.component or
                     item is bond.tail.component}
+        elif isinstance(item, Port) or isinstance(item, tuple):
+            return {bond for bond in model.bonds if item in bond}
+        else:
+            raise InvalidComponentException()
 
     targets = _filter(target) & _filter(other)
 
@@ -104,8 +108,14 @@ def connect(source, destination):
     head = _find_or_make_port(destination)
 
     model = tail.component.parent
-    if not model or head.component.parent is not model:
-        raise InvalidComponentException
+    model_prime = head.component.parent
+    if not model:
+        raise InvalidComponentException(f"{tail.component} is not in a model")
+    elif not model_prime:
+        raise InvalidComponentException(f"{head.component} is not in a model")
+    elif model is not model_prime:
+        raise InvalidComponentException("Components are in different models")
+
     bond = Bond(tail, head)
     model._bonds.add(bond)
 

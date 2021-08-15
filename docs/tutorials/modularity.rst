@@ -152,9 +152,8 @@ sure the topology is correct::
 In order to replace the reaction, with the newly built `E1`, first remove all
 the bonds connecting the original reaction.::
 
-    for bond in model.bonds:
-        if reaction is bond.head.component or reaction is bond.tail.component:
-            bgt.disconnect(bond.tail, bond.head)
+    bgt.disconnect(A_junction, reaction)
+    bgt.disconnect(reaction, B_junction)
 
 Then remove the old reaction and add `E1`::
 
@@ -214,15 +213,15 @@ product ports::
     bgt.connect(substrate, substrate_law)
     bgt.connect(product_law, product)
 
-    bgt.expose(substrate)
-    bgt.expose(product)
+    bgt.expose(substrate, label='S')
+    bgt.expose(product, label='P')
 
 Now, add the first step in the linear chain of reactions, and connect it to
 the substrate law.::
 
     reaction_step = enzyme_catalysed_reaction('E1')
 
-    bgt.add(reaction_step)
+    bgt.add(chain, reaction_step)
     substrate_port, = (port for port in reaction_step.ports if port.name == "S")
     bgt.connect(substrate_law, substrate_port)
 
@@ -233,7 +232,7 @@ which is then connected to the substrate of the next catalysed reaction.::
     for i in range(1, 4):
         last_product_port, = (port for port in reaction_step.ports if port.name == "P")
         step_law = bgt.new("0")
-        step_ce = bgt.new("Ce", library="BioChem", name=f"A{i}", value={"R":R,"T":T, "k":1})
+        step_ce = bgt.new("Ce", library="BioChem", name=f"A{i}", value={"R":1,"T":1, "k":1})
         reaction_step = enzyme_catalysed_reaction(f"E{i}")
 
         bgt.add(chain, step_ce, step_law, reaction_step)
@@ -263,9 +262,8 @@ in addition to the internal state variables, and control variables.
 
 We can now return to our model, and swap out the `E1` for the 3 step chain::
 
-    for bond in model.bonds:
-        if E1 is bond.head.component or E1 is bond.tail.component:
-            bgt.disconnect(bond.tail, bond.head)
+    bgt.disconnect(E1, A_junction)
+    bgt.disconnect(E1, B_junction)
 
     bgt.remove(model, E1)
     bgt.add(model, chain)
