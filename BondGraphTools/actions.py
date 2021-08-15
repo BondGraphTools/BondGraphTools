@@ -114,7 +114,7 @@ def connect(source, destination):
     elif not model_prime:
         raise InvalidComponentException(f"{head.component} is not in a model")
     elif model is not model_prime:
-        raise InvalidComponentException(f"Components are in different models")
+        raise InvalidComponentException("Components are in different models")
 
     bond = Bond(tail, head)
     model._bonds.add(bond)
