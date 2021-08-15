@@ -38,7 +38,6 @@ class BondGraphBase(object):
         self.parent = parent
         """Model that contains this object."""
 
-
     def __repr__(self):
         return f"{self.metamodel}: {self.name}"
 

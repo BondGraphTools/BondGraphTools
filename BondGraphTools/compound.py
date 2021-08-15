@@ -86,7 +86,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
             return False
 
         for c1, c2 in zip(self.components,
-                          other.componets):
+                          other.components):
             if c1 != c2:
                 return False
 

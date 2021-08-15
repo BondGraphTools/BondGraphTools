@@ -223,7 +223,6 @@ class EqualEffort(BondGraphBase, PortExpander):
         PortExpander .__init__(self, {None: None})
         BondGraphBase.__init__(self, **kwargs)
 
-
     @property
     def template(self):
         return "base/0"
@@ -259,7 +258,6 @@ class EqualFlow(BondGraphBase, PortExpander):
         PortExpander.__init__(self, {"non_inverting": {"weight": 1},
                                      "inverting": {"weight": -1}})
         BondGraphBase.__init__(self, **kwargs)
-
 
     @property
     def non_inverting(self):
