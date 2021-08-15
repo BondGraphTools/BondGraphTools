@@ -41,6 +41,6 @@ jobs:
       uses: paambaati/codeclimate-action@v2.7.5
       env:
         CC_TEST_REPORTER_ID: 895919e9413384a08a878a372ecad8e82ac0f6f80933e23cc36261e9986d27c0
+        LD_LIBRARY_PATH:  /usr/local/lib:$LD_LIBRARY_PATH
       with:
-        coverageCommand: export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-        && pytest --runslow --cov=BondGraphTools --cov-report=xml test
+        coverageCommand: pytest --runslow --cov=BondGraphTools --cov-report=xml test
