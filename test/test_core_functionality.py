@@ -178,95 +178,23 @@ class TestConnect:
                 else:
                     assert component not in bond
 
-    def test_component_in_bond(self):
-        # see issues 85
-        c = new('C')
-        se = new('Se')
-        r = new('R')
-        one = new('1')
-        bg = new()
-        bg.add(c, se, r, one)
+    def test_connect_unadded(self):
 
-        bonds = [(c, one.non_inverting),
-                 (se, one),
-                 (one, r)]
+        j = bgt.new("0")
+        c = bgt.new("C")
+        se = bgt.new("Se")
 
-        for bond in bonds:
-            connect(*bond)
+        bg = bgt.new()
+        bg.add([c, j])
 
-        comps = [{c, one}, {se, one}, {one, r}]
-        all_comps = {c, se, r, one}
+        connect(c, j)
 
-        for i, bond in enumerate(bg.bonds):
-            for component in all_comps:
-                if component in comps[i]:
-                    assert component in bond
-                else:
-                    assert component not in bond
+        assert j in bg.components
+        assert c in bg.components
+        assert j is not se
 
-
-def test_disconnect_ports():
-
-    c = bgt.new("C")
-    se = bgt.new("Se")
-
-    bg = bgt.new()
-    bg.add([c, se])
-
-    connect(c, se)
-
-    with pytest.raises(InvalidPortException):
-        connect(c, se)
-
-    (c1, p1), (c2, p2) = list(bg.bonds)[0]
-    assert c1 in (c, se)
-    assert c2 in (c, se)
-
-    disconnect(c, se)
-    assert not bg.bonds
-
-
-def test_many_port():
-
-    j = bgt.new("0")
-    c = bgt.new("C")
-    se = bgt.new("Se")
-
-    bg = bgt.new()
-    bg.add([c, se, j])
-
-    connect(c, j)
-    connect(se, j)
-
-    for (c1, p1), (c2, p2) in bg.bonds:
-        assert c1 in (c, se)
-        assert c2 is j
-
-    assert len(j.ports) == 2
-
-
-def test_delete_one_from_many_port():
-
-    j = bgt.new("0")
-    c = bgt.new("C")
-    se = bgt.new("Se")
-
-    bg = bgt.new()
-    bg.add([c, se, j])
-
-    connect(c, j)
-    connect(se, j)
-
-    (p, q), (r, s) = bg.bonds[1]
-
-    assert p in (se, j)
-    assert r in (se, j)
-    assert len(bg.bonds) == 2
-    disconnect(c, j)
-    assert len(bg.bonds) == 1
-    (pp, qq), (rr, ss) = bg.bonds[0]
-    assert pp in (se, j)
-    assert rr in (se, j)
+        with pytest.raises(InvalidComponentException):
+            connect(se, j)
 
 
 def test_set_param():
@@ -291,56 +219,137 @@ def test_set_compound_param():
     bg.params[0] = 1
 
 
-def test_connect_unadded():
 
-    j = bgt.new("0")
-    c = bgt.new("C")
-    se = bgt.new("Se")
+class TestDisconnect:
+    def test_many_port(self):
 
-    bg = bgt.new()
-    bg.add([c, j])
+        j = bgt.new("0")
+        c = bgt.new("C")
+        se = bgt.new("Se")
 
-    connect(c, j)
+        bg = bgt.new()
+        bg.add([c, se, j])
 
-    assert j in bg.components
-    assert c in bg.components
-    assert j is not se
-
-    with pytest.raises(InvalidComponentException):
+        connect(c, j)
         connect(se, j)
 
+        for (c1, p1), (c2, p2) in bg.bonds:
+            assert c1 in (c, se)
+            assert c2 is j
 
-def test_disconnect_multiport():
-    zero = bgt.new("0")
-    r = bgt.new("R")
-    c = bgt.new("C")
-    one = bgt.new("1")
-    bg = bgt.new()
-    bg.add([zero, r, c, one])
+        assert len(j.ports) == 2
 
-    connect(zero, one.non_inverting)
-    connect(r, zero)
-    connect(c, one.inverting)
+    def test_disconnect_ports(self):
 
-    assert len(bg.bonds) == 3
-    disconnect(zero, one)
-    assert len(bg.bonds) == 2
-    assert ((zero, 0), (one, 0)) not in bg.bonds
+        c = bgt.new("C")
+        se = bgt.new("Se")
+
+        bg = bgt.new()
+        bg.add([c, se])
+
+        connect(c, se)
+
+        with pytest.raises(InvalidPortException):
+            connect(c, se)
+
+        (c1, p1), (c2, p2) = list(bg.bonds)[0]
+        assert c1 in (c, se)
+        assert c2 in (c, se)
+
+        disconnect(c, se)
+        assert not bg.bonds
 
 
-def test_disconnect_component():
-    zero = bgt.new("0")
-    r = bgt.new("R")
-    c = bgt.new("C")
-    one = bgt.new("1")
+    def test_delete_one_from_many_port(self):
 
-    bg = bgt.new()
-    bg.add([zero, r, c, one])
+        j = bgt.new("0")
+        c = bgt.new("C")
+        se = bgt.new("Se")
 
-    connect(c, (one, one.non_inverting))
+        bg = bgt.new()
+        bg.add([c, se, j])
 
-    with pytest.raises(TypeError):
-        disconnect(c)
+        connect(c, j)
+        connect(se, j)
+
+        (p, q), (r, s) = bg.bonds[1]
+
+        assert p in (se, j)
+        assert r in (se, j)
+        assert len(bg.bonds) == 2
+        disconnect(c, j)
+        assert len(bg.bonds) == 1
+        (pp, qq), (rr, ss) = bg.bonds[0]
+        assert pp in (se, j)
+        assert rr in (se, j)
+
+
+    def test_disconnect_multiport(self):
+        zero = bgt.new("0")
+        r = bgt.new("R")
+        c = bgt.new("C")
+        one = bgt.new("1")
+        bg = bgt.new()
+        bg.add([zero, r, c, one])
+
+        connect(zero, one.non_inverting)
+        connect(r, zero)
+        connect(c, one.inverting)
+
+        assert len(bg.bonds) == 3
+        disconnect(zero, one)
+        assert len(bg.bonds) == 2
+        assert ((zero, 0), (one, 0)) not in bg.bonds
+
+    def test_disconnect_component(self):
+        zero = bgt.new("0")
+        r = bgt.new("R")
+        c = bgt.new("C")
+        one = bgt.new("1")
+
+        bg = bgt.new()
+        bg.add([zero, r, c, one])
+
+        connect(c, (one, one.non_inverting))
+
+        with pytest.raises(TypeError):
+            disconnect(c)
+
+        connect(one, zero)
+        connect(zero, r)
+        assert len(bg.bonds) == 3
+
+        disconnect(r, zero)
+        assert len(bg.bonds) == 2
+        connect(r, zero)
+        assert len(bg.bonds) == 3
+        disconnect(zero, one)
+        assert len(bg.bonds) == 2
+
+    def test_disconnect_component_bug(self):
+        model = bgt.new()
+        BGT0 = bgt.new('0')
+        model.add(BGT0)
+
+        BGT1 = bgt.new('0')
+        model.add(BGT1)
+
+        A = bgt.new('C', name='A')
+        model.add(A)
+
+        B = bgt.new('C', name='B')
+        model.add(B)
+
+        r = bgt.new('Re', name='r', library='BioChem')
+        model.add(r)
+
+        bgt.connect(BGT1, (r, 0))
+        bgt.connect((r, 1), BGT0)
+        bgt.connect(BGT1, A)
+        bgt.connect(BGT0, B)
+        assert len(model.bonds) == 4
+        bgt.disconnect(A, BGT1)
+        assert len(model.bonds) == 3
 
 
 class TestRemove:
@@ -467,3 +476,44 @@ class TestSwap:
 
         with pytest.raises(InvalidPortException):
             swap(zero, l)
+
+
+def test_expose_bug_aug_2021():
+    # reported by Peter Gawthrop, Aug 16, 20201
+    model = bgt.new(name="AB")
+
+    BGT0 = bgt.new('0')
+    model.add(BGT0)
+
+    BGT1 = bgt.new('0')
+    model.add(BGT1)
+
+    A = bgt.new('C', name='A')
+    model.add(A)
+
+    B = bgt.new('C', name='B')
+    model.add(B)
+
+    r = bgt.new('Re', name='r', library='BioChem')
+    model.add(r)
+
+    bgt.connect(BGT1, (r, 0))
+    bgt.connect((r, 1), BGT0)
+    bgt.connect(BGT1, A)
+    bgt.connect(BGT0, B)
+    bgt.expose(model / 'A', 'in')
+
+    sources = [c for c in model.components if c.metamodel == 'SS']
+    assert len(sources) == 1
+    ss = sources[0]
+    assert A not in model.components
+    test_bonds = [{ss, BGT1}, {BGT1, r}, {BGT0, r}, {BGT0, B}]
+
+    for bond in model.bonds:
+        test_bonds = [
+            pair for pair in test_bonds
+            if not (bond.head.component in pair and bond.tail.component in pair)
+        ]
+
+    assert not test_bonds, f"{test_bonds} were removed when they weren't " \
+                           "supposed to be."
