@@ -1,4 +1,4 @@
-"""Tools for running mdoel simulations"""
+"""Tools for running model simulations."""
 
 
 import logging
@@ -224,7 +224,7 @@ try:
     from scikits.odes.dae import dae
     simulate = _simulate
 except ImportError:
-    print("Warning - sciket.odes not found. Simulations are disabled.")
+    print("Warning - scikit.odes not found. Simulations are disabled.")
 
     from BondGraphTools.exceptions import SolverException
 

@@ -34,9 +34,8 @@ class BondGraph(BondGraphBase, LabeledPortManager):
             for component in components:
                 self.add(component)
 
-        self._bonds = BondSet()
-
-        """Graphical Layout of internal components"""
+        self.bonds = BondSet()
+        """The list of connections between internal components"""
 
         self._port_map = dict()
         self._model_changed = True
@@ -44,11 +43,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     @property
     def template(self):
         return None
-
-    @property
-    def bonds(self):
-        """The list of connections between internal components"""
-        return list(self._bonds)
 
     def __truediv__(self, other):
         """See Also: `BondGraph.uri`"""
@@ -73,10 +67,6 @@ class BondGraph(BondGraphBase, LabeledPortManager):
     @property
     def metamodel(self):
         return "BG"
-
-    @bonds.setter
-    def bonds(self, arg):
-        raise AttributeError("Use add/remove functions.")
 
     def __hash__(self):
         return super().__hash__()
@@ -144,7 +134,7 @@ class BondGraph(BondGraphBase, LabeledPortManager):
 
     def remove(self, component):
         # Warning: Scheduled to be deprecated
-        if [b for b in self._bonds if b.head.component is component or
+        if [b for b in self.bonds if b.head.component is component or
                 b.tail.component is component]:
             raise InvalidComponentException("Component is still connected")
         if component not in self.components:

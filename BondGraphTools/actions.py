@@ -30,6 +30,23 @@ __all__ = [
 ]
 
 
+def _get_active_bonds(item):
+    if isinstance(item, BondGraphBase):
+        model = item.parent
+        assert model, f"{item} is not part of a model."
+        return {bond for bond in model.bonds
+                if bond.tail.component is item
+                or bond.head.component is item}
+
+    if isinstance(item, tuple) or isinstance(item, Port):
+        component, port = item
+        return {bond for bond in component.parent.bonds
+                if item is bond.tail or item is bond.head}
+
+    raise InvalidPortException(f"Cannot find {item}: Expected a component"
+                               "or port.")
+
+
 def disconnect(target, other):
     """
     Disconnects the flow of energy between the two components or ports.
@@ -45,44 +62,12 @@ def disconnect(target, other):
     See Also:
         :func:`connect`
     """
-    if isinstance(target, BondGraphBase):
-        model = target.parent
-    elif isinstance(target, Port):
-        model = target.component.parent
-    elif isinstance(target, tuple):
-        model = target[0].parent
-    else:
-        model = None
+    target_bonds = _get_active_bonds(target)
+    other_bonds = _get_active_bonds(other)
 
-    if isinstance(other, BondGraphBase):
-        model_prime = other.parent
-    elif isinstance(other, Port):
-        model_prime = other.component.parent
-    elif isinstance(target, tuple):
-        model_prime = other[0].parent
-    else:
-        model_prime = None
-
-    if not model or not model_prime or (model is not model_prime):
-        raise InvalidComponentException(
-            "Could not find components in a shared model"
-        )
-
-    def _filter(item):
-        # assume item is a port:
-        if isinstance(item, BondGraphBase):
-            return {bond for bond in model.bonds
-                    if item is bond.head.component or
-                    item is bond.tail.component}
-        elif isinstance(item, Port) or isinstance(item, tuple):
-            return {bond for bond in model.bonds if item in bond}
-        else:
-            raise InvalidComponentException()
-
-    targets = _filter(target) & _filter(other)
-
-    for target_bond in targets:
-        model._bonds.remove(target_bond)
+    for bond in target_bonds.intersection(other_bonds):
+        model = bond.tail.component.parent
+        model.bonds.remove(bond)
 
 
 def connect(source, destination):
@@ -117,7 +102,7 @@ def connect(source, destination):
         raise InvalidComponentException("Components are in different models")
 
     bond = Bond(tail, head)
-    model._bonds.add(bond)
+    model.bonds.add(bond)
 
 
 def _unpack_port_arg(port):
@@ -183,13 +168,11 @@ def swap(old_component, new_component):
 
     model = old_component.parent
     if not model:
-        return
-
-    if new_component in model.components:
+        raise InvalidComponentException("No parent model.")
+    elif new_component in model.components:
         raise InvalidComponentException(
             "Component is already in the model"
         )
-
     elif not is_swap_valid(old_component, new_component):
         raise InvalidComponentException("Cannot swap components")
 
