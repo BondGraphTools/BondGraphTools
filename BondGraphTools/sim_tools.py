@@ -164,8 +164,6 @@ def _bondgraph_to_residuals(model, control_vars=None):
                 if isinstance(f, str):
                     f = _to_function(f, X, dX, dx_subs + x_subs)
                     u_func_dict[idx] = f
-                if n == 1:
-                    r = f(0, 0, 0)
                 else:
                     r = f(0, test_x, test_x)
                 assert isinstance(r, (float, int, sp.Number)
