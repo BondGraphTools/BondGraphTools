@@ -1,16 +1,15 @@
 import setuptools
-from BondGraphTools.version import __version__ as version
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 with open("requirements.txt", 'r') as fh:
-    requirements =[line.strip() for line in fh.readlines()]
+    requirements = [line.strip() for line in fh.readlines()]
 
 
 setuptools.setup(
     name="BondGraphTools",
-    version=version,
+    version="0.4.6",
     author="Pete Cudmore",
     author_email="peter.cudmore@uqconnect.edu.au",
     description="Bond Graph Modelling Toolkit",
