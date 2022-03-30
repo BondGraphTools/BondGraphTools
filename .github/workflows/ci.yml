@@ -32,8 +32,8 @@ jobs:
     - name: Install Python3 Dependencies.
       run: |
         python3 -m pip install scikits.odes
-        python3 -m pip install -r requirements.txt
         python3 -m pip install flake8 pytest coverage mock pytest-cov==2.6.1
+        python3 -m pip install -e .
     - name: Lint with flake8
       run: |
           flake8 BondGraphTools
